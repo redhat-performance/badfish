@@ -3,8 +3,9 @@ badfish is a Redfish-based API tool for managing bare-metal systems via the Redf
 
 ## Scope
 Right now badfish is focused on managing Dell systems, but can potentially work
-with any system that supports the Redfish API.  We're mostly concentrated
-programatically enforcing interface/device boot order to accomodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
+with any system that supports the Redfish API.  
+
+We're mostly concentrated on programatically enforcing interface/device boot order to accomodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
 
 ## Features
 * Toggle and save a persistent interface/device boot order on remote systems
