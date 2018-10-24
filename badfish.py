@@ -231,6 +231,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", required=True)
     parser.add_argument("-t", help="Type of host. Accepts: foreman, director", required=True)
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
+    parser.add_argument("--reboot", help="Flag for just rebooting the host", action="store_true")
 
     args = vars(parser.parse_args())
 
@@ -240,13 +241,17 @@ if __name__ == "__main__":
     host_type = args["t"]
     interfaces_path = args["i"]
     pxe = args["pxe"]
+    reboot = args["reboot"]
 
-    if host_type.lower() not in ("foreman", "director"):
-        raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
+    if reboot:
+        reboot_server(host, username, password)
+    else:
+        if host_type.lower() not in ("foreman", "director"):
+            raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
 
-    change_boot_order(host, username, password)
-    if pxe:
-        set_next_boot_pxe(host, username, password)
-    job_id = create_bios_config_job(host, username, password)
-    get_job_status(host, username, password, job_id)
-    reboot_server(host, username, password)
+        change_boot_order(host, username, password)
+        if pxe:
+            set_next_boot_pxe(host, username, password)
+        job_id = create_bios_config_job(host, username, password)
+        get_job_status(host, username, password, job_id)
+        reboot_server(host, username, password)
