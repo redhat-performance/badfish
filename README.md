@@ -22,14 +22,14 @@ badfish operates against a YAML configuration file to toggle between keyvalue:pa
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
 ```
-./badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t director
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t director
 ```
 
 ### Enforcing a Foreman-style interface order
 Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed systems to first always PXE from the interface that is Foreman-managed (DHCP/PXE).  If the system is not set to build it will simply boot to local disk.  In our setup we utilize a specific NIC for this interface based on system type.
 
 ```
-./badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
 ```
 
 ### Forcing a one-time boot to Foreman
