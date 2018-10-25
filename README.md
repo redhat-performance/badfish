@@ -35,6 +35,9 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ### Forcing a one-time boot to Foreman
 To force systems to perform a one-time boot off a specific interface simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the Foreman interface listed in your ```config/idrac_interfaces.yml``` or equivalent resource.
 
+### Reboot only option
+In certain cases you might need to only reboot the host, for this case we included the ```--reboot``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
+
 #### Dell Foreman / PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
