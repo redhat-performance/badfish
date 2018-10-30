@@ -94,6 +94,33 @@ def set_next_boot_pxe(_host, _username, _password):
         sys.exit()
 
 
+def clear_job_queue(_host, _username, _password, _jobs_queue):
+    _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % _host
+    if not _jobs_queue:
+        print("\n- WARNING, job queue already cleared for iDRAC %s, DELETE command will not execute" % _host)
+    print("\n- WARNING, clearing job queue for job IDs: %s\n" % _jobs_queue)
+    for i in _jobs_queue:
+        i = i.strip("'")
+        url = '%s/%s' % (_url, i)
+        headers = {'content-type': 'application/json'}
+        requests.delete(url, headers=headers, verify=False, auth=(_username, _password))
+    job_store = get_jobs_queue(_host, _username, _password)
+    if not job_store:
+        print("- PASS, job queue for iDRAC %s successfully cleared" % _host)
+    else:
+        print("- FAIL, job queue not cleared, current job queue contains jobs: %s" % job_store)
+        sys.exit()
+
+
+def get_jobs_queue(_host, _username, _password):
+    _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % _host
+    req = requests.get(_url, auth=(_username, _password), verify=False)
+    data = req.json()
+    data = str(data)
+    job_store = re.findall("JID_.+?'", data)
+    return job_store
+
+
 def create_bios_config_job(_host, _username, _password):
     _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % _host
     _payload = {"TargetSettingsURI": "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"}
@@ -101,12 +128,12 @@ def create_bios_config_job(_host, _username, _password):
     _response = requests.post(
         _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(_username, _password)
     )
-    statusCode = _response.status_code
+    status_code = _response.status_code
 
-    if statusCode == 200:
+    if status_code == 200:
         print("- PASS: POST command passed to create target config job, status code 200 returned.")
     else:
-        print("- FAIL: POST command failed to create BIOS config job, status code is %s" % statusCode)
+        print("- FAIL: POST command failed to create BIOS config job, status code is %s" % status_code)
         detail_message = str(_response.__dict__)
         print(detail_message)
         sys.exit()
@@ -124,12 +151,12 @@ def get_job_status(_host, _username, _password, _job_id):
             verify=False,
             auth=(_username, _password),
         )
-        statusCode = req.status_code
-        if statusCode == 200:
+        status_code = req.status_code
+        if status_code == 200:
             print("- PASS: Command passed to check job status, code 200 returned")
             time.sleep(10)
         else:
-            print("- FAIL: Command failed to check job status, return code is %s" % statusCode)
+            print("- FAIL: Command failed to check job status, return code is %s" % status_code)
             print("    Extended Info Message: {0}".format(req.json()))
             sys.exit()
         data = req.json()
@@ -153,12 +180,12 @@ def reboot_server(_host, _username, _password):
         _response = requests.post(
             _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(_username, _password)
         )
-        statusCode = _response.status_code
-        if statusCode == 204:
-            print("- PASS: Command passed to gracefully restart server, code return is %s" % statusCode)
+        status_code = _response.status_code
+        if status_code == 204:
+            print("- PASS: Command passed to gracefully restart server, code return is %s" % status_code)
             time.sleep(3)
         else:
-            print("- FAIL: Command failed to gracefully restart server, status code is: %s" % statusCode)
+            print("- FAIL: Command failed to gracefully restart server, status code is: %s" % status_code)
             print("    Extended Info Message: {0}".format(_response.json()))
             sys.exit()
         count = 0
@@ -178,12 +205,12 @@ def reboot_server(_host, _username, _password):
                 _response = requests.post(
                     _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(_username, _password)
                 )
-                statusCode = _response.status_code
-                if statusCode == 204:
-                    print("- PASS: Command passed to forcefully power OFF server, code return is %s" % statusCode)
+                status_code = _response.status_code
+                if status_code == 204:
+                    print("- PASS: Command passed to forcefully power OFF server, code return is %s" % status_code)
                     time.sleep(10)
                 else:
-                    print("- FAIL, Command failed to gracefully power OFF server, status code is: %s" % statusCode)
+                    print("- FAIL, Command failed to gracefully power OFF server, status code is: %s" % status_code)
                     print("    Extended Info Message: {0}".format(_response.json()))
                     sys.exit()
 
@@ -197,11 +224,11 @@ def reboot_server(_host, _username, _password):
         _response = requests.post(
             _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(_username, _password)
         )
-        statusCode = _response.status_code
-        if statusCode == 204:
-            print("- PASS: Command passed to power ON server, code return is %s" % statusCode)
+        status_code = _response.status_code
+        if status_code == 204:
+            print("- PASS: Command passed to power ON server, code return is %s" % status_code)
         else:
-            print("- FAIL: Command failed to power ON server, status code is: %s" % statusCode)
+            print("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
             print("    Extended Info Message: {0}".format(_response.json()))
             sys.exit()
     elif data[u"PowerState"] == "Off":
@@ -211,11 +238,11 @@ def reboot_server(_host, _username, _password):
         _response = requests.post(
             _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(_username, _password)
         )
-        statusCode = _response.status_code
-        if statusCode == 204:
-            print("- PASS: Command passed to power ON server, code return is %s" % statusCode)
+        status_code = _response.status_code
+        if status_code == 204:
+            print("- PASS: Command passed to power ON server, code return is %s" % status_code)
         else:
-            print("- FAIL: Command failed to power ON server, status code is: %s" % statusCode)
+            print("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
             print("    Extended Info Message: {0}".format(_response.json()))
             sys.exit()
     else:
@@ -231,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", required=True)
     parser.add_argument("-t", help="Type of host. Accepts: foreman, director", required=True)
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--reboot", help="Flag for just rebooting the host", action="store_true")
+    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
 
     args = vars(parser.parse_args())
 
@@ -241,7 +268,7 @@ if __name__ == "__main__":
     host_type = args["t"]
     interfaces_path = args["i"]
     pxe = args["pxe"]
-    reboot = args["reboot"]
+    reboot = args["reboot_only"]
 
     if reboot:
         reboot_server(host, username, password)
@@ -252,6 +279,9 @@ if __name__ == "__main__":
         change_boot_order(host, username, password)
         if pxe:
             set_next_boot_pxe(host, username, password)
+        jobs_queue = get_jobs_queue(host, username, password)
+        if jobs_queue:
+            clear_job_queue(host, username, password, jobs_queue)
         job_id = create_bios_config_job(host, username, password)
         get_job_status(host, username, password, job_id)
         reboot_server(host, username, password)
