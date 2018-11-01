@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import argparse
 import json
 import re
 import requests
@@ -43,8 +42,8 @@ class Badfish:
         data = _response.json()
         return data[u"Attributes"][_boot_seq]
 
-    def change_boot_order(self, _interfaces_path, _host_type):
-        with open(_interfaces_path, "r") as f:
+    def change_boot_order(self, interfaces_path, host_type):
+        with open(interfaces_path, "r") as f:
             try:
                 definitions = yaml.safe_load(f)
             except yaml.YAMLError as ex:
@@ -52,7 +51,7 @@ class Badfish:
                 sys.exit(1)
 
         host_model = self.host.split(".")[0].split("-")[-1]
-        interfaces = definitions["%s_%s_interfaces" % (_host_type, host_model)].split(",")
+        interfaces = definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")
 
         bios_boot_mode = self.get_bios_boot_mode()
         boot_seq = self.get_boot_seq(bios_boot_mode)
@@ -71,10 +70,7 @@ class Badfish:
             payload = {"Attributes": {boot_seq: boot_devices}}
             headers = {"content-type": "application/json"}
             response = requests.patch(
-                url, data=json.dumps(payload),
-                headers=headers,
-                verify=False,
-                auth=(self.username, self.password)
+                url, data=json.dumps(payload), headers=headers, verify=False, auth=(self.username, self.password)
             )
             if response.status_code == 200:
                 print("- PASS: PATCH command passed to update boot order")
@@ -260,42 +256,3 @@ class Badfish:
         else:
             print("- FAIL: unable to get current server power state to perform either reboot or power on")
             sys.exit()
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
-    parser.add_argument("-H", help="iDRAC host address", required=True)
-    parser.add_argument("-u", help="iDRAC username", required=True)
-    parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", required=True)
-    parser.add_argument("-t", help="Type of host. Accepts: foreman, director", required=True)
-    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
-
-    args = vars(parser.parse_args())
-
-    host = args["H"]
-    username = args["u"]
-    password = args["p"]
-    host_type = args["t"]
-    interfaces_path = args["i"]
-    pxe = args["pxe"]
-    reboot = args["reboot_only"]
-
-    badfish = Badfish(host, username, password)
-
-    if reboot:
-        badfish.reboot_server()
-    else:
-        if host_type.lower() not in ("foreman", "director"):
-            raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
-
-        badfish.change_boot_order(interfaces_path, host_type)
-        if pxe:
-            badfish.set_next_boot_pxe()
-        jobs_queue = badfish.get_job_queue()
-        if jobs_queue:
-            badfish.clear_job_queue(jobs_queue)
-        job_id = badfish.create_bios_config_job()
-        badfish.get_job_status(job_id)
-        badfish.reboot_server()

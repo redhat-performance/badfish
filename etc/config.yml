@@ -1,0 +1,4 @@
+## Runtime configuration for the badfish application.
+##
+core:
+  logging: WARN
