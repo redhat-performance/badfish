@@ -280,18 +280,59 @@ class Badfish:
             print(str(_response.__dict__))
             sys.exit()
 
+    def check_boot(self, _interfaces_path):
+        bios_boot_mode = self.get_bios_boot_mode()
+        boot_seq = self.get_boot_seq(bios_boot_mode)
+        boot_devices = self.get_boot_devices(boot_seq)
+        if _interfaces_path:
+
+            with open(_interfaces_path, "r") as f:
+                try:
+                    definitions = yaml.safe_load(f)
+                except yaml.YAMLError as ex:
+                    print(ex)
+                    sys.exit(1)
+
+            host_model = self.host.split(".")[0].split("-")[-1]
+            interfaces = {}
+            for _host in ["foreman", "director"]:
+                match = True
+                interfaces[_host] = definitions["%s_%s_interfaces" % (_host, host_model)].split(",")
+                for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
+                    if device[u"Name"] == interfaces[_host][device[u"Index"]]:
+                        continue
+                    else:
+                        match = False
+                        break
+                if match:
+                    print("Current boot order is set to '%s'" % _host)
+                    sys.exit()
+
+            print("- WARN: Current boot order does not match any of the given.")
+            print("Current boot order:")
+            for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
+                print("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+            sys.exit()
+
+        else:
+            print("Current boot order:")
+            for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
+                print("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+            sys.exit()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
     parser.add_argument("-H", help="iDRAC host address", required=True)
     parser.add_argument("-u", help="iDRAC username", required=True)
     parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml")
+    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
     parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
     parser.add_argument("--boot-to",
                         help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
+    parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
 
     args = vars(parser.parse_args())
 
@@ -303,6 +344,7 @@ if __name__ == "__main__":
     pxe = args["pxe"]
     boot_to = args["boot_to"]
     reboot = args["reboot_only"]
+    check_boot = args["check_boot"]
 
     badfish = Badfish(host, username, password)
 
@@ -313,11 +355,17 @@ if __name__ == "__main__":
         job_id = badfish.create_bios_config_job()
         badfish.get_job_status(job_id)
         badfish.reboot_server()
+    elif check_boot:
+        badfish.check_boot(interfaces_path)
     else:
         if host_type.lower() not in ("foreman", "director"):
             raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
 
-        badfish.change_boot_order(interfaces_path, host_type)
+        if interfaces_path:
+            badfish.change_boot_order(interfaces_path, host_type)
+        else:
+            print("- FAIL: You must provide a path to the interfaces yaml via `-i` optional argument.")
+            sys.exit()
         if pxe:
             badfish.set_next_boot_pxe()
         jobs_queue = badfish.get_job_queue()
