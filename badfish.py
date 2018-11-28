@@ -261,15 +261,36 @@ class Badfish:
             print("- FAIL: unable to get current server power state to perform either reboot or power on")
             sys.exit()
 
+    def boot_to_device(self, _boot_to):
+        _url = 'https://%s/redfish/v1/Systems/System.Embedded.1/Bios/Settings' % self.host
+        _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": _boot_to}}
+        _headers = {'content-type': 'application/json'}
+        _response = requests.patch(
+            _url,
+            data=json.dumps(_payload),
+            headers=_headers,
+            verify=False,
+            auth=(self.username, self.password)
+        )
+        status_code = _response.status_code
+        if status_code == 200:
+            print("- PASS: Command passed to set BIOS attribute pending values")
+        else:
+            print("- FAIL: command failed, error code is: %s" % status_code)
+            print(str(_response.__dict__))
+            sys.exit()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
     parser.add_argument("-H", help="iDRAC host address", required=True)
     parser.add_argument("-u", help="iDRAC username", required=True)
     parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", required=True)
-    parser.add_argument("-t", help="Type of host. Accepts: foreman, director", required=True)
+    parser.add_argument("-i", help="Path to iDRAC interfaces yaml")
+    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
+    parser.add_argument("--boot-to",
+                        help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
 
     args = vars(parser.parse_args())
@@ -280,11 +301,17 @@ if __name__ == "__main__":
     host_type = args["t"]
     interfaces_path = args["i"]
     pxe = args["pxe"]
+    boot_to = args["boot_to"]
     reboot = args["reboot_only"]
 
     badfish = Badfish(host, username, password)
 
     if reboot:
+        badfish.reboot_server()
+    elif boot_to:
+        badfish.boot_to_device(boot_to)
+        job_id = badfish.create_bios_config_job()
+        badfish.get_job_status(job_id)
         badfish.reboot_server()
     else:
         if host_type.lower() not in ("foreman", "director"):
