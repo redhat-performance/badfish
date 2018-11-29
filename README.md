@@ -32,11 +32,35 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
 ```
 
-### Forcing a one-time boot to Foreman
-To force systems to perform a one-time boot off a specific interface simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the Foreman interface listed in your ```config/idrac_interfaces.yml``` or equivalent resource.
+### Forcing a one time boot to a specific device
+To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied. 
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
+```
+
+### Forcing a one-time boot to PXE
+To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --pxe
+```
 
 ### Reboot only option
-In certain cases you might need to only reboot the host, for this case we included the ```--reboot``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
+In certain cases you might need to only reboot the host, for this case we included the ```--reboot-only``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
+```
+
+### Check current boot order
+To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match (Foreman or Director).
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
+```
+
+### Log to file
+If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
+```
 
 #### Dell Foreman / PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
