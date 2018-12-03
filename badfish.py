@@ -301,7 +301,7 @@ class Badfish:
             for _host in ["foreman", "director"]:
                 match = True
                 interfaces[_host] = definitions["%s_%s_interfaces" % (_host, host_model)].split(",")
-                for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
+                for device in sorted(boot_devices[:len(interfaces)], key=lambda x: x[u"Index"]):
                     if device[u"Name"] == interfaces[_host][device[u"Index"]]:
                         continue
                     else:
