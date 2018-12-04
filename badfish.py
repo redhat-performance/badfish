@@ -155,7 +155,8 @@ class Badfish:
         return _job_id
 
     def get_job_status(self, _job_id):
-        while True:
+        retries = 10
+        for _ in range(retries):
             req = requests.get(
                 "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.host, _job_id),
                 verify=False,
@@ -172,9 +173,11 @@ class Badfish:
             data = req.json()
             if data[u"Message"] == "Task successfully scheduled.":
                 logger.info("- PASS: job id %s successfully scheduled" % _job_id)
-                break
+                return
             else:
                 logger.warn("- WARNING: JobStatus not scheduled, current status is: %s" % data[u"Message"])
+        logger.error("- FAIL: Not able to successfully schedule the job.")
+        sys.exit(1)
 
     def reboot_server(self):
         _response = requests.get(
@@ -209,7 +212,7 @@ class Badfish:
                 if data[u"PowerState"] == "Off":
                     logger.info("- PASS: GET command passed to verify server is in OFF state")
                     break
-                elif count == 20:
+                elif count == 10:
                     logger.warn("- WARNING: unable to graceful shutdown the server, will perform forced shutdown now")
                     _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
                     _payload = {"ResetType": "ForceOff"}
