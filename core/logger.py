@@ -76,5 +76,3 @@ class Logger(_Logger):
             self.removeHandler(handler)
         return
 
-
-logger = Logger()

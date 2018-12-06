@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 
-from core.logger import logger
+from core.logger import Logger
 from logging import FileHandler, Formatter
 
 import argparse
 import json
+import os
 import re
 import requests
 import sys
@@ -15,19 +16,28 @@ import yaml
 warnings.filterwarnings("ignore")
 
 
+BOOT_SOURCES_URI = "/redfish/v1/Systems/System.Embedded.1/BootSources/Settings"
+BIOS_URI = "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"
+
+
 class Badfish:
     def __init__(self, _host, _username, _password):
         self.host = _host
         self.username = _username
         self.password = _password
+        self.logger = Logger()
 
     def get_bios_boot_mode(self):
         _response = requests.get(
             "https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % self.host,
             verify=False,
-            auth=(self.username, self.password)
+            auth=(self.username, self.password),
         )
-        data = _response.json()
+        try:
+            data = _response.json()
+        except ValueError:
+            self.logger.error("Could not retrieve Bios Boot mode.")
+            sys.exit(1)
         return data[u"Attributes"]["BootMode"]
 
     @staticmethod
@@ -51,7 +61,7 @@ class Badfish:
             try:
                 definitions = yaml.safe_load(f)
             except yaml.YAMLError as ex:
-                logger.error(ex)
+                self.logger.error(ex)
                 sys.exit(1)
 
         host_model = self.host.split(".")[0].split("-")[-1]
@@ -70,21 +80,18 @@ class Badfish:
                     break
 
         if change:
-            url = "https://%s/redfish/v1/Systems/System.Embedded.1/BootSources/Settings" % self.host
+            url = "https://%s%s" % (self.host, BOOT_SOURCES_URI)
             payload = {"Attributes": {boot_seq: boot_devices}}
             headers = {"content-type": "application/json"}
             response = requests.patch(
-                url, data=json.dumps(payload),
-                headers=headers,
-                verify=False,
-                auth=(self.username, self.password)
+                url, data=json.dumps(payload), headers=headers, verify=False, auth=(self.username, self.password)
             )
             if response.status_code == 200:
-                logger.info("- PASS: PATCH command passed to update boot order")
+                self.logger.info("- PASS: PATCH command passed to update boot order")
             else:
-                logger.error("- FAIL: There was something wrong with your request")
+                self.logger.error("- FAIL: There was something wrong with your request")
         else:
-            logger.warn("- WARNING: No changes were made since the boot order already matches the requested.")
+            self.logger.warning("- WARNING: No changes were made since the boot order already matches the requested.")
             sys.exit()
         return
 
@@ -97,30 +104,32 @@ class Badfish:
         )
         time.sleep(5)
         if _response.status_code == 200:
-            logger.info('- PASS: PATCH command passed to set next boot onetime boot device to: "%s"' % "Pxe")
+            self.logger.info('- PASS: PATCH command passed to set next boot onetime boot device to: "%s"' % "Pxe")
         else:
-            logger.error("- FAIL: Command failed, error code is %s" % _response.status_code)
+            self.logger.error("- FAIL: Command failed, error code is %s" % _response.status_code)
             detail_message = str(_response.__dict__)
-            logger.error(detail_message)
+            self.logger.error(detail_message)
             sys.exit(1)
         return
 
     def clear_job_queue(self, _job_queue):
         _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
-        _headers = {'content-type': 'application/json'}
+        _headers = {"content-type": "application/json"}
         if not _job_queue:
-            logger.warn("\n- WARNING, job queue already cleared for iDRAC %s, DELETE command will not execute" % self.host)
+            self.logger.warning(
+                "\n- WARNING, job queue already cleared for iDRAC %s, DELETE command will not execute" % self.host
+            )
             return
-        logger.warn("\n- WARNING, clearing job queue for job IDs: %s\n" % _job_queue)
+        self.logger.warning("\n- WARNING, clearing job queue for job IDs: %s\n" % _job_queue)
         for _job in _job_queue:
             job = _job.strip("'")
-            url = '%s/%s' % (_url, job)
+            url = "%s/%s" % (_url, job)
             requests.delete(url, headers=_headers, verify=False, auth=(self.username, self.password))
         job_queue = self.get_job_queue()
         if not job_queue:
-            logger.info("- PASS, job queue for iDRAC %s successfully cleared" % self.host)
+            self.logger.info("- PASS, job queue for iDRAC %s successfully cleared" % self.host)
         else:
-            logger.error("- FAIL, job queue not cleared, current job queue contains jobs: %s" % job_queue)
+            self.logger.error("- FAIL, job queue not cleared, current job queue contains jobs: %s" % job_queue)
             sys.exit(1)
         return
 
@@ -132,9 +141,9 @@ class Badfish:
         job_queue = re.findall("JID_.+?'", data)
         return job_queue
 
-    def create_bios_config_job(self):
+    def create_bios_config_job(self, uri):
         _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
-        _payload = {"TargetSettingsURI": "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"}
+        _payload = {"TargetSettingsURI": uri}
         _headers = {"content-type": "application/json"}
         _response = requests.post(
             _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
@@ -142,16 +151,16 @@ class Badfish:
         status_code = _response.status_code
 
         if status_code == 200:
-            logger.info("- PASS: POST command passed to create target config job, status code 200 returned.")
+            self.logger.info("- PASS: POST command passed to create target config job, status code 200 returned.")
         else:
-            logger.error("- FAIL: POST command failed to create BIOS config job, status code is %s" % status_code)
+            self.logger.error("- FAIL: POST command failed to create BIOS config job, status code is %s" % status_code)
             detail_message = str(_response.__dict__)
-            logger.error(detail_message)
+            self.logger.error(detail_message)
             sys.exit(1)
         convert_to_string = str(_response.__dict__)
         job_id_search = re.search("JID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search)
-        logger.info("- INFO: %s job ID successfully created" % _job_id)
+        self.logger.info("- INFO: %s job ID successfully created" % _job_id)
         return _job_id
 
     def get_job_status(self, _job_id):
@@ -164,29 +173,29 @@ class Badfish:
             )
             status_code = req.status_code
             if status_code == 200:
-                logger.info("- PASS: Command passed to check job status, code 200 returned")
+                self.logger.info("- PASS: Command passed to check job status, code 200 returned")
                 time.sleep(10)
             else:
-                logger.error("- FAIL: Command failed to check job status, return code is %s" % status_code)
-                logger.error("    Extended Info Message: {0}".format(req.json()))
+                self.logger.error("- FAIL: Command failed to check job status, return code is %s" % status_code)
+                self.logger.error("    Extended Info Message: {0}".format(req.json()))
                 sys.exit(1)
             data = req.json()
             if data[u"Message"] == "Task successfully scheduled.":
-                logger.info("- PASS: job id %s successfully scheduled" % _job_id)
+                self.logger.info("- PASS: job id %s successfully scheduled" % _job_id)
                 return
             else:
-                logger.warn("- WARNING: JobStatus not scheduled, current status is: %s" % data[u"Message"])
-        logger.error("- FAIL: Not able to successfully schedule the job.")
+                self.logger.warning("- WARNING: JobStatus not scheduled, current status is: %s" % data[u"Message"])
+        self.logger.error("- FAIL: Not able to successfully schedule the job.")
         sys.exit(1)
 
     def reboot_server(self):
         _response = requests.get(
             "https://%s/redfish/v1/Systems/System.Embedded.1/" % self.host,
             verify=False,
-            auth=(self.username, self.password)
+            auth=(self.username, self.password),
         )
         data = _response.json()
-        logger.warn("- WARNING: Current server power state is: %s" % data[u"PowerState"])
+        self.logger.warning("- WARNING: Current server power state is: %s" % data[u"PowerState"])
         if data[u"PowerState"] == "On":
             _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
             _payload = {"ResetType": "GracefulRestart"}
@@ -196,40 +205,52 @@ class Badfish:
             )
             status_code = _response.status_code
             if status_code == 204:
-                logger.info("- PASS: Command passed to gracefully restart server, code return is %s" % status_code)
+                self.logger.info(
+                    "- PASS: Command passed to gracefully restart server, code return is %s" % status_code
+                )
                 time.sleep(3)
             else:
-                logger.error("- FAIL: Command failed to gracefully restart server, status code is: %s" % status_code)
-                logger.error("    Extended Info Message: {0}".format(_response.json()))
+                self.logger.error(
+                    "- FAIL: Command failed to gracefully restart server, status code is: %s" % status_code
+                )
+                self.logger.error("    Extended Info Message: {0}".format(_response.json()))
                 sys.exit(1)
             count = 0
             while True:
                 _response = requests.get(
-                    "https://%s/redfish/v1/Systems/System.Embedded.1/" % self.host, verify=False,
-                    auth=(self.username, self.password)
+                    "https://%s/redfish/v1/Systems/System.Embedded.1/" % self.host,
+                    verify=False,
+                    auth=(self.username, self.password),
                 )
                 data = _response.json()
                 if data[u"PowerState"] == "Off":
-                    logger.info("- PASS: GET command passed to verify server is in OFF state")
+                    self.logger.info("- PASS: GET command passed to verify server is in OFF state")
                     break
                 elif count == 10:
-                    logger.warn("- WARNING: unable to graceful shutdown the server, will perform forced shutdown now")
+                    self.logger.warning(
+                        "- WARNING: unable to graceful shutdown the server, will perform forced shutdown now"
+                    )
                     _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
                     _payload = {"ResetType": "ForceOff"}
                     _headers = {"content-type": "application/json"}
                     _response = requests.post(
-                        _url, data=json.dumps(_payload),
+                        _url,
+                        data=json.dumps(_payload),
                         headers=_headers,
                         verify=False,
-                        auth=(self.username, self.password)
+                        auth=(self.username, self.password),
                     )
                     status_code = _response.status_code
                     if status_code == 204:
-                        logger.info("- PASS: Command passed to forcefully power OFF server, code return is %s" % status_code)
+                        self.logger.info(
+                            "- PASS: Command passed to forcefully power OFF server, code return is %s" % status_code
+                        )
                         time.sleep(10)
                     else:
-                        logger.error("- FAIL, Command failed to gracefully power OFF server, status code is: %s" % status_code)
-                        logger.error("    Extended Info Message: {0}".format(_response.json()))
+                        self.logger.error(
+                            "- FAIL, Command failed to gracefully power OFF server, status code is: %s" % status_code
+                        )
+                        self.logger.error("    Extended Info Message: {0}".format(_response.json()))
                         sys.exit(1)
 
                 else:
@@ -244,10 +265,10 @@ class Badfish:
             )
             status_code = _response.status_code
             if status_code == 204:
-                logger.info("- PASS: Command passed to power ON server, code return is %s" % status_code)
+                self.logger.info("- PASS: Command passed to power ON server, code return is %s" % status_code)
             else:
-                logger.error("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
-                logger.error("    Extended Info Message: {0}".format(_response.json()))
+                self.logger.error("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
+                self.logger.error("    Extended Info Message: {0}".format(_response.json()))
                 sys.exit(1)
         elif data[u"PowerState"] == "Off":
             _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
@@ -258,32 +279,28 @@ class Badfish:
             )
             status_code = _response.status_code
             if status_code == 204:
-                logger.info("- PASS: Command passed to power ON server, code return is %s" % status_code)
+                self.logger.info("- PASS: Command passed to power ON server, code return is %s" % status_code)
             else:
-                logger.error("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
-                logger.error("    Extended Info Message: {0}".format(_response.json()))
+                self.logger.error("- FAIL: Command failed to power ON server, status code is: %s" % status_code)
+                self.logger.error("    Extended Info Message: {0}".format(_response.json()))
                 sys.exit(1)
         else:
-            logger.error("- FAIL: unable to get current server power state to perform either reboot or power on")
+            self.logger.error("- FAIL: unable to get current server power state to perform either reboot or power on")
             sys.exit(1)
 
     def boot_to_device(self, _boot_to):
-        _url = 'https://%s/redfish/v1/Systems/System.Embedded.1/Bios/Settings' % self.host
+        _url = "https://%s%s" % (self.host, BIOS_URI)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": _boot_to}}
-        _headers = {'content-type': 'application/json'}
+        _headers = {"content-type": "application/json"}
         _response = requests.patch(
-            _url,
-            data=json.dumps(_payload),
-            headers=_headers,
-            verify=False,
-            auth=(self.username, self.password)
+            _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
         )
         status_code = _response.status_code
         if status_code == 200:
-            logger.info("- PASS: Command passed to set BIOS attribute pending values")
+            self.logger.info("- PASS: Command passed to set BIOS attribute pending values")
         else:
-            logger.error("- FAIL: command failed, error code is: %s" % status_code)
-            logger.error(str(_response.__dict__))
+            self.logger.error("- FAIL: command failed, error code is: %s" % status_code)
+            self.logger.error(str(_response.__dict__))
             sys.exit(1)
 
     def check_boot(self, _interfaces_path):
@@ -296,39 +313,38 @@ class Badfish:
                 try:
                     definitions = yaml.safe_load(f)
                 except yaml.YAMLError as ex:
-                    logger.error(ex)
-                    sys.exit(1)
+                    self.logger.error(ex)
+                    return 1
 
             host_model = self.host.split(".")[0].split("-")[-1]
             interfaces = {}
             for _host in ["foreman", "director"]:
                 match = True
                 interfaces[_host] = definitions["%s_%s_interfaces" % (_host, host_model)].split(",")
-                for device in sorted(boot_devices[:len(interfaces)], key=lambda x: x[u"Index"]):
+                for device in sorted(boot_devices[: len(interfaces)], key=lambda x: x[u"Index"]):
                     if device[u"Name"] == interfaces[_host][device[u"Index"]]:
                         continue
                     else:
                         match = False
                         break
                 if match:
-                    logger.info("Current boot order is set to '%s'" % _host)
-                    sys.exit()
+                    self.logger.info("Current boot order is set to '%s'" % _host)
+                    return
 
-            logger.warn("- WARN: Current boot order does not match any of the given.")
-            logger.info("Current boot order:")
+            self.logger.warning("- WARN: Current boot order does not match any of the given.")
+            self.logger.info("Current boot order:")
             for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
-                logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
-            sys.exit()
+                self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+            return
 
         else:
-            logger.info("Current boot order:")
+            self.logger.info("Current boot order:")
             for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
-                logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
-            sys.exit()
+                self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+            return
 
 
-if __name__ == "__main__":
-    logger.start()
+def main(argv=None):
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
     parser.add_argument("-H", help="iDRAC host address", required=True)
     parser.add_argument("-u", help="iDRAC username", required=True)
@@ -337,13 +353,10 @@ if __name__ == "__main__":
     parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
     parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--boot-to",
-                        help="Set next boot to one-shot boot to a specific device")
+    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
-
-    args = vars(parser.parse_args())
-
+    args = vars(parser.parse_args(argv))
     host = args["H"]
     username = args["u"]
     password = args["p"]
@@ -352,22 +365,20 @@ if __name__ == "__main__":
     interfaces_path = args["i"]
     pxe = args["pxe"]
     boot_to = args["boot_to"]
-    reboot = args["reboot_only"]
+    reboot_only = args["reboot_only"]
     check_boot = args["check_boot"]
-
     badfish = Badfish(host, username, password)
-
+    badfish.logger.start()
     if log:
-        file_hdlr = FileHandler(log)
-        file_hdlr.setFormatter(Formatter(logger.LOGFMT))
-        file_hdlr.setLevel("DEBUG")
-        logger.addHandler(file_hdlr)
-
-    if reboot:
+        file_handler = FileHandler(log)
+        file_handler.setFormatter(Formatter(badfish.logger.LOGFMT))
+        file_handler.setLevel("DEBUG")
+        badfish.logger.addHandler(file_handler)
+    if reboot_only:
         badfish.reboot_server()
     elif boot_to:
         badfish.boot_to_device(boot_to)
-        job_id = badfish.create_bios_config_job()
+        job_id = badfish.create_bios_config_job(BIOS_URI)
         badfish.get_job_status(job_id)
         badfish.reboot_server()
     elif check_boot:
@@ -377,15 +388,23 @@ if __name__ == "__main__":
             raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
 
         if interfaces_path:
+            if not os.path.exists(interfaces_path):
+                badfish.logger.error("- FAIL: No such file or directory: %s" % interfaces_path)
+                return 1
             badfish.change_boot_order(interfaces_path, host_type)
         else:
-            logger.error("- FAIL: You must provide a path to the interfaces yaml via `-i` optional argument.")
-            sys.exit(1)
+            badfish.logger.error("- FAIL: You must provide a path to the interfaces yaml via `-i` optional argument.")
+            return 1
         if pxe:
             badfish.set_next_boot_pxe()
         jobs_queue = badfish.get_job_queue()
         if jobs_queue:
             badfish.clear_job_queue(jobs_queue)
-        job_id = badfish.create_bios_config_job()
+        job_id = badfish.create_bios_config_job(BIOS_URI)
         badfish.get_job_status(job_id)
         badfish.reboot_server()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
