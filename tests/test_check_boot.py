@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import pytest
@@ -67,6 +68,7 @@ RESPONSE_NO_MATCH = 'Current boot order:\n1: HardDisk.List.1-1\n2: NIC.Integrate
 WARN_NO_MATCH = '- WARN: Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
 RESPONSE_DIRECTOR = "Current boot order is set to 'director'\n"
 RESPONSE_FOREMAN = "Current boot order is set to 'foreman'\n"
+INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
 
 
 class TestCheckBoot(unittest.TestCase):
@@ -76,34 +78,38 @@ class TestCheckBoot(unittest.TestCase):
         self._capsys = capsys
 
     @requests_mock.mock()
-    def badfish_call(self, _mock, args):
+    def badfish_call(self, _mock):
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % MOCK_HOST,
                   json={"Attributes": {"BootMode": u"Bios"}}
                   )
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % MOCK_HOST,
                   json={"Attributes": {"BootSeq": self.boot_seq}})
         argv = ["-H", MOCK_HOST, "-u", MOCK_USER, "-p", MOCK_PASS]
-        argv.extend(args)
+        argv.extend(self.args)
         assert not main(argv)
         out, err = self._capsys.readouterr()
         return err
 
     def test_check_boot_without_interfaces(self):
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        result = self.badfish_call(args=["--check-boot"])
+        self.args = ["--check-boot"]
+        result = self.badfish_call()
         assert RESPONSE_WITHOUT == result
 
     def test_check_boot_with_interfaces_director(self):
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        result = self.badfish_call(args=["-i", "../config/idrac_interfaces.yml", "--check-boot"])
+        self.args = ["-i", INTERFACES_PATH, "--check-boot"]
+        result = self.badfish_call()
         assert RESPONSE_DIRECTOR == result
 
     def test_check_boot_with_interfaces_foreman(self):
         self.boot_seq = BOOT_SEQ_RESPONSE_FOREMAN
-        result = self.badfish_call(args=["-i", "../config/idrac_interfaces.yml", "--check-boot"])
+        self.args = ["-i", INTERFACES_PATH, "--check-boot"]
+        result = self.badfish_call()
         assert RESPONSE_FOREMAN == result
 
     def test_check_boot_no_match(self):
         self.boot_seq = BOOT_SEQ_RESPONSE_NO_MATCH
-        result = self.badfish_call(args=["-i", "../config/idrac_interfaces.yml", "--check-boot"])
+        self.args = ["-i", INTERFACES_PATH, "--check-boot"]
+        result = self.badfish_call()
         assert WARN_NO_MATCH == result
