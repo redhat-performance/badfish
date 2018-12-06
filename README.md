@@ -5,11 +5,14 @@ badfish is a Redfish-based API tool for managing bare-metal systems via the Redf
 Right now badfish is focused on managing Dell systems, but can potentially work
 with any system that supports the Redfish API.  
 
-We're mostly concentrated on programatically enforcing interface/device boot order to accomodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
+We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
 
 ## Features
 * Toggle and save a persistent interface/device boot order on remote systems
-* Optionally one-time boot to a specific interface
+* Optionally one-time boot to a specific interface or to first device listed for PXE booting
+* Check current boot order
+* Reboot host
+* Logging to a specific path
 
 ## Requirements
 * iDRAC7,8 or newer
@@ -17,7 +20,7 @@ We're mostly concentrated on programatically enforcing interface/device boot ord
 * iDRAC administrative account
 
 ## Usage
-badfish operates against a YAML configuration file to toggle between keyvalue:pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
@@ -33,7 +36,7 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ```
 
 ### Forcing a one time boot to a specific device
-To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied. 
+To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied. 
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
 ```
