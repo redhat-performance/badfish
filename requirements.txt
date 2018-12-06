@@ -1,0 +1,7 @@
+## Python requirements for using badfish.
+##
+##    pip install --requirement=requirements.txt
+##
+
+PyYAML==3.13
+requests==2.20.1
