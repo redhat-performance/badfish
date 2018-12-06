@@ -369,23 +369,29 @@ def main(argv=None):
     check_boot = args["check_boot"]
     badfish = Badfish(host, username, password)
     badfish.logger.start()
+
     if log:
         file_handler = FileHandler(log)
         file_handler.setFormatter(Formatter(badfish.logger.LOGFMT))
         file_handler.setLevel("DEBUG")
         badfish.logger.addHandler(file_handler)
+
     if reboot_only:
         badfish.reboot_server()
     elif boot_to:
         badfish.boot_to_device(boot_to)
+        jobs_queue = badfish.get_job_queue()
+        if jobs_queue:
+            badfish.clear_job_queue(jobs_queue)
         job_id = badfish.create_bios_config_job(BIOS_URI)
         badfish.get_job_status(job_id)
         badfish.reboot_server()
     elif check_boot:
         badfish.check_boot(interfaces_path)
     else:
-        if host_type.lower() not in ("foreman", "director"):
-            raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
+        if host_type:
+            if host_type.lower() not in ("foreman", "director"):
+                raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
 
         if interfaces_path:
             if not os.path.exists(interfaces_path):
