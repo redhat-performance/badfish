@@ -1,0 +1,10 @@
+## Python requirements for running badfish test suite.
+##
+##    pip install --requirement=test-requirements.txt
+##
+
+pytest==4.0.1
+pytest-mock==1.10.0
+PyYAML==3.13
+requests==2.20.1
+requests-mock==1.5.2
