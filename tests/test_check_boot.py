@@ -1,10 +1,9 @@
 import unittest
-
 import pytest
 import requests_mock
+import tests.config as conf
 
 from badfish import main
-import tests.config as conf
 
 
 class TestCheckBoot(unittest.TestCase):
