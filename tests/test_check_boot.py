@@ -9,60 +9,38 @@ from badfish import main
 MOCK_HOST = "r630.host.io"
 MOCK_USER = "mock_user"
 MOCK_PASS = "mock_pass"
-BOOT_SEQ_RESPONSE_DIRECTOR = [
-    {
-        u'Index': 0,
+
+
+def render_device_dict(index, device):
+    device_dict = {
+        u'Index': index,
         u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Integrated.1-2-1#bfa8fe2210d216298c7c53aedfc7e21b',
-        u'Name': u'NIC.Integrated.1-2-1'
-    }, {
-        u'Index': 1,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#HardDisk.List.1-1#c9203080df84781e2ca3d512883dee6f',
-        u'Name': u'HardDisk.List.1-1'
-    }, {
-        u'Index': 2,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Slot.2-1-1#135ac45c488549c04a21f1c199c2044a',
-        u'Name': u'NIC.Slot.2-1-1'
+        u'Id': u'BIOS.Setup.1-1#BootSeq#{name}#{hash}'.format(**device),
+        u'Name': device['name']
     }
+    return device_dict
+
+
+DEVICE_HDD_1 = {'name': u'HardDisk.List.1-1', 'hash': 'c9203080df84781e2ca3d512883dee6f'}
+DEVICE_NIC_1 = {'name': u'NIC.Integrated.1-2-1', 'hash': 'bfa8fe2210d216298c7c53aedfc7e21b'}
+DEVICE_NIC_2 = {'name': u'NIC.Slot.2-1-1', 'hash': '135ac45c488549c04a21f1c199c2044a'}
+
+BOOT_SEQ_RESPONSE_DIRECTOR = [
+    render_device_dict(0, DEVICE_NIC_1),
+    render_device_dict(1, DEVICE_HDD_1),
+    render_device_dict(2, DEVICE_NIC_2)
 ]
 BOOT_SEQ_RESPONSE_FOREMAN = [
-    {
-        u'Index': 0,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Slot.2-1-1#135ac45c488549c04a21f1c199c2044a',
-        u'Name': u'NIC.Slot.2-1-1'
-    }, {
-        u'Index': 1,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#HardDisk.List.1-1#c9203080df84781e2ca3d512883dee6f',
-        u'Name': u'HardDisk.List.1-1'
-    }, {
-        u'Index': 2,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Integrated.1-2-1#bfa8fe2210d216298c7c53aedfc7e21b',
-        u'Name': u'NIC.Integrated.1-2-1'
-    }
+    render_device_dict(0, DEVICE_NIC_2),
+    render_device_dict(1, DEVICE_HDD_1),
+    render_device_dict(2, DEVICE_NIC_1)
 ]
 BOOT_SEQ_RESPONSE_NO_MATCH = [
-    {
-        u'Index': 0,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#HardDisk.List.1-1#c9203080df84781e2ca3d512883dee6f',
-        u'Name': u'HardDisk.List.1-1'
-    }, {
-        u'Index': 1,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Integrated.1-2-1#bfa8fe2210d216298c7c53aedfc7e21b',
-        u'Name': u'NIC.Integrated.1-2-1'
-    }, {
-        u'Index': 2,
-        u'Enabled': True,
-        u'Id': u'BIOS.Setup.1-1#BootSeq#NIC.Slot.2-1-1#135ac45c488549c04a21f1c199c2044a',
-        u'Name': u'NIC.Slot.2-1-1'
-    }
+    render_device_dict(0, DEVICE_HDD_1),
+    render_device_dict(1, DEVICE_NIC_1),
+    render_device_dict(2, DEVICE_NIC_2)
 ]
+
 RESPONSE_WITHOUT = 'Current boot order:\n1: NIC.Integrated.1-2-1\n2: HardDisk.List.1-1\n3: NIC.Slot.2-1-1\n'
 RESPONSE_NO_MATCH = 'Current boot order:\n1: HardDisk.List.1-1\n2: NIC.Integrated.1-2-1\n3: NIC.Slot.2-1-1\n'
 WARN_NO_MATCH = '- WARN: Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
