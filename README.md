@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
+
 # badfish
 badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
 
