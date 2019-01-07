@@ -38,7 +38,12 @@ class Badfish:
         except ValueError:
             self.logger.error("Could not retrieve Bios Boot mode.")
             sys.exit(1)
-        return data[u"Attributes"]["BootMode"]
+        try:
+            bios_boot_mode = data[u"Attributes"]["BootMode"]
+            return bios_boot_mode
+        except KeyError:
+            self.logger.warning("Could not retrieve Bios Attributes. Assuming Bios.")
+            return "Bios"
 
     @staticmethod
     def get_boot_seq(bios_boot_mode):
@@ -156,7 +161,7 @@ class Badfish:
             self.logger.error("- FAIL: POST command failed to create BIOS config job, status code is %s" % status_code)
             detail_message = str(_response.__dict__)
             self.logger.error(detail_message)
-            sys.exit(1)
+            return None
         convert_to_string = str(_response.__dict__)
         job_id_search = re.search("JID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search)
@@ -288,6 +293,24 @@ class Badfish:
             self.logger.error("- FAIL: unable to get current server power state to perform either reboot or power on")
             sys.exit(1)
 
+    def reset_idrac(self):
+        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % self.host
+        _payload = {"ResetType": "GracefulRestart"}
+        _headers = {'content-type': 'application/json'}
+        _response = requests.post(
+            _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
+        )
+        status_code = _response.status_code
+        if status_code == 204:
+            self.logger.info("- PASS, status code %s returned for POST command to reset iDRAC" % status_code)
+        else:
+            data = _response.json()
+            self.logger.error("- FAIL, status code %s returned, error is: \n%s" % (status_code, data))
+            sys.exit(1)
+        time.sleep(15)
+
+        self.logger.info("- WARNING, iDRAC will now reset and be back online within a few minutes.")
+
     def boot_to_device(self, _boot_to):
         _url = "https://%s%s" % (self.host, BIOS_URI)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": _boot_to}}
@@ -355,6 +378,7 @@ def main(argv=None):
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
     parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
+    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
     args = vars(parser.parse_args(argv))
     host = args["H"]
@@ -366,6 +390,7 @@ def main(argv=None):
     pxe = args["pxe"]
     boot_to = args["boot_to"]
     reboot_only = args["reboot_only"]
+    racreset = args["racreset"]
     check_boot = args["check_boot"]
     badfish = Badfish(host, username, password)
     badfish.logger.start()
@@ -378,14 +403,17 @@ def main(argv=None):
 
     if reboot_only:
         badfish.reboot_server()
+    elif racreset:
+        badfish.reset_idrac()
     elif boot_to:
         badfish.boot_to_device(boot_to)
         jobs_queue = badfish.get_job_queue()
         if jobs_queue:
             badfish.clear_job_queue(jobs_queue)
+        badfish.reset_idrac()
         job_id = badfish.create_bios_config_job(BIOS_URI)
-        badfish.get_job_status(job_id)
-        badfish.reboot_server()
+        if job_id:
+            badfish.get_job_status(job_id)
     elif check_boot:
         badfish.check_boot(interfaces_path)
     else:
@@ -407,8 +435,9 @@ def main(argv=None):
         if jobs_queue:
             badfish.clear_job_queue(jobs_queue)
         job_id = badfish.create_bios_config_job(BIOS_URI)
-        badfish.get_job_status(job_id)
-        badfish.reboot_server()
+        if job_id:
+            badfish.get_job_status(job_id)
+        badfish.reset_idrac()
     return 0
 
 
