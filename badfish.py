@@ -95,6 +95,8 @@ class Badfish:
                 self.logger.info("- PASS: PATCH command passed to update boot order")
             else:
                 self.logger.error("- FAIL: There was something wrong with your request")
+                detail_message = str(response.__dict__)
+                self.logger.error(detail_message)
         else:
             self.logger.warning("- WARNING: No changes were made since the boot order already matches the requested.")
             sys.exit()
@@ -302,10 +304,10 @@ class Badfish:
         )
         status_code = _response.status_code
         if status_code == 204:
-            self.logger.info("- PASS, status code %s returned for POST command to reset iDRAC" % status_code)
+            self.logger.info("- PASS: status code %s returned for POST command to reset iDRAC" % status_code)
         else:
             data = _response.json()
-            self.logger.error("- FAIL, status code %s returned, error is: \n%s" % (status_code, data))
+            self.logger.error("- FAIL: status code %s returned, error is: \n%s" % (status_code, data))
             sys.exit(1)
         time.sleep(15)
 
