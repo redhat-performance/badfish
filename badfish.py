@@ -416,6 +416,7 @@ def main(argv=None):
         job_id = badfish.create_bios_config_job(BIOS_URI)
         if job_id:
             badfish.get_job_status(job_id)
+        badfish.reboot_server()
     elif check_boot:
         badfish.check_boot(interfaces_path)
     else:
@@ -436,10 +437,11 @@ def main(argv=None):
         jobs_queue = badfish.get_job_queue()
         if jobs_queue:
             badfish.clear_job_queue(jobs_queue)
+        badfish.reset_idrac()
         job_id = badfish.create_bios_config_job(BIOS_URI)
         if job_id:
             badfish.get_job_status(job_id)
-        badfish.reset_idrac()
+        badfish.reboot_server()
     return 0
 
 
