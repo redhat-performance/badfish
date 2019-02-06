@@ -127,7 +127,7 @@ class Badfish:
                 "\n- WARNING, job queue already cleared for iDRAC %s, DELETE command will not execute" % self.host
             )
             return
-        self.logger.warning("\n- WARNING, clearing job queue for job IDs: %s\n" % _job_queue)
+        self.logger.warning("- WARNING, clearing job queue for job IDs: %s" % _job_queue)
         for _job in _job_queue:
             job = _job.strip("'")
             url = "%s/%s" % (_url, job)
@@ -201,6 +201,7 @@ class Badfish:
             verify=False,
             auth=(self.username, self.password),
         )
+
         data = _response.json()
         self.logger.warning("- WARNING: Current server power state is: %s" % data[u"PowerState"])
         if data[u"PowerState"] == "On":
@@ -368,6 +369,14 @@ class Badfish:
                 self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
             return
 
+    def get_power_state(self):
+        _url = 'https://%s/redfish/v1/Systems/System.Embedded.1/' % self.host
+        response = requests.get(_url, verify=False, auth=(self.username, self.password))
+        data = response.json()
+        print("- WARNING, Current server power state is: %s" % data[u'PowerState'])
+
+        return data[u'PowerState']
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
@@ -394,6 +403,8 @@ def main(argv=None):
     reboot_only = args["reboot_only"]
     racreset = args["racreset"]
     check_boot = args["check_boot"]
+    job_id = None
+
     badfish = Badfish(host, username, password)
     badfish.logger.start()
 
@@ -413,7 +424,12 @@ def main(argv=None):
         if jobs_queue:
             badfish.clear_job_queue(jobs_queue)
         badfish.reset_idrac()
-        job_id = badfish.create_bios_config_job(BIOS_URI)
+        powering_up = True
+        while powering_up:
+            time.sleep(10)
+            state = badfish.get_power_state()
+            job_id = badfish.create_bios_config_job(BIOS_URI)
+            powering_up = state == "On"
         if job_id:
             badfish.get_job_status(job_id)
         badfish.reboot_server()
