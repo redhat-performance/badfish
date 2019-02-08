@@ -302,7 +302,16 @@ class Badfish:
                         self.logger.error(
                             "Command failed to gracefully power OFF server, status code is: %s." % status_code
                         )
-                        self.logger.error("Extended Info Message: {0}".format(_response.json()))
+
+                        try:
+                            data = _response.json()
+                        except ValueError:
+                            return None
+
+                        if "error" in data:
+                            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+                            self.logger.warning(detail_message)
+
                         sys.exit(1)
 
                 else:
