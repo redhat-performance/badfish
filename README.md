@@ -73,6 +73,18 @@ If you would like to log the output of ```badfish``` you can use the ```--log```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
 ```
 
+### Verbose output
+If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. Note: this is the default log level for the ```--log``` argument.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
+```
+
+### Variable number of retries
+At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
+```
+
 #### Dell Foreman / PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 

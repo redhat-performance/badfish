@@ -4,7 +4,7 @@ All modules use the same global logging object. No messages will be emitted
 until the logger is started.
 
 """
-from logging import Formatter
+from logging import Formatter, INFO
 from logging import Logger as _Logger
 from logging import NullHandler
 from logging import StreamHandler
@@ -18,7 +18,8 @@ class Logger(_Logger):
     """ Message logger.
 
     """
-    LOGFMT = "%(asctime)s - %(levelname)s: %(message)s"
+    LOGFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
+    STDFMT = "- %(levelname)-8s - %(message)s"
 
     def __init__(self, name=None):
         """ Initialize this logger.
@@ -37,7 +38,7 @@ class Logger(_Logger):
         self.addHandler(NullHandler())  # default to no output
         return
 
-    def start(self, level="INFO", stream=None):
+    def start(self, level=INFO, stream=None):
         """ Start logging to a stream.
 
         Until the logger is started, no messages will be emitted. This applies
@@ -63,8 +64,9 @@ class Logger(_Logger):
         :param stream: output stream (stderr by default)
         """
         handler = StreamHandler(stream)
+        handler.setFormatter(Formatter(self.STDFMT))
         self.addHandler(handler)
-        self.setLevel(level.upper())
+        self.setLevel(level)
         return
 
     def stop(self):
