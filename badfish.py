@@ -328,7 +328,7 @@ class Badfish:
 
                 if "error" in data:
                     detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                    self.logger.WARNING(detail_message)
+                    self.logger.warning(detail_message)
 
                 sys.exit(1)
 
