@@ -49,6 +49,19 @@ class Badfish:
         )
         sys.stdout.flush()
 
+    def error_handler(self, _response):
+            try:
+                data = _response.json()
+            except ValueError:
+                self.logger.error("Error reading response from host.")
+                sys.exit(1)
+
+            if "error" in data:
+                detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+                self.logger.warning(detail_message)
+
+            sys.exit(1)
+
     def get_bios_boot_mode(self):
         try:
             _response = requests.get(
@@ -123,14 +136,9 @@ class Badfish:
                 self.logger.info("PATCH command passed to update boot order.")
             else:
                 self.logger.error("There was something wrong with your request.")
-                if response:
-                    try:
-                        data = response.json()
-                    except ValueError:
-                        return
-                    if "error" in data:
-                        detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                        self.logger.error(detail_message)
+
+                self.error_handler(response)
+
         else:
             self.logger.warning("No changes were made since the boot order already matches the requested.")
             sys.exit()
@@ -143,14 +151,16 @@ class Badfish:
         _response = requests.patch(
             _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
         )
+
         time.sleep(5)
+
         if _response.status_code == 200:
             self.logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
         else:
             self.logger.error("Command failed, error code is %s." % _response.status_code)
-            detail_message = str(_response.__dict__)
-            self.logger.error(detail_message)
-            sys.exit(1)
+
+            self.error_handler(_response)
+
         return
 
     def clear_job_queue(self, _job_queue):
@@ -200,14 +210,9 @@ class Badfish:
             self.logger.info("POST command passed to create target config job, status code 200 returned.")
         else:
             self.logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
-            try:
-                data = _response.json()
-            except ValueError:
-                return None
-            if "error" in data:
-                detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                self.logger.error(detail_message)
-            return None
+
+            self.error_handler(_response)
+
         convert_to_string = str(_response.__dict__)
         job_id_search = re.search("JID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search)
@@ -217,20 +222,21 @@ class Badfish:
     def get_job_status(self, _job_id):
         retries = 10
         for _ in range(retries):
-            req = requests.get(
+            _response = requests.get(
                 "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.host, _job_id),
                 verify=False,
                 auth=(self.username, self.password),
             )
-            status_code = req.status_code
+            status_code = _response.status_code
             if status_code == 200:
                 self.logger.info("Command passed to check job status, code 200 returned.")
                 time.sleep(10)
             else:
                 self.logger.error("Command failed to check job status, return code is %s." % status_code)
-                self.logger.error("Extended Info Message: {0}.".format(req.json()))
-                sys.exit(1)
-            data = req.json()
+
+                self.error_handler(_response)
+
+            data = _response.json()
             if data[u"Message"] == "Task successfully scheduled.":
                 self.logger.info("Job id %s successfully scheduled." % _job_id)
                 return
@@ -265,8 +271,9 @@ class Badfish:
                 self.logger.error(
                     "Command failed to gracefully restart server, status code is: %s." % status_code
                 )
-                self.logger.error("Extended Info Message: {0}.".format(_response.json()))
-                sys.exit(1)
+
+                self.error_handler(_response)
+
             count = 0
             while True:
                 _response = requests.get(
@@ -303,17 +310,7 @@ class Badfish:
                             "Command failed to gracefully power OFF server, status code is: %s." % status_code
                         )
 
-                        try:
-                            data = _response.json()
-                        except ValueError:
-                            self.logger.error("Error reading response from host.")
-                            sys.exit(1)
-
-                        if "error" in data:
-                            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                            self.logger.warning(detail_message)
-
-                        sys.exit(1)
+                        self.error_handler(_response)
 
                 else:
                     time.sleep(1)
@@ -331,16 +328,7 @@ class Badfish:
             else:
                 self.logger.error("Command failed to power ON server, status code is: %s." % status_code)
 
-                try:
-                    data = _response.json()
-                except ValueError:
-                    return None
-
-                if "error" in data:
-                    detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                    self.logger.warning(detail_message)
-
-                sys.exit(1)
+                self.error_handler(_response)
 
         elif data[u"PowerState"] == "Off":
             _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
@@ -354,8 +342,8 @@ class Badfish:
                 self.logger.info("Command passed to power ON server, code return is %s." % status_code)
             else:
                 self.logger.error("Command failed to power ON server, status code is: %s." % status_code)
-                self.logger.error("Extended Info Message: {0}.".format(_response.json()))
-                sys.exit(1)
+
+                self.error_handler(_response)
         else:
             self.logger.error("Unable to get current server power state to perform either reboot or power on.")
             sys.exit(1)
@@ -394,8 +382,7 @@ class Badfish:
             self.logger.info("Command passed to set BIOS attribute pending values.")
         else:
             self.logger.error("Command failed, error code is: %s." % status_code)
-            self.logger.error(str(_response.__dict__))
-            sys.exit(1)
+            self.error_handler(_response)
 
     def check_boot(self, _interfaces_path):
         bios_boot_mode = self.get_bios_boot_mode()
