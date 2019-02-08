@@ -320,8 +320,18 @@ class Badfish:
                 self.logger.info("Command passed to power ON server, code return is %s." % status_code)
             else:
                 self.logger.error("Command failed to power ON server, status code is: %s." % status_code)
-                self.logger.error("Extended Info Message: {0}.".format(_response.json()))
+
+                try:
+                    data = _response.json()
+                except ValueError:
+                    return None
+
+                if "error" in data:
+                    detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+                    self.logger.WARNING(detail_message)
+
                 sys.exit(1)
+
         elif data[u"PowerState"] == "Off":
             _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
             _payload = {"ResetType": "On"}
