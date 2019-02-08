@@ -306,7 +306,8 @@ class Badfish:
                         try:
                             data = _response.json()
                         except ValueError:
-                            return None
+                            self.logger.error("Error reading response from host.")
+                            sys.exit(1)
 
                         if "error" in data:
                             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
