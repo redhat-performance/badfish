@@ -35,9 +35,16 @@ BOOT_SEQ_RESPONSE_NO_MATCH = [
     render_device_dict(2, DEVICE_NIC_2)
 ]
 
-RESPONSE_WITHOUT = 'Current boot order:\n1: NIC.Integrated.1-2-1\n2: HardDisk.List.1-1\n3: NIC.Slot.2-1-1\n'
-RESPONSE_NO_MATCH = 'Current boot order:\n1: HardDisk.List.1-1\n2: NIC.Integrated.1-2-1\n3: NIC.Slot.2-1-1\n'
-WARN_NO_MATCH = '- WARN: Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
-RESPONSE_DIRECTOR = "Current boot order is set to 'director'\n"
-RESPONSE_FOREMAN = "Current boot order is set to 'foreman'\n"
+RESPONSE_WITHOUT = '- INFO     - Current boot order:\n' \
+                   '- INFO     - 1: NIC.Integrated.1-2-1\n' \
+                   '- INFO     - 2: HardDisk.List.1-1\n' \
+                   '- INFO     - 3: NIC.Slot.2-1-1\n'
+RESPONSE_NO_MATCH = '- INFO     - Current boot order:\n' \
+                    '- INFO     - 1: HardDisk.List.1-1\n' \
+                    '- INFO     - 2: NIC.Integrated.1-2-1\n' \
+                    '- INFO     - 3: NIC.Slot.2-1-1\n'
+WARN_NO_MATCH = '- WARNING  - Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
+RESPONSE_DIRECTOR = "- INFO     - Current boot order is set to 'director'.\n"
+
+RESPONSE_FOREMAN = "- INFO     - Current boot order is set to 'foreman'.\n"
 INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
