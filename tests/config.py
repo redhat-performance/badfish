@@ -44,7 +44,22 @@ RESPONSE_NO_MATCH = '- INFO     - Current boot order:\n' \
                     '- INFO     - 2: NIC.Integrated.1-2-1\n' \
                     '- INFO     - 3: NIC.Slot.2-1-1\n'
 WARN_NO_MATCH = '- WARNING  - Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
-RESPONSE_DIRECTOR = "- INFO     - Current boot order is set to 'director'.\n"
+RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
-RESPONSE_FOREMAN = "- INFO     - Current boot order is set to 'foreman'.\n"
+RESPONSE_FOREMAN = "- WARNING  - Current boot order is set to: foreman.\n"
 INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
+
+# test_boot_to constants
+BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
+ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the existing for host %s" % (BAD_DEVICE_NAME, MOCK_HOST)
+JOB_ID = 'JID_498218641680'
+RESPONSE_BOOT_TO = "- WARNING  - Job queue already cleared for iDRAC %s, DELETE command will not execute.\n" \
+                   "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
+                   "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
+                   "- INFO     - Polling for host state: On\n" \
+                   "- INFO     - Command passed to set BIOS attribute pending values.\n" \
+                   "- INFO     - POST command passed to create target config job, status code 200 returned.\n" \
+                   "- INFO     - %s job ID successfully created.\n" \
+                   "- INFO     - Command passed to check job status, code 200 returned.\n" \
+                   "- INFO     - Job id %s successfully scheduled.\n" \
+                   "- INFO     - Command passed to On server, code return is 204.\n" % (MOCK_HOST, JOB_ID, JOB_ID)

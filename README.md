@@ -1,10 +1,10 @@
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
 
-# badfish
-badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
+# Badfish
+Badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
 
 ## Scope
-Right now badfish is focused on managing Dell systems, but can potentially work
+Right now Badfish is focused on managing Dell systems, but can potentially work
 with any system that supports the Redfish API.  
 
 We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
@@ -22,7 +22,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * iDRAC administrative account
 
 ## Usage
-badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
@@ -56,7 +56,7 @@ In certain cases you might need to only reboot the host, for this case we includ
 ```
 
 ### Resetting iDRAC
-For the replacement of `racadm racreset`, the optional argument `--racreset` was added. When this argument is passed to badfish, a graceful restart is triggered on the iDRAC itself.
+For the replacement of `racadm racreset`, the optional argument `--racreset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the iDRAC itself.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
