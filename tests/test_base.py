@@ -1,12 +1,18 @@
 import pytest
 import requests_mock
 import unittest
+import time
 
 from badfish import main
 from tests import config
 
 
+def no_sleep(_):
+    pass
+
+
 class TestBase(unittest.TestCase):
+    time.sleep = no_sleep
     first_call = True
     last_on = False
 
