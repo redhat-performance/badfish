@@ -34,8 +34,7 @@ class TestBase(unittest.TestCase):
     @requests_mock.mock()
     def badfish_call(self, _mock):
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % config.MOCK_HOST,
-                  json={"Attributes": {"BootMode": u"Bios"}}
-                  )
+                  json={"Attributes": {"BootMode": u"Bios"}})
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % config.MOCK_HOST,
                   json={"Attributes": {"BootSeq": self.boot_seq}})
         _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % config.MOCK_HOST,
