@@ -16,7 +16,6 @@ import yaml
 
 warnings.filterwarnings("ignore")
 
-
 BOOT_SOURCES_URI = "/redfish/v1/Systems/System.Embedded.1/BootSources/Settings"
 BIOS_URI = "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"
 
@@ -50,17 +49,17 @@ class Badfish:
         sys.stdout.flush()
 
     def error_handler(self, _response):
-            try:
-                data = _response.json()
-            except ValueError:
-                self.logger.error("Error reading response from host.")
-                sys.exit(1)
-
-            if "error" in data:
-                detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-                self.logger.warning(detail_message)
-
+        try:
+            data = _response.json()
+        except ValueError:
+            self.logger.error("Error reading response from host.")
             sys.exit(1)
+
+        if "error" in data:
+            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+            self.logger.warning(detail_message)
+
+        sys.exit(1)
 
     def get_bios_boot_mode(self):
         try:
@@ -126,7 +125,8 @@ class Badfish:
                 try:
                     count += 1
                     response = requests.patch(
-                        url, data=json.dumps(payload), headers=headers, verify=False, auth=(self.username, self.password)
+                        url, data=json.dumps(payload), headers=headers, verify=False,
+                        auth=(self.username, self.password)
                     )
                 except ConnectionError:
                     self.logger.error("Failed to communicate with server.")
@@ -424,6 +424,16 @@ class Badfish:
                 self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
             return
 
+    def check_device(self, device):
+        bios_boot_mode = self.get_bios_boot_mode()
+        boot_seq = self.get_boot_seq(bios_boot_mode)
+        boot_devices = [device.lower() for device in self.get_boot_devices(boot_seq)]
+        if device in boot_devices:
+            return True
+        else:
+            self.logger.error("Device %s does not match any of the existing for host %s" % (device, self.host))
+            return False
+
     def get_power_state(self):
         _url = 'https://%s/redfish/v1/Systems/System.Embedded.1/' % self.host
         try:
@@ -441,26 +451,29 @@ class Badfish:
         return data[u'PowerState']
 
     def boot_to(self, device):
-        jobs_queue = self.get_job_queue()
-        if jobs_queue:
-            self.clear_job_queue(jobs_queue)
-        self.reset_idrac()
-        powering_up = True
-        count = 0
-        while powering_up and count < self.retries:
-            count += 1
-            time.sleep(5)
-            state = self.get_power_state()
-            powering_up = state != "On"
-            self.progress_bar(count, self.retries, state)
-        if not powering_up:
-            self.boot_to_device(device)
-            job_id = self.create_bios_config_job(BIOS_URI)
-            if job_id:
-                self.get_job_status(job_id)
-            self.reboot_server()
+        if self.check_device(device):
+            jobs_queue = self.get_job_queue()
+            if jobs_queue:
+                self.clear_job_queue(jobs_queue)
+            self.reset_idrac()
+            powering_up = True
+            count = 0
+            while powering_up and count < self.retries:
+                count += 1
+                time.sleep(5)
+                state = self.get_power_state()
+                powering_up = state != "On"
+                self.progress_bar(count, self.retries, state)
+            if not powering_up:
+                self.boot_to_device(device)
+                job_id = self.create_bios_config_job(BIOS_URI)
+                if job_id:
+                    self.get_job_status(job_id)
+                self.reboot_server()
+            else:
+                self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
+                return 1
         else:
-            self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
             return 1
 
     def change_boot(self, host_type, interfaces_path, pxe=False):
