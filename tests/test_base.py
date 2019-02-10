@@ -7,12 +7,8 @@ from badfish import main
 from tests import config
 
 
-def no_sleep(_):
-    pass
-
-
 class TestBase(unittest.TestCase):
-    time.sleep = no_sleep
+    time.sleep = lambda x: None
     first_call = True
     last_on = False
 
