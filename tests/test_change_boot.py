@@ -1,5 +1,6 @@
 import pytest
 
+from argparse import ArgumentTypeError
 from tests.test_base import TestBase
 from tests import config
 
@@ -18,6 +19,12 @@ class TestChangeBoot(TestBase):
         self.args = ["-i", config.INTERFACES_PATH, self.option_arg, "director"]
         _, err = self.badfish_call()
         assert config.RESPONSE_CHANGE_BOOT == err
+
+    def test_change_bad_type(self):
+        self.boot_seq = config.BOOT_SEQ_RESPONSE_FOREMAN
+        self.args = ["-i", config.INTERFACES_PATH, self.option_arg, "bad_type"]
+        with pytest.raises(ArgumentTypeError):
+            _, err = self.badfish_call()
 
     def test_change_to_same(self):
         self.boot_seq = config.BOOT_SEQ_RESPONSE_DIRECTOR
