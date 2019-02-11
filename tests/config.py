@@ -63,3 +63,28 @@ RESPONSE_BOOT_TO = "- WARNING  - Job queue already cleared for iDRAC %s, DELETE 
                    "- INFO     - Command passed to check job status, code 200 returned.\n" \
                    "- INFO     - Job id %s successfully scheduled.\n" \
                    "- INFO     - Command passed to On server, code return is 204.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
+
+# test_reboot_only
+RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Command passed to GracefulRestart server, code return is 204.\n" \
+                               "- INFO     - Polling for host state: Off\n" \
+                               "- INFO     - Polling for host state: Not Down\n" \
+                               "- INFO     - Command passed to On server, code return is 204.\n"
+
+# test_reset_idrac
+RESPONSE_RESET = "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
+                  "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
+
+# test_change_boot
+RESPONSE_CHANGE_BOOT = "- WARNING  - Job queue already cleared for iDRAC r630.host.io, DELETE command will not execute.\n" \
+                       "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
+                       "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
+                       "- WARNING  - Waiting for host to be up.\n" \
+                       "- INFO     - Polling for host state: On\n" \
+                       "- INFO     - PATCH command passed to update boot order.\n" \
+                       "- INFO     - POST command passed to create target config job, status code 200 returned.\n" \
+                       "- INFO     - JID_498218641680 job ID successfully created.\n" \
+                       "- INFO     - Command passed to check job status, code 200 returned.\n" \
+                       "- INFO     - Job id JID_498218641680 successfully scheduled.\n" \
+                       "- INFO     - Command passed to On server, code return is 204.\n"
+
+RESPONSE_CHANGE_NO_INT = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
