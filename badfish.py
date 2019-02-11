@@ -22,7 +22,7 @@ RETRIES = 15
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _retries, log=None, _log_level=INFO):
+    def __init__(self, _host, _username, _password, _retries=RETRIES, log=None, _log_level=INFO):
         self.host = _host
         self.username = _username
         self.password = _password
