@@ -545,6 +545,42 @@ class Badfish:
             )
         return True
 
+    def get_firmware_inventory(self):
+        self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
+
+        _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/' % self.host
+        try:
+            _response = requests.get(_url, auth=(self.username, self.password), verify=False)
+        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            sys.exit(1)
+
+        data = _response.json()
+        installed_devices = []
+        for device in data[u'Members']:
+            a = device[u'@odata.id']
+            a = a.replace("/redfish/v1/UpdateService/FirmwareInventory/", "")
+            if "Installed" in a:
+                installed_devices.append(a)
+
+        for device in installed_devices:
+            self.logger.debug("Getting device info for %s" % device)
+            _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/%s' % (self.host, device)
+            try:
+                _response = requests.get(_url, auth=(self.username, self.password), verify=False)
+            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
+                self.logger.debug(ex)
+                self.logger.error("Failed to get data for %s." % device)
+                continue
+
+            data = _response.json()
+            for info in data.items():
+                if "odata" not in info[0] and "Description" not in info[0]:
+                    self.logger.info("%s: %s" % (info[0], info[1]))
+
+            self.logger.info("*" * 48)
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
@@ -559,6 +595,7 @@ def main(argv=None):
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
+    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
     args = vars(parser.parse_args(argv))
@@ -573,6 +610,7 @@ def main(argv=None):
     reboot_only = args["reboot_only"]
     racreset = args["racreset"]
     check_boot = args["check_boot"]
+    firmware_inventory = args["firmware_inventory"]
     verbose = args["verbose"]
     retries = args["retries"]
 
@@ -588,6 +626,8 @@ def main(argv=None):
         badfish.boot_to(device)
     elif check_boot:
         badfish.check_boot(interfaces_path)
+    elif firmware_inventory:
+        badfish.get_firmware_inventory()
     else:
         badfish.change_boot(host_type, interfaces_path, pxe)
     return 0

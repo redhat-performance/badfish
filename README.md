@@ -85,6 +85,12 @@ At certain points during the execution of ```badfish``` the program might come a
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
 ```
 
+### Firmware inventory
+If you would like to get a detailed list of all the devices supported by iDRAC you can run ```badfish``` with the ```--firware-inventory``` option which will return a list of devices with additional device info.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
+```
+
 #### Dell Foreman / PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
