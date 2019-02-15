@@ -91,6 +91,18 @@ If you would like to get a detailed list of all the devices supported by iDRAC y
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
 ```
 
+### Clear Job Queue
+If you would like to clear all the jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--clear-jobs``` option which query for all active jobs in the iDRAC queue and will post a request to clear the queue.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs
+```
+
+### Export system configuration
+If you would like export the current iDRAC system settings to an xml you can run ```badfish``` with the ```--export-configuration``` option which create a job request for system configuration export and will create an xml file with the exported attributes on the current directory.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --export-configuration
+```
+
 #### Dell Foreman / PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
