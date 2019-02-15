@@ -58,7 +58,7 @@ RESPONSE_BOOT_TO = "- WARNING  - Job queue already cleared for iDRAC %s, DELETE 
                    "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
                    "- INFO     - Polling for host state: On\n" \
                    "- INFO     - Command passed to set BIOS attribute pending values.\n" \
-                   "- INFO     - POST command passed to create target config job, status code 200 returned.\n" \
+                   "- INFO     - POST command passed to create target config job.\n" \
                    "- INFO     - %s job ID successfully created.\n" \
                    "- INFO     - Command passed to check job status, code 200 returned.\n" \
                    "- INFO     - Job id %s successfully scheduled.\n" \
@@ -81,7 +81,7 @@ RESPONSE_CHANGE_BOOT = "- WARNING  - Job queue already cleared for iDRAC r630.ho
                        "- WARNING  - Waiting for host to be up.\n" \
                        "- INFO     - Polling for host state: On\n" \
                        "- INFO     - PATCH command passed to update boot order.\n" \
-                       "- INFO     - POST command passed to create target config job, status code 200 returned.\n" \
+                       "- INFO     - POST command passed to create target config job.\n" \
                        "- INFO     - JID_498218641680 job ID successfully created.\n" \
                        "- INFO     - Command passed to check job status, code 200 returned.\n" \
                        "- INFO     - Job id JID_498218641680 successfully scheduled.\n" \
