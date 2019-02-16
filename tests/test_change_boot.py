@@ -23,8 +23,8 @@ class TestChangeBoot(TestBase):
     def test_change_bad_type(self):
         self.boot_seq = config.BOOT_SEQ_RESPONSE_FOREMAN
         self.args = ["-i", config.INTERFACES_PATH, self.option_arg, "bad_type"]
-        with pytest.raises(ArgumentTypeError):
-            _, err = self.badfish_call()
+        with pytest.raises(SystemExit):
+            self.badfish_call()
 
     def test_change_to_same(self):
         self.boot_seq = config.BOOT_SEQ_RESPONSE_DIRECTOR
