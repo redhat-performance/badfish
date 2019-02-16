@@ -651,6 +651,9 @@ def execute_badfish(_host, _args):
 
     badfish = Badfish(_host, username, password, retries, log, log_level)
 
+    if _args["host_list"]:
+        badfish.logger.info("Executing actions on host: %s" % _host)
+
     if reboot_only:
         badfish.reboot_server()
     elif racreset:
@@ -667,6 +670,9 @@ def execute_badfish(_host, _args):
         badfish.clear_job_queue()
     else:
         badfish.change_boot(host_type, interfaces_path, pxe)
+
+    if _args["host_list"]:
+        badfish.logger.info("*" * 48)
 
 
 def main(argv=None):
@@ -698,7 +704,7 @@ def main(argv=None):
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        execute_badfish(_host, args)
+                        execute_badfish(_host.strip(), args)
                     except SystemExit:
                         continue
         except IOError:
