@@ -712,7 +712,7 @@ def main(argv=None):
     elif not host:
         raise argparse.ArgumentError("You must specify at least either a host (-H) or a host list (--host-list).")
     else:
-        execute_badfish(host)
+        execute_badfish(host, args)
     return 0
 
 
