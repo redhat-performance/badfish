@@ -101,7 +101,12 @@ class Badfish:
             self.logger.error("Failed to communicate with server.")
             sys.exit(1)
         data = _response.json()
-        return data[u"Attributes"][_boot_seq]
+        if "Attributes" in data:
+            return data[u"Attributes"][_boot_seq]
+        else:
+            self.logger.debug(data)
+            self.logger.error("Boot order modification is not supported by this host.")
+            sys.exit(1)
 
     def get_job_queue(self):
         self.logger.debug("Getting job queue.")
