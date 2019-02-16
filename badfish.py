@@ -22,20 +22,12 @@ RETRIES = 15
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _retries=RETRIES, log=None, _log_level=INFO):
+    def __init__(self, _host, _username, _password, logger, _retries=RETRIES):
         self.host = _host
         self.username = _username
         self.password = _password
         self.retries = _retries
-        self.log = log
-        self.logger = Logger()
-        self.logger.start(level=_log_level)
-
-        if self.log:
-            file_handler = FileHandler(self.log)
-            file_handler.setFormatter(Formatter(self.logger.LOGFMT))
-            file_handler.setLevel(DEBUG)
-            self.logger.addHandler(file_handler)
+        self.logger = logger
 
     @staticmethod
     def progress_bar(value, end_value, state, bar_length=20):
@@ -591,7 +583,7 @@ class Badfish:
         _headers = {'content-type': 'application/json'}
         job_id = self.create_job(_url, _payload, _headers, 202)
 
-        for _ in range(RETRIES):
+        for _ in range(self.retries):
             try:
                 _response = requests.get('https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id),
                                          auth=(self.username, self.password), verify=False)
@@ -627,48 +619,28 @@ class Badfish:
                 self.logger.error("Execute job ID command failed, error code is: %s" % status_code)
                 sys.exit(1)
 
-        self.logger.error("Could not export settings after %s attempts." % RETRIES)
+        self.logger.error("Could not export settings after %s attempts." % self.retries)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
-    parser.add_argument("-H", help="iDRAC host address", required=True)
-    parser.add_argument("-u", help="iDRAC username", required=True)
-    parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
-    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
-    parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
-    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
-    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
-    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
-    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
-    parser.add_argument("--export-configuration", help="Export system configuration to XML", action="store_true")
-    parser.add_argument("--clear-jobs", help="Clear any schedule jobs from the queue", action="store_true")
-    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
-    parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
-    args = vars(parser.parse_args(argv))
-    host = args["H"]
-    username = args["u"]
-    password = args["p"]
-    host_type = args["t"]
-    log = args["log"]
-    interfaces_path = args["i"]
-    pxe = args["pxe"]
-    device = args["boot_to"]
-    reboot_only = args["reboot_only"]
-    racreset = args["racreset"]
-    check_boot = args["check_boot"]
-    firmware_inventory = args["firmware_inventory"]
-    export_configuration = args["export_configuration"]
-    clear_jobs = args["clear_jobs"]
-    verbose = args["verbose"]
-    retries = args["retries"]
+def execute_badfish(_host, _args, logger):
+    username = _args["u"]
+    password = _args["p"]
+    host_type = _args["t"]
+    interfaces_path = _args["i"]
+    pxe = _args["pxe"]
+    device = _args["boot_to"]
+    reboot_only = _args["reboot_only"]
+    racreset = _args["racreset"]
+    check_boot = _args["check_boot"]
+    firmware_inventory = _args["firmware_inventory"]
+    export_configuration = _args["export_configuration"]
+    clear_jobs = _args["clear_jobs"]
+    retries = _args["retries"]
 
-    log_level = DEBUG if verbose else INFO
+    badfish = Badfish(_host, username, password, logger, retries)
 
-    badfish = Badfish(host, username, password, retries, log, log_level)
+    if _args["host_list"]:
+        badfish.logger.info("Executing actions on host: %s" % _host)
 
     if reboot_only:
         badfish.reboot_server()
@@ -686,6 +658,61 @@ def main(argv=None):
         badfish.clear_job_queue()
     else:
         badfish.change_boot(host_type, interfaces_path, pxe)
+
+    if _args["host_list"]:
+        badfish.logger.info("*" * 48)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
+    parser.add_argument("-H", help="iDRAC host address")
+    parser.add_argument("-u", help="iDRAC username", required=True)
+    parser.add_argument("-p", help="iDRAC password", required=True)
+    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
+    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
+    parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
+    parser.add_argument("--host-list", help="Path to a plain text file with a list of hosts.", default=None)
+    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
+    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
+    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
+    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
+    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
+    parser.add_argument("--export-configuration", help="Export system configuration to XML", action="store_true")
+    parser.add_argument("--clear-jobs", help="Clear any schedule jobs from the queue", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
+    parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
+    args = vars(parser.parse_args(argv))
+
+    log_level = DEBUG if args["verbose"] else INFO
+
+    logger = Logger()
+    logger.start(level=log_level)
+
+    if args["log"]:
+        file_handler = FileHandler(args["log"])
+        file_handler.setFormatter(Formatter(logger.LOGFMT))
+        file_handler.setLevel(DEBUG)
+        logger.addHandler(file_handler)
+
+    host_list = args["host_list"]
+    host = args["H"]
+
+    if host_list:
+        try:
+            with open(host_list, "r") as _file:
+                for _host in _file.readlines():
+                    try:
+                        execute_badfish(_host.strip(), args, logger)
+                    except SystemExit:
+                        continue
+        except IOError as ex:
+            logger.debug(ex)
+            logger.error("There was something wrong reading from %s" % host_list)
+    elif not host:
+        logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
+    else:
+        execute_badfish(host, args, logger)
     return 0
 
 

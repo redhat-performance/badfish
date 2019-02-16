@@ -14,6 +14,11 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Optionally one-time boot to a specific interface or to first device listed for PXE booting
 * Check current boot order
 * Reboot host
+* Reset iDRAC
+* Export iDRAC system configuration to  XML
+* Clear iDRAC job queue
+* Get firmware inventory of installed devices supported by iDRAC
+* Bulk actions via plain text file with list of hosts
 * Logging to a specific path
 
 ## Requirements
@@ -67,22 +72,16 @@ To check the current boot order of a specific host you can use the ```--check-bo
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
 ```
 
-### Log to file
-If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
-```
-./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
-```
-
-### Verbose output
-If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. Note: this is the default log level for the ```--log``` argument.
-```
-./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
-```
-
 ### Variable number of retries
 At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
+```
+
+### Export system configuration
+If you would like export the current iDRAC system settings to an xml you can run ```badfish``` with the ```--export-configuration``` option which create a job request for system configuration export and will create an xml file with the exported attributes on the current directory.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --export-configuration
 ```
 
 ### Firmware inventory
@@ -97,10 +96,22 @@ If you would like to clear all the jobs that are queued on the remote iDRAC you 
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs
 ```
 
-### Export system configuration
-If you would like export the current iDRAC system settings to an xml you can run ```badfish``` with the ```--export-configuration``` option which create a job request for system configuration export and will create an xml file with the exported attributes on the current directory.
+### Bulk actions via text file with list of hosts
+In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
 ```
-./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --export-configuration
+./badfish.py --host-list /tmp/bad-hosts -u root -p yourpass --clear-jobs
+```
+
+### Verbose output
+If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. Note: this is the default log level for the ```--log``` argument.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
+```
+
+### Log to file
+If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
 ```
 
 #### Dell Foreman / PXE Interface
