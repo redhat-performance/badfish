@@ -2,7 +2,7 @@
 
 from core.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
-from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
+from requests.exceptions import RequestException
 
 import argparse
 import json
@@ -28,6 +28,65 @@ class Badfish:
         self.password = _password
         self.retries = _retries
         self.logger = logger
+
+    def get_request(self, uri, _continue=False):
+        try:
+            _response = requests.get(uri, auth=(self.username, self.password), verify=False)
+        except RequestException as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            if _continue:
+                return
+            else:
+                sys.exit(1)
+        return _response
+
+    def post_request(self, uri, payload, headers):
+        try:
+            _response = requests.post(
+                uri,
+                data=json.dumps(payload),
+                headers=headers,
+                verify=False,
+                auth=(self.username, self.password)
+            )
+        except RequestException as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            sys.exit(1)
+        return _response
+
+    def patch_request(self, uri, payload, headers, _continue=False):
+        try:
+            _response = requests.patch(
+                uri,
+                data=json.dumps(payload),
+                headers=headers,
+                verify=False,
+                auth=(self.username, self.password)
+            )
+        except RequestException as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            if _continue:
+                return
+            else:
+                sys.exit(1)
+        return _response
+
+    def delete_request(self, uri, headers):
+        try:
+            requests.delete(
+                uri,
+                headers=headers,
+                verify=False,
+                auth=(self.username, self.password)
+            )
+        except RequestException as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            sys.exit(1)
+        return
 
     @staticmethod
     def progress_bar(value, end_value, state, bar_length=20):
@@ -64,16 +123,8 @@ class Badfish:
 
     def get_bios_boot_mode(self):
         self.logger.debug("Getting bios boot mode.")
-        try:
-            _response = requests.get(
-                "https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % self.host,
-                verify=False,
-                auth=(self.username, self.password),
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server. Host appears to be down.")
-            sys.exit(1)
+        _uri = "https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % self.host
+        _response = self.get_request(_uri)
 
         try:
             data = _response.json()
@@ -90,16 +141,9 @@ class Badfish:
 
     def get_boot_devices(self):
         _boot_seq = self.get_boot_seq()
-        try:
-            _response = requests.get(
-                "https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % self.host,
-                verify=False,
-                auth=(self.username, self.password),
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _uri = "https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % self.host
+        _response = self.get_request(_uri)
+
         data = _response.json()
         if "Attributes" in data:
             return data[u"Attributes"][_boot_seq]
@@ -111,12 +155,8 @@ class Badfish:
     def get_job_queue(self):
         self.logger.debug("Getting job queue.")
         _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
-        try:
-            _response = requests.get(_url, auth=(self.username, self.password), verify=False)
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server. Host appears to be down.")
-            sys.exit(1)
+        _response = self.get_request(_url)
+
         data = _response.json()
         data = str(data)
         job_queue = re.findall("JID_.+?'", data)
@@ -125,17 +165,11 @@ class Badfish:
 
     def get_job_status(self, _job_id):
         self.logger.debug("Getting job status.")
+        _uri = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.host, _job_id)
 
         for _ in range(self.retries):
-            try:
-                _response = requests.get(
-                    "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.host, _job_id),
-                    verify=False,
-                    auth=(self.username, self.password),
-                )
-            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-                self.logger.debug(ex)
-                self.logger.error("Failed to communicate with server.")
+            _response = self.get_request(_uri, _continue=True)
+            if not _response:
                 continue
 
             status_code = _response.status_code
@@ -186,16 +220,15 @@ class Badfish:
         return None
 
     def get_power_state(self):
-        _url = 'https://%s/redfish/v1/Systems/System.Embedded.1/' % self.host
-        self.logger.debug("url: %s" % _url)
-        try:
-            response = requests.get(_url, verify=False, auth=(self.username, self.password), timeout=20)
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.debug("Can't communicate with host.")
+        _uri = 'https://%s/redfish/v1/Systems/System.Embedded.1/' % self.host
+        self.logger.debug("url: %s" % _uri)
+
+        _response = self.get_request(_uri, _continue=True)
+        if not _response:
             return "Down"
-        if response.ok:
-            data = response.json()
+
+        if _response.ok:
+            data = _response.json()
         else:
             self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
@@ -238,19 +271,15 @@ class Badfish:
         headers = {"content-type": "application/json"}
         response = None
         _status_code = 400
-        count = 0
-        while _status_code != 200 and count < self.retries:
-            try:
-                count += 1
-                response = requests.patch(
-                    url, data=json.dumps(payload), headers=headers, verify=False,
-                    auth=(self.username, self.password)
-                )
-            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-                self.logger.debug(ex)
-                self.logger.error("Failed to communicate with server.")
-                continue
-            _status_code = response.status_code
+
+        for _ in range(self.retries):
+            if _status_code != 200:
+                response = self.patch_request(url, payload, headers, True)
+                if response:
+                    _status_code = response.status_code
+            else:
+                break
+
         if _status_code == 200:
             self.logger.info("PATCH command passed to update boot order.")
         else:
@@ -263,14 +292,7 @@ class Badfish:
         _url = "https://%s/redfish/v1/Systems/System.Embedded.1" % self.host
         _payload = {"Boot": {"BootSourceOverrideTarget": "Pxe"}}
         _headers = {"content-type": "application/json"}
-        try:
-            _response = requests.patch(
-                _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _response = self.patch_request(_url, _payload, _headers)
 
         time.sleep(5)
 
@@ -290,12 +312,7 @@ class Badfish:
             for _job in _job_queue:
                 job = _job.strip("'")
                 url = "%s/%s" % (_url, job)
-                try:
-                    requests.delete(url, headers=_headers, verify=False, auth=(self.username, self.password))
-                except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-                    self.logger.debug(ex)
-                    self.logger.error("Failed to communicate with server.")
-                    sys.exit(1)
+                self.delete_request(url, _headers)
 
             job_queue = self.get_job_queue()
             if not job_queue:
@@ -309,14 +326,7 @@ class Badfish:
             )
 
     def create_job(self, _url, _payload, _headers, expected=200):
-        try:
-            _response = requests.post(
-                _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _response = self.post_request(_url, _payload, _headers)
 
         status_code = _response.status_code
 
@@ -343,14 +353,8 @@ class Badfish:
         _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
         _payload = {"ResetType": reset_type}
         _headers = {"content-type": "application/json"}
-        try:
-            _response = requests.post(
-                _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _response = self.post_request(_url, _payload, _headers)
+
         status_code = _response.status_code
         if status_code == 204:
             self.logger.info(
@@ -395,14 +399,8 @@ class Badfish:
         self.logger.debug("url: %s" % _url)
         self.logger.debug("payload: %s" % _payload)
         self.logger.debug("headers: %s" % _headers)
-        try:
-            _response = requests.post(
-                _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("There was something wrong with your request.")
-            sys.exit(1)
+        _response = self.post_request(_url, _payload, _headers)
+
         status_code = _response.status_code
         if status_code == 204:
             self.logger.info("Status code %s returned for POST command to reset iDRAC." % status_code)
@@ -438,14 +436,7 @@ class Badfish:
         _url = "https://%s%s" % (self.host, BIOS_URI)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": device}}
         _headers = {"content-type": "application/json"}
-        try:
-            _response = requests.patch(
-                _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
-            )
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _response = self.patch_request(_url, _payload, _headers)
         status_code = _response.status_code
         if status_code == 200:
             self.logger.info("Command passed to set BIOS attribute pending values.")
@@ -549,12 +540,7 @@ class Badfish:
         self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
 
         _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/' % self.host
-        try:
-            _response = requests.get(_url, auth=(self.username, self.password), verify=False)
-        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            sys.exit(1)
+        _response = self.get_request(_url)
 
         data = _response.json()
         installed_devices = []
@@ -566,12 +552,10 @@ class Badfish:
 
         for device in installed_devices:
             self.logger.debug("Getting device info for %s" % device)
-            _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/%s' % (self.host, device)
-            try:
-                _response = requests.get(_url, auth=(self.username, self.password), verify=False)
-            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-                self.logger.debug(ex)
-                self.logger.error("Failed to get data for %s." % device)
+            _uri = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/%s' % (self.host, device)
+
+            _response = self.get_request(_uri, _continue=True)
+            if not _response:
                 continue
 
             data = _response.json()
@@ -588,13 +572,12 @@ class Badfish:
         _headers = {'content-type': 'application/json'}
         job_id = self.create_job(_url, _payload, _headers, 202)
 
+        _uri = 'https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id)
+
         for _ in range(self.retries):
-            try:
-                _response = requests.get('https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id),
-                                         auth=(self.username, self.password), verify=False)
-            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
-                self.logger.debug(ex)
-                self.logger.error("Failed to communicate with server.")
+
+            _response = self.get_request(_uri, _continue=True)
+            if not _response:
                 continue
 
             data = _response.__dict__
