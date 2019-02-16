@@ -22,20 +22,12 @@ RETRIES = 15
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _retries=RETRIES, log=None, _log_level=INFO):
+    def __init__(self, _host, _username, _password, logger, _retries=RETRIES):
         self.host = _host
         self.username = _username
         self.password = _password
         self.retries = _retries
-        self.log = log
-        self.logger = Logger()
-        self.logger.start(level=_log_level)
-
-        if self.log:
-            file_handler = FileHandler(self.log)
-            file_handler.setFormatter(Formatter(self.logger.LOGFMT))
-            file_handler.setLevel(DEBUG)
-            self.logger.addHandler(file_handler)
+        self.logger = logger
 
     @staticmethod
     def progress_bar(value, end_value, state, bar_length=20):
@@ -591,7 +583,7 @@ class Badfish:
         _headers = {'content-type': 'application/json'}
         job_id = self.create_job(_url, _payload, _headers, 202)
 
-        for _ in range(RETRIES):
+        for _ in range(self.retries):
             try:
                 _response = requests.get('https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id),
                                          auth=(self.username, self.password), verify=False)
@@ -627,14 +619,13 @@ class Badfish:
                 self.logger.error("Execute job ID command failed, error code is: %s" % status_code)
                 sys.exit(1)
 
-        self.logger.error("Could not export settings after %s attempts." % RETRIES)
+        self.logger.error("Could not export settings after %s attempts." % self.retries)
 
 
-def execute_badfish(_host, _args):
+def execute_badfish(_host, _args, logger):
     username = _args["u"]
     password = _args["p"]
     host_type = _args["t"]
-    log = _args["log"]
     interfaces_path = _args["i"]
     pxe = _args["pxe"]
     device = _args["boot_to"]
@@ -644,12 +635,9 @@ def execute_badfish(_host, _args):
     firmware_inventory = _args["firmware_inventory"]
     export_configuration = _args["export_configuration"]
     clear_jobs = _args["clear_jobs"]
-    verbose = _args["verbose"]
     retries = _args["retries"]
 
-    log_level = DEBUG if verbose else INFO
-
-    badfish = Badfish(_host, username, password, retries, log, log_level)
+    badfish = Badfish(_host, username, password, logger, retries)
 
     if _args["host_list"]:
         badfish.logger.info("Executing actions on host: %s" % _host)
@@ -696,6 +684,17 @@ def main(argv=None):
     parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
     args = vars(parser.parse_args(argv))
 
+    log_level = DEBUG if args["verbose"] else INFO
+
+    logger = Logger()
+    logger.start(level=log_level)
+
+    if args["log"]:
+        file_handler = FileHandler(args["log"])
+        file_handler.setFormatter(Formatter(logger.LOGFMT))
+        file_handler.setLevel(DEBUG)
+        logger.addHandler(file_handler)
+
     host_list = args["host_list"]
     host = args["H"]
 
@@ -704,15 +703,16 @@ def main(argv=None):
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        execute_badfish(_host.strip(), args)
+                        execute_badfish(_host.strip(), args, logger)
                     except SystemExit:
                         continue
-        except IOError:
-            raise argparse.ArgumentError("Could not read from %s" % host_list)
+        except IOError as ex:
+            logger.debug(ex)
+            logger.error("There was something wrong reading from %s" % host_list)
     elif not host:
-        raise argparse.ArgumentError("You must specify at least either a host (-H) or a host list (--host-list).")
+        logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
     else:
-        execute_badfish(host, args)
+        execute_badfish(host, args, logger)
     return 0
 
 
