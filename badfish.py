@@ -630,45 +630,26 @@ class Badfish:
         self.logger.error("Could not export settings after %s attempts." % RETRIES)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
-    parser.add_argument("-H", help="iDRAC host address", required=True)
-    parser.add_argument("-u", help="iDRAC username", required=True)
-    parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
-    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
-    parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
-    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
-    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
-    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
-    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
-    parser.add_argument("--export-configuration", help="Export system configuration to XML", action="store_true")
-    parser.add_argument("--clear-jobs", help="Clear any schedule jobs from the queue", action="store_true")
-    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
-    parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
-    args = vars(parser.parse_args(argv))
-    host = args["H"]
-    username = args["u"]
-    password = args["p"]
-    host_type = args["t"]
-    log = args["log"]
-    interfaces_path = args["i"]
-    pxe = args["pxe"]
-    device = args["boot_to"]
-    reboot_only = args["reboot_only"]
-    racreset = args["racreset"]
-    check_boot = args["check_boot"]
-    firmware_inventory = args["firmware_inventory"]
-    export_configuration = args["export_configuration"]
-    clear_jobs = args["clear_jobs"]
-    verbose = args["verbose"]
-    retries = args["retries"]
+def execute_badfish(_host, _args):
+    username = _args["u"]
+    password = _args["p"]
+    host_type = _args["t"]
+    log = _args["log"]
+    interfaces_path = _args["i"]
+    pxe = _args["pxe"]
+    device = _args["boot_to"]
+    reboot_only = _args["reboot_only"]
+    racreset = _args["racreset"]
+    check_boot = _args["check_boot"]
+    firmware_inventory = _args["firmware_inventory"]
+    export_configuration = _args["export_configuration"]
+    clear_jobs = _args["clear_jobs"]
+    verbose = _args["verbose"]
+    retries = _args["retries"]
 
     log_level = DEBUG if verbose else INFO
 
-    badfish = Badfish(host, username, password, retries, log, log_level)
+    badfish = Badfish(_host, username, password, retries, log, log_level)
 
     if reboot_only:
         badfish.reboot_server()
@@ -686,6 +667,40 @@ def main(argv=None):
         badfish.clear_job_queue()
     else:
         badfish.change_boot(host_type, interfaces_path, pxe)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
+    parser.add_argument("-H", help="iDRAC host address")
+    parser.add_argument("-u", help="iDRAC username", required=True)
+    parser.add_argument("-p", help="iDRAC password", required=True)
+    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
+    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
+    parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
+    parser.add_argument("--host-list", help="Path to a plain text file with a list of hosts.", default=None)
+    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
+    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
+    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
+    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
+    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
+    parser.add_argument("--export-configuration", help="Export system configuration to XML", action="store_true")
+    parser.add_argument("--clear-jobs", help="Clear any schedule jobs from the queue", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
+    parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
+    args = vars(parser.parse_args(argv))
+
+    host_list = args["host_list"]
+    host = args["H"]
+
+    if host_list:
+        with open(host_list, "r") as _file:
+            for _host in _file.readlines():
+                execute_badfish(_host, args)
+    elif not host:
+        raise argparse.ArgumentError("You must specify at least either a host (-H) or a host list (--host-list).")
+    else:
+        execute_badfish(host)
     return 0
 
 
