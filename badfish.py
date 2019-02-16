@@ -694,9 +694,15 @@ def main(argv=None):
     host = args["H"]
 
     if host_list:
-        with open(host_list, "r") as _file:
-            for _host in _file.readlines():
-                execute_badfish(_host, args)
+        try:
+            with open(host_list, "r") as _file:
+                for _host in _file.readlines():
+                    try:
+                        execute_badfish(_host, args)
+                    except SystemExit:
+                        continue
+        except IOError:
+            raise argparse.ArgumentError("Could not read from %s" % host_list)
     elif not host:
         raise argparse.ArgumentError("You must specify at least either a host (-H) or a host list (--host-list).")
     else:
