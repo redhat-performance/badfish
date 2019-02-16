@@ -29,9 +29,35 @@ class Badfish:
         self.retries = _retries
         self.logger = logger
 
+    @staticmethod
+    def progress_bar(value, end_value, state, bar_length=20):
+        percent = float(value) / end_value
+        arrow = '-' * int(round(percent * bar_length) - 1) + '>'
+        spaces = ' ' * (bar_length - len(arrow))
+
+        if state.lower() == "on":
+            state = "On  "
+        sys.stdout.write(
+            "\r  Polling: [{0}] {1}% - Host state: {2}\n".format(arrow + spaces, int(round(percent * 100)), state)
+        )
+        sys.stdout.flush()
+
+    def error_handler(self, _response):
+        try:
+            data = _response.json()
+        except ValueError:
+            self.logger.error("Error reading response from host.")
+            sys.exit(1)
+
+        if "error" in data:
+            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+            self.logger.warning(detail_message)
+
+        sys.exit(1)
+
     def get_request(self, uri, _continue=False):
         try:
-            _response = requests.get(uri, auth=(self.username, self.password), verify=False)
+            _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=30)
         except RequestException as ex:
             self.logger.debug(ex)
             self.logger.error("Failed to communicate with server.")
@@ -87,32 +113,6 @@ class Badfish:
             self.logger.error("Failed to communicate with server.")
             sys.exit(1)
         return
-
-    @staticmethod
-    def progress_bar(value, end_value, state, bar_length=20):
-        percent = float(value) / end_value
-        arrow = '-' * int(round(percent * bar_length) - 1) + '>'
-        spaces = ' ' * (bar_length - len(arrow))
-
-        if state.lower() == "on":
-            state = "On  "
-        sys.stdout.write(
-            "\r  Polling: [{0}] {1}% - Host state: {2}\n".format(arrow + spaces, int(round(percent * 100)), state)
-        )
-        sys.stdout.flush()
-
-    def error_handler(self, _response):
-        try:
-            data = _response.json()
-        except ValueError:
-            self.logger.error("Error reading response from host.")
-            sys.exit(1)
-
-        if "error" in data:
-            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-            self.logger.warning(detail_message)
-
-        sys.exit(1)
 
     def get_boot_seq(self):
         bios_boot_mode = self.get_bios_boot_mode()
@@ -235,6 +235,47 @@ class Badfish:
         self.logger.debug("Current server power state is: %s." % data[u'PowerState'])
 
         return data[u'PowerState']
+
+    def change_boot(self, host_type, interfaces_path, pxe=False):
+        if host_type.lower() not in ("foreman", "director"):
+            self.logger.error('Expected values for -t argument are "foreman" or "director"')
+            sys.exit(1)
+
+        if interfaces_path:
+            if not os.path.exists(interfaces_path):
+                self.logger.error("No such file or directory: %s." % interfaces_path)
+                sys.exit(1)
+        else:
+            self.logger.error(
+                "You must provide a path to the interfaces yaml via `-i` optional argument."
+            )
+            sys.exit(1)
+
+        _type = self.get_host_type(interfaces_path)
+        if _type and _type.lower() != host_type.lower():
+            self.clear_job_queue()
+            self.reset_idrac()
+            self.logger.warning("Waiting for host to be up.")
+            host_up = self.polling_host_state("On")
+            if host_up:
+                self.change_boot_order(interfaces_path, host_type)
+
+                if pxe:
+                    self.set_next_boot_pxe()
+
+                job_id = self.create_bios_config_job(BIOS_URI)
+                if job_id:
+                    self.get_job_status(job_id)
+
+                self.reboot_server()
+            else:
+                self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
+                sys.exit(1)
+        else:
+            self.logger.warning(
+                "No changes were made since the boot order already matches the requested."
+            )
+        return True
 
     def change_boot_order(self, _interfaces_path, _host_type):
         with open(_interfaces_path, "r") as f:
@@ -481,60 +522,19 @@ class Badfish:
         state_str = "Not %s" % state if not equals else state
         self.logger.info("Polling for host state: %s" % state_str)
         desired_state = False
-        count = 0
-        while not desired_state and count < self.retries:
-            count += 1
+        for count in range(self.retries):
             current_state = self.get_power_state()
-            self.progress_bar(count, self.retries, current_state)
             if equals:
                 desired_state = current_state.lower() == state.lower()
             else:
                 desired_state = current_state.lower() != state.lower()
             time.sleep(5)
+            if desired_state:
+                self.progress_bar(self.retries, self.retries, current_state)
+                break
+            self.progress_bar(count, self.retries, current_state)
 
         return desired_state
-
-    def change_boot(self, host_type, interfaces_path, pxe=False):
-
-        if interfaces_path:
-            if not os.path.exists(interfaces_path):
-                self.logger.error("No such file or directory: %s." % interfaces_path)
-                sys.exit(1)
-        else:
-            self.logger.error(
-                "You must provide a path to the interfaces yaml via `-i` optional argument."
-            )
-            sys.exit(1)
-
-        _type = self.get_host_type(interfaces_path)
-        if _type and _type.lower() != host_type.lower():
-            self.clear_job_queue()
-            self.reset_idrac()
-            self.logger.warning("Waiting for host to be up.")
-            host_up = self.polling_host_state("On")
-            if host_up:
-                if host_type:
-                    if host_type.lower() not in ("foreman", "director"):
-                        raise argparse.ArgumentTypeError('Expected values for -t argument are "foreman" or "director"')
-
-                    self.change_boot_order(interfaces_path, host_type)
-
-                if pxe:
-                    self.set_next_boot_pxe()
-
-                job_id = self.create_bios_config_job(BIOS_URI)
-                if job_id:
-                    self.get_job_status(job_id)
-
-                self.reboot_server()
-            else:
-                self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
-                sys.exit(1)
-        else:
-            self.logger.warning(
-                "No changes were made since the boot order already matches the requested."
-            )
-        return True
 
     def get_firmware_inventory(self):
         self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
@@ -566,7 +566,8 @@ class Badfish:
             self.logger.info("*" * 48)
 
     def export_configuration(self):
-        _url = 'https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration' % self.host
+        _url = 'https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/' \
+               'Oem/EID_674_Manager.ExportSystemConfiguration' % self.host
         _payload = {"ExportFormat": "XML", "ShareParameters": {"Target": "ALL"},
                     "IncludeInExport": "IncludeReadOnly,IncludePasswordHashValues"}
         _headers = {'content-type': 'application/json'}
