@@ -311,10 +311,7 @@ class Badfish:
                 "Job queue already cleared for iDRAC %s, DELETE command will not execute." % self.host
             )
 
-    def create_bios_config_job(self, uri):
-        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
-        _payload = {"TargetSettingsURI": uri}
-        _headers = {"content-type": "application/json"}
+    def create_job(self, _url, _payload, _headers, expected=200):
         try:
             _response = requests.post(
                 _url, data=json.dumps(_payload), headers=_headers, verify=False, auth=(self.username, self.password)
@@ -326,8 +323,8 @@ class Badfish:
 
         status_code = _response.status_code
 
-        if status_code == 200:
-            self.logger.info("POST command passed to create target config job, status code 200 returned.")
+        if status_code == expected:
+            self.logger.info("POST command passed to create target config job.")
         else:
             self.logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
 
@@ -338,6 +335,12 @@ class Badfish:
         _job_id = re.sub("[,']", "", job_id_search).strip("}").strip("\"").strip("'")
         self.logger.info("%s job ID successfully created." % _job_id)
         return _job_id
+
+    def create_bios_config_job(self, uri):
+        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
+        _payload = {"TargetSettingsURI": uri}
+        _headers = {"content-type": "application/json"}
+        return self.create_job(_url, _payload, _headers)
 
     def send_reset(self, reset_type):
         _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
@@ -545,6 +548,87 @@ class Badfish:
             )
         return True
 
+    def get_firmware_inventory(self):
+        self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
+
+        _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/' % self.host
+        try:
+            _response = requests.get(_url, auth=(self.username, self.password), verify=False)
+        except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
+            self.logger.debug(ex)
+            self.logger.error("Failed to communicate with server.")
+            sys.exit(1)
+
+        data = _response.json()
+        installed_devices = []
+        for device in data[u'Members']:
+            a = device[u'@odata.id']
+            a = a.replace("/redfish/v1/UpdateService/FirmwareInventory/", "")
+            if "Installed" in a:
+                installed_devices.append(a)
+
+        for device in installed_devices:
+            self.logger.debug("Getting device info for %s" % device)
+            _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/%s' % (self.host, device)
+            try:
+                _response = requests.get(_url, auth=(self.username, self.password), verify=False)
+            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
+                self.logger.debug(ex)
+                self.logger.error("Failed to get data for %s." % device)
+                continue
+
+            data = _response.json()
+            for info in data.items():
+                if "odata" not in info[0] and "Description" not in info[0]:
+                    self.logger.info("%s: %s" % (info[0], info[1]))
+
+            self.logger.info("*" * 48)
+
+    def export_configuration(self):
+        _url = 'https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration' % self.host
+        _payload = {"ExportFormat": "XML", "ShareParameters": {"Target": "ALL"},
+                    "IncludeInExport": "IncludeReadOnly,IncludePasswordHashValues"}
+        _headers = {'content-type': 'application/json'}
+        job_id = self.create_job(_url, _payload, _headers, 202)
+
+        for _ in range(RETRIES):
+            try:
+                _response = requests.get('https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id),
+                                         auth=(self.username, self.password), verify=False)
+            except (ConnectionError, ConnectTimeout, ReadTimeout) as ex:
+                self.logger.debug(ex)
+                self.logger.error("Failed to communicate with server.")
+                continue
+
+            data = _response.__dict__
+            if "<SystemConfiguration Model" in str(data):
+                self.logger.info("Export job ID %s successfully completed." % job_id)
+
+                filename = "%s_export.xml" % self.host
+
+                with open(filename, "w") as _file:
+                    _content = data["_content"]
+                    _file.writelines(["%s\n" % line.decode("utf-8") for line in _content.split(b"\n")])
+
+                self.logger.info("Exported attributes saved in file: %s" % filename)
+
+                return
+            else:
+                pass
+
+            status_code = _response.status_code
+            data = _response.json()
+
+            if status_code == 202 or status_code == 200:
+                self.logger.info("JobStatus not completed, current status: \"%s\", percent complete: \"%s\"" % (
+                    data[u'Oem'][u'Dell'][u'Message'], data[u'Oem'][u'Dell'][u'PercentComplete']))
+                time.sleep(1)
+            else:
+                self.logger.error("Execute job ID command failed, error code is: %s" % status_code)
+                sys.exit(1)
+
+        self.logger.error("Could not export settings after %s attempts." % RETRIES)
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Client tool for changing boot order via Redfish API.")
@@ -559,6 +643,9 @@ def main(argv=None):
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
+    parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
+    parser.add_argument("--export-configuration", help="Export system configuration to XML", action="store_true")
+    parser.add_argument("--clear-jobs", help="Clear any schedule jobs from the queue", action="store_true")
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
     args = vars(parser.parse_args(argv))
@@ -573,6 +660,9 @@ def main(argv=None):
     reboot_only = args["reboot_only"]
     racreset = args["racreset"]
     check_boot = args["check_boot"]
+    firmware_inventory = args["firmware_inventory"]
+    export_configuration = args["export_configuration"]
+    clear_jobs = args["clear_jobs"]
     verbose = args["verbose"]
     retries = args["retries"]
 
@@ -588,6 +678,12 @@ def main(argv=None):
         badfish.boot_to(device)
     elif check_boot:
         badfish.check_boot(interfaces_path)
+    elif firmware_inventory:
+        badfish.get_firmware_inventory()
+    elif export_configuration:
+        badfish.export_configuration()
+    elif clear_jobs:
+        badfish.clear_job_queue()
     else:
         badfish.change_boot(host_type, interfaces_path, pxe)
     return 0
