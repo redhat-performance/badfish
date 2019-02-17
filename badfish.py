@@ -16,8 +16,6 @@ import yaml
 
 warnings.filterwarnings("ignore")
 
-BOOT_SOURCES_URI = "/redfish/v1/Systems/System.Embedded.1/BootSources/Settings"
-BIOS_URI = "/redfish/v1/Systems/System.Embedded.1/Bios/Settings"
 RETRIES = 15
 
 
@@ -27,7 +25,12 @@ class Badfish:
         self.username = _username
         self.password = _password
         self.retries = _retries
+        self.host_uri = "https://%s" % _host
+        self.redfish_uri = "/redfish/v1"
+        self.root_uri = "%s%s" % (self.host_uri, self.redfish_uri)
         self.logger = logger
+        self.system_resource = self.find_systems_resource()
+        self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
 
     @staticmethod
     def progress_bar(value, end_value, state, bar_length=20):
@@ -123,7 +126,7 @@ class Badfish:
 
     def get_bios_boot_mode(self):
         self.logger.debug("Getting bios boot mode.")
-        _uri = "https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % self.host
+        _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
         _response = self.get_request(_uri)
 
         try:
@@ -141,7 +144,7 @@ class Badfish:
 
     def get_boot_devices(self):
         _boot_seq = self.get_boot_seq()
-        _uri = "https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % self.host
+        _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
         _response = self.get_request(_uri)
 
         data = _response.json()
@@ -154,7 +157,7 @@ class Badfish:
 
     def get_job_queue(self):
         self.logger.debug("Getting job queue.")
-        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
+        _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
         _response = self.get_request(_url)
 
         data = _response.json()
@@ -165,7 +168,7 @@ class Badfish:
 
     def get_job_status(self, _job_id):
         self.logger.debug("Getting job status.")
-        _uri = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.host, _job_id)
+        _uri = "%s/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.root_uri, _job_id)
 
         for _ in range(self.retries):
             _response = self.get_request(_uri, _continue=True)
@@ -219,8 +222,29 @@ class Badfish:
 
         return None
 
+    def find_systems_resource(self):
+        response = self.get_request(self.root_uri)
+        if response:
+            data = response.json()
+            if 'Systems' not in data:
+                self.logger.error("Systems resource not found")
+                sys.exit(1)
+            else:
+                systems = data["Systems"]["@odata.id"]
+                response = self.get_request(self.host_uri + systems)
+                if response:
+                    data = response.json()
+                    if data.get(u'Members'):
+                        for member in data[u'Members']:
+                            systems_service = member[u'@odata.id']
+                            self.logger.info("Systems service: %s." % systems_service)
+                            return systems_service
+                    else:
+                        self.logger.error("ComputerSystem's Members array is either empty or missing")
+                        sys.exit(1)
+
     def get_power_state(self):
-        _uri = 'https://%s/redfish/v1/Systems/System.Embedded.1/' % self.host
+        _uri = '%s%s' % (self.host_uri, self.system_resource)
         self.logger.debug("url: %s" % _uri)
 
         _response = self.get_request(_uri, _continue=True)
@@ -263,7 +287,7 @@ class Badfish:
                 if pxe:
                     self.set_next_boot_pxe()
 
-                job_id = self.create_bios_config_job(BIOS_URI)
+                job_id = self.create_bios_config_job(self.bios_uri)
                 if job_id:
                     self.get_job_status(job_id)
 
@@ -307,7 +331,8 @@ class Badfish:
 
     def patch_boot_seq(self, boot_devices):
         _boot_seq = self.get_boot_seq()
-        url = "https://%s%s" % (self.host, BOOT_SOURCES_URI)
+        boot_sources_uri = "%s/BootSources/Settings" % self.system_resource
+        url = "%s%s" % (self.host_uri, boot_sources_uri)
         payload = {"Attributes": {_boot_seq: boot_devices}}
         headers = {"content-type": "application/json"}
         response = None
@@ -330,7 +355,7 @@ class Badfish:
                 self.error_handler(response)
 
     def set_next_boot_pxe(self):
-        _url = "https://%s/redfish/v1/Systems/System.Embedded.1" % self.host
+        _url = "%s%s" % (self.host_uri, self.system_resource)
         _payload = {"Boot": {"BootSourceOverrideTarget": "Pxe"}}
         _headers = {"content-type": "application/json"}
         _response = self.patch_request(_url, _payload, _headers)
@@ -347,7 +372,7 @@ class Badfish:
     def clear_job_queue(self):
         _job_queue = self.get_job_queue()
         if _job_queue:
-            _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
+            _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
             _headers = {"content-type": "application/json"}
             self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
             for _job in _job_queue:
@@ -385,13 +410,13 @@ class Badfish:
         return _job_id
 
     def create_bios_config_job(self, uri):
-        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % self.host
+        _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
         _payload = {"TargetSettingsURI": uri}
         _headers = {"content-type": "application/json"}
         return self.create_job(_url, _payload, _headers)
 
     def send_reset(self, reset_type):
-        _url = "https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % self.host
+        _url = "%s%s/Actions/ComputerSystem.Reset" % (self.host_uri, self.system_resource)
         _payload = {"ResetType": reset_type}
         _headers = {"content-type": "application/json"}
         _response = self.post_request(_url, _payload, _headers)
@@ -434,7 +459,7 @@ class Badfish:
 
     def reset_idrac(self):
         self.logger.debug("Running reset iDRAC.")
-        _url = "https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % self.host
+        _url = "%s/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % self.root_uri
         _payload = {"ResetType": "GracefulRestart"}
         _headers = {'content-type': 'application/json'}
         self.logger.debug("url: %s" % _url)
@@ -462,7 +487,7 @@ class Badfish:
             time.sleep(5)
             if host_up:
                 self.send_one_time_boot(device)
-                job_id = self.create_bios_config_job(BIOS_URI)
+                job_id = self.create_bios_config_job(self.bios_uri)
                 if job_id:
                     self.get_job_status(job_id)
                 self.reboot_server()
@@ -474,7 +499,7 @@ class Badfish:
         return True
 
     def send_one_time_boot(self, device):
-        _url = "https://%s%s" % (self.host, BIOS_URI)
+        _url = "%s%s" % (self.root_uri, self.bios_uri)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": device}}
         _headers = {"content-type": "application/json"}
         _response = self.patch_request(_url, _payload, _headers)
@@ -539,7 +564,7 @@ class Badfish:
     def get_firmware_inventory(self):
         self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
 
-        _url = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/' % self.host
+        _url = '%s/UpdateService/FirmwareInventory/' % self.root_uri
         _response = self.get_request(_url)
 
         data = _response.json()
@@ -552,7 +577,7 @@ class Badfish:
 
         for device in installed_devices:
             self.logger.debug("Getting device info for %s" % device)
-            _uri = 'https://%s/redfish/v1/UpdateService/FirmwareInventory/%s' % (self.host, device)
+            _uri = '%s/UpdateService/FirmwareInventory/%s' % (self.root_uri, device)
 
             _response = self.get_request(_uri, _continue=True)
             if not _response:
@@ -566,14 +591,14 @@ class Badfish:
             self.logger.info("*" * 48)
 
     def export_configuration(self):
-        _url = 'https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/' \
-               'Oem/EID_674_Manager.ExportSystemConfiguration' % self.host
+        _url = '%s/Managers/iDRAC.Embedded.1/Actions/' \
+               'Oem/EID_674_Manager.ExportSystemConfiguration' % self.root_uri
         _payload = {"ExportFormat": "XML", "ShareParameters": {"Target": "ALL"},
                     "IncludeInExport": "IncludeReadOnly,IncludePasswordHashValues"}
         _headers = {'content-type': 'application/json'}
         job_id = self.create_job(_url, _payload, _headers, 202)
 
-        _uri = 'https://%s/redfish/v1/TaskService/Tasks/%s' % (self.host, job_id)
+        _uri = '%s/TaskService/Tasks/%s' % (self.root_uri, job_id)
 
         for _ in range(self.retries):
 

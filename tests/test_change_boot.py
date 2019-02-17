@@ -1,6 +1,5 @@
 import pytest
 
-from argparse import ArgumentTypeError
 from tests.test_base import TestBase
 from tests import config
 
