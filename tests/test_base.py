@@ -10,7 +10,7 @@ from tests import config
 class TestBase(unittest.TestCase):
     time.sleep = lambda x: None
     first_call = True
-    last_on = False
+    last_on = True
 
     def jobs_callback(self, request, context):
         if self.first_call:
@@ -20,12 +20,14 @@ class TestBase(unittest.TestCase):
             return {"JobID": config.JOB_ID}
 
     def state_callback(self, request, context):
+        response = {u"Members": [{u"@odata.id": "/redfish/v1/Systems/System.Embedded.1"}]}
         if self.last_on:
             self.last_on = False
-            return {u"PowerState": "Off"}
+            response[u"PowerState"] = "Off"
         else:
             self.last_on = True
-            return {u"PowerState": "On"}
+            response[u"PowerState"] = "On"
+        return response
 
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
@@ -33,8 +35,10 @@ class TestBase(unittest.TestCase):
 
     @requests_mock.mock()
     def badfish_call(self, _mock):
-        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/" % config.MOCK_HOST,
+        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1" % config.MOCK_HOST,
                   json=self.state_callback)
+        _mock.get("https://%s/redfish/v1" % config.MOCK_HOST,
+                  json={"Systems": {"@odata.id": "/redfish/v1/Systems/System.Embedded.1"}})
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % config.MOCK_HOST,
                   json={"Attributes": {"BootMode": u"Bios"}})
         _mock.patch("https://%s/redfish/v1/Systems/System.Embedded.1/Bios/Settings" % config.MOCK_HOST,

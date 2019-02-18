@@ -35,7 +35,8 @@ BOOT_SEQ_RESPONSE_NO_MATCH = [
     render_device_dict(2, DEVICE_NIC_2)
 ]
 
-RESPONSE_WITHOUT = '- INFO     - Current boot order:\n' \
+RESPONSE_WITHOUT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                   '- INFO     - Current boot order:\n' \
                    '- INFO     - 1: NIC.Integrated.1-2-1\n' \
                    '- INFO     - 2: HardDisk.List.1-1\n' \
                    '- INFO     - 3: NIC.Slot.2-1-1\n'
@@ -43,17 +44,22 @@ RESPONSE_NO_MATCH = '- INFO     - Current boot order:\n' \
                     '- INFO     - 1: HardDisk.List.1-1\n' \
                     '- INFO     - 2: NIC.Integrated.1-2-1\n' \
                     '- INFO     - 3: NIC.Slot.2-1-1\n'
-WARN_NO_MATCH = '- WARNING  - Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
-RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
+WARN_NO_MATCH = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                '- WARNING  - Current boot order does not match any of the given.\n%s' % RESPONSE_NO_MATCH
+RESPONSE_DIRECTOR = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                    "- WARNING  - Current boot order is set to: director.\n"
 
-RESPONSE_FOREMAN = "- WARNING  - Current boot order is set to: foreman.\n"
+RESPONSE_FOREMAN = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                   "- WARNING  - Current boot order is set to: foreman.\n"
 INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
 
 # test_boot_to constants
 BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
-ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the existing for host %s" % (BAD_DEVICE_NAME, MOCK_HOST)
+ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the existing for host %s" % (
+    BAD_DEVICE_NAME, MOCK_HOST)
 JOB_ID = 'JID_498218641680'
-RESPONSE_BOOT_TO = "- WARNING  - Job queue already cleared for iDRAC %s, DELETE command will not execute.\n" \
+RESPONSE_BOOT_TO = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                   "- WARNING  - Job queue already cleared for iDRAC %s, DELETE command will not execute.\n" \
                    "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
                    "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
                    "- INFO     - Polling for host state: On\n" \
@@ -65,17 +71,21 @@ RESPONSE_BOOT_TO = "- WARNING  - Job queue already cleared for iDRAC %s, DELETE 
                    "- INFO     - Command passed to On server, code return is 204.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
 
 # test_reboot_only
-RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Command passed to GracefulRestart server, code return is 204.\n" \
+RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                               "- INFO     - Command passed to GracefulRestart server, code return is 204.\n" \
                                "- INFO     - Polling for host state: Off\n" \
                                "- INFO     - Polling for host state: Not Down\n" \
                                "- INFO     - Command passed to On server, code return is 204.\n"
 
 # test_reset_idrac
-RESPONSE_RESET = "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
-                  "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
+RESPONSE_RESET = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                 "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
+                 "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
 
 # test_change_boot
-RESPONSE_CHANGE_BOOT = "- WARNING  - Job queue already cleared for iDRAC r630.host.io, DELETE command will not execute.\n" \
+RESPONSE_CHANGE_BOOT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                       "- WARNING  - Job queue already cleared for iDRAC r630.host.io, DELETE command will not " \
+                       "execute.\n" \
                        "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
                        "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
                        "- WARNING  - Waiting for host to be up.\n" \
@@ -87,4 +97,5 @@ RESPONSE_CHANGE_BOOT = "- WARNING  - Job queue already cleared for iDRAC r630.ho
                        "- INFO     - Job id JID_498218641680 successfully scheduled.\n" \
                        "- INFO     - Command passed to On server, code return is 204.\n"
 
-RESPONSE_CHANGE_NO_INT = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
+RESPONSE_CHANGE_NO_INT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
+                         "- WARNING  - No changes were made since the boot order already matches the requested.\n"
