@@ -30,6 +30,7 @@ class Badfish:
         self.root_uri = "%s%s" % (self.host_uri, self.redfish_uri)
         self.logger = logger
         self.system_resource = self.find_systems_resource()
+        self.manager_resource = self.find_managers_resource()
         self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
 
     @staticmethod
@@ -157,7 +158,7 @@ class Badfish:
 
     def get_job_queue(self):
         self.logger.debug("Getting job queue.")
-        _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
+        _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _response = self.get_request(_url)
 
         data = _response.json()
@@ -168,7 +169,7 @@ class Badfish:
 
     def get_job_status(self, _job_id):
         self.logger.debug("Getting job status.")
-        _uri = "%s/Managers/iDRAC.Embedded.1/Jobs/%s" % (self.root_uri, _job_id)
+        _uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, _job_id)
 
         for _ in range(self.retries):
             _response = self.get_request(_uri, _continue=True)
@@ -241,6 +242,27 @@ class Badfish:
                             return systems_service
                     else:
                         self.logger.error("ComputerSystem's Members array is either empty or missing")
+                        sys.exit(1)
+
+    def find_managers_resource(self):
+        response = self.get_request(self.root_uri)
+        if response:
+            data = response.json()
+            if 'Managers' not in data:
+                self.logger.error("Managers resource not found")
+                sys.exit(1)
+            else:
+                managers = data["Managers"]["@odata.id"]
+                response = self.get_request(self.host_uri + managers)
+                if response:
+                    data = response.json()
+                    if data.get(u'Members'):
+                        for member in data[u'Members']:
+                            managers_service = member[u'@odata.id']
+                            self.logger.info("Managers service: %s." % managers_service)
+                            return managers_service
+                    else:
+                        self.logger.error("Manager's Members array is either empty or missing")
                         sys.exit(1)
 
     def get_power_state(self):
@@ -372,7 +394,7 @@ class Badfish:
     def clear_job_queue(self):
         _job_queue = self.get_job_queue()
         if _job_queue:
-            _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
+            _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
             _headers = {"content-type": "application/json"}
             self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
             for _job in _job_queue:
@@ -410,7 +432,7 @@ class Badfish:
         return _job_id
 
     def create_bios_config_job(self, uri):
-        _url = "%s/Managers/iDRAC.Embedded.1/Jobs" % self.root_uri
+        _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _payload = {"TargetSettingsURI": uri}
         _headers = {"content-type": "application/json"}
         return self.create_job(_url, _payload, _headers)
@@ -459,7 +481,7 @@ class Badfish:
 
     def reset_idrac(self):
         self.logger.debug("Running reset iDRAC.")
-        _url = "%s/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % self.root_uri
+        _url = "%s%s/Actions/Manager.Reset/" % (self.host_uri, self.manager_resource)
         _payload = {"ResetType": "GracefulRestart"}
         _headers = {'content-type': 'application/json'}
         self.logger.debug("url: %s" % _url)
@@ -591,8 +613,8 @@ class Badfish:
             self.logger.info("*" * 48)
 
     def export_configuration(self):
-        _url = '%s/Managers/iDRAC.Embedded.1/Actions/' \
-               'Oem/EID_674_Manager.ExportSystemConfiguration' % self.root_uri
+        _url = '%s%s/Actions/' \
+               'Oem/EID_674_Manager.ExportSystemConfiguration' % (self.host_uri, self.manager_resource)
         _payload = {"ExportFormat": "XML", "ShareParameters": {"Target": "ALL"},
                     "IncludeInExport": "IncludeReadOnly,IncludePasswordHashValues"}
         _headers = {'content-type': 'application/json'}
