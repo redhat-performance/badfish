@@ -595,6 +595,10 @@ class Badfish:
             self.logger.error("Not able to access Firmware inventory.")
             sys.exit(1)
         installed_devices = []
+        if "error" in data:
+            self.logger.debug(data["error"])
+            self.logger.error("Not able to access Firmware inventory.")
+            sys.exit(1)
         for device in data[u'Members']:
             a = device[u'@odata.id']
             a = a.replace("/redfish/v1/UpdateService/FirmwareInventory/", "")
