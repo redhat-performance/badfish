@@ -589,7 +589,11 @@ class Badfish:
         _url = '%s/UpdateService/FirmwareInventory/' % self.root_uri
         _response = self.get_request(_url)
 
-        data = _response.json()
+        try:
+            data = _response.json()
+        except ValueError:
+            self.logger.error("Not able to access Firmware inventory.")
+            sys.exit(1)
         installed_devices = []
         for device in data[u'Members']:
             a = device[u'@odata.id']
