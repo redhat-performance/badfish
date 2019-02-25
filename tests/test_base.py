@@ -38,7 +38,14 @@ class TestBase(unittest.TestCase):
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1" % config.MOCK_HOST,
                   json=self.state_callback)
         _mock.get("https://%s/redfish/v1" % config.MOCK_HOST,
-                  json={"Systems": {"@odata.id": "/redfish/v1/Systems/System.Embedded.1"}})
+                  json={
+                      "Systems": {
+                          "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
+                      },
+                      "Managers": {
+                          "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"
+                      }
+                  })
         _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % config.MOCK_HOST,
                   json={"Attributes": {"BootMode": u"Bios"}})
         _mock.patch("https://%s/redfish/v1/Systems/System.Embedded.1/Bios/Settings" % config.MOCK_HOST,
@@ -51,6 +58,8 @@ class TestBase(unittest.TestCase):
         _mock.patch("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources/Settings" % config.MOCK_HOST,
                     json={})
 
+        _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1" % config.MOCK_HOST,
+                   json={u"Members": [{u"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"}]})
         _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % config.MOCK_HOST,
                   json=self.jobs_callback)
         _mock.post("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % config.MOCK_HOST,
