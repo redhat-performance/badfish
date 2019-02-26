@@ -703,7 +703,7 @@ def execute_badfish(_host, _args, logger):
     elif host_type:
         badfish.change_boot(host_type, interfaces_path, pxe)
 
-    if pxe:
+    if pxe and not host_type:
         badfish.set_next_boot_pxe()
 
     if _args["host_list"]:
