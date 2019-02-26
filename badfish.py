@@ -700,8 +700,11 @@ def execute_badfish(_host, _args, logger):
         badfish.export_configuration()
     elif clear_jobs:
         badfish.clear_job_queue()
-    else:
+    elif host_type:
         badfish.change_boot(host_type, interfaces_path, pxe)
+
+    if pxe and not host_type:
+        badfish.set_next_boot_pxe()
 
     if _args["host_list"]:
         badfish.logger.info("*" * 48)
