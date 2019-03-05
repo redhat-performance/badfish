@@ -353,7 +353,7 @@ class Badfish:
 
     def patch_boot_seq(self, boot_devices):
         _boot_seq = self.get_boot_seq()
-        boot_sources_uri = "%s%s/BootSources/Settings" % (self.redfish_uri, self.system_resource)
+        boot_sources_uri = "%s/BootSources/Settings" % self.system_resource
         url = "%s%s" % (self.host_uri, boot_sources_uri)
         payload = {"Attributes": {_boot_seq: boot_devices}}
         headers = {"content-type": "application/json"}
@@ -433,7 +433,7 @@ class Badfish:
 
     def create_bios_config_job(self, uri):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
-        _payload = {"TargetSettingsURI": uri}
+        _payload = {"TargetSettingsURI": "%s%s" % (self.redfish_uri, uri)}
         _headers = {"content-type": "application/json"}
         return self.create_job(_url, _payload, _headers)
 
