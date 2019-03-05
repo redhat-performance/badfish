@@ -61,7 +61,7 @@ class Badfish:
 
     def get_request(self, uri, _continue=False):
         try:
-            _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=30)
+            _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
         except RequestException as ex:
             self.logger.debug(ex)
             self.logger.error("Failed to communicate with server.")
@@ -234,6 +234,9 @@ class Badfish:
                 systems = data["Systems"]["@odata.id"]
                 response = self.get_request(self.host_uri + systems)
                 if response:
+                    if response.status_code == 401:
+                        self.logger.error("Failed to authenticate. Verify your credentials.")
+                        sys.exit(1)
                     data = response.json()
                     if data.get(u'Members'):
                         for member in data[u'Members']:
