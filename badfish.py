@@ -447,7 +447,7 @@ class Badfish:
         _response = self.post_request(_url, _payload, _headers)
 
         status_code = _response.status_code
-        if status_code == 204:
+        if status_code in [200, 204]:
             self.logger.info(
                 "Command passed to %s server, code return is %s." % (reset_type, status_code)
             )
