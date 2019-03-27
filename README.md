@@ -20,6 +20,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Get firmware inventory of installed devices supported by iDRAC
 * Bulk actions via plain text file with list of hosts
 * Logging to a specific path
+* Containerized Badfish image
 
 ## Requirements
 * iDRAC7,8 or newer
@@ -28,6 +29,19 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 
 ## Usage
 Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+
+## Usage via docker
+Badfish can now be run via a docker-image. For this you need to first pull the Badfish image via:
+```
+docker pull quads/badfish
+```
+You can then run badfish from inside the container:
+```
+docker run -it --rm --dns $DNS_IP badfish -H $HOST -u $USER -p $PASS --reboot-only
+```
+NOTE:
+* If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with --dns
+* If you would like to use a different file for config/idrac_interfaces.yml you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
 
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
