@@ -37,7 +37,7 @@ docker pull quads/badfish
 ```
 You can then run badfish from inside the container:
 ```
-docker run -it --rm --dns $DNS_IP badfish -H $HOST -u $USER -p $PASS --reboot-only
+docker run -it --rm --dns $DNS_IP quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
 ```
 NOTE:
 * If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with --dns
