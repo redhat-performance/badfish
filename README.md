@@ -1,4 +1,4 @@
-![quads](/image/badfish.jpg?raw=true)
+![badfish](/image/badfish.jpg?raw=true)
 
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
 
