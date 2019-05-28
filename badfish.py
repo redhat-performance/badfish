@@ -523,17 +523,42 @@ class Badfish:
             sys.exit(1)
         return True
 
+    def boot_to_type(self, host_type, _interfaces_path):
+        if host_type.lower() not in ("foreman", "director"):
+            self.logger.error('Expected values for -t argument are "foreman" or "director"')
+            sys.exit(1)
+
+        if _interfaces_path:
+            if not os.path.exists(_interfaces_path):
+                self.logger.error("No such file or directory: %s." % _interfaces_path)
+                sys.exit(1)
+        else:
+            self.logger.error(
+                "You must provide a path to the interfaces yaml via `-i` optional argument."
+            )
+            sys.exit(1)
+
+        device = self.get_host_type_boot_device(host_type, _interfaces_path)
+
+        self.boot_to(device)
+
     def send_one_time_boot(self, device):
         _url = "%s%s" % (self.root_uri, self.bios_uri)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": device}}
         _headers = {"content-type": "application/json"}
-        _response = self.patch_request(_url, _payload, _headers)
-        status_code = _response.status_code
-        if status_code == 200:
-            self.logger.info("Command passed to set BIOS attribute pending values.")
-        else:
-            self.logger.error("Command failed, error code is: %s." % status_code)
-            self.error_handler(_response)
+        for i in range(self.retries):
+            _response = self.patch_request(_url, _payload, _headers)
+            status_code = _response.status_code
+            if status_code == 200:
+                self.logger.info("Command passed to set BIOS attribute pending values.")
+                break
+            else:
+                self.logger.error("Command failed, error code is: %s." % status_code)
+                if status_code == 503 and i - 1 != self.retries:
+                    self.logger.info("Retrying to send one time boot.")
+                    continue
+                else:
+                    self.error_handler(_response)
 
     def check_boot(self, _interfaces_path):
         if _interfaces_path:
@@ -668,6 +693,19 @@ class Badfish:
 
         self.logger.error("Could not export settings after %s attempts." % self.retries)
 
+    def get_host_type_boot_device(self, host_type, _interfaces_path):
+        if _interfaces_path:
+            with open(_interfaces_path, "r") as f:
+                try:
+                    definitions = yaml.safe_load(f)
+                except yaml.YAMLError:
+                    self.logger.exception("Couldn't read file: %s" % _interfaces_path)
+                    sys.exit(1)
+
+            host_model = self.host.split(".")[0].split("-")[-1]
+            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
+        return None
+
 
 def execute_badfish(_host, _args, logger):
     username = _args["u"]
@@ -676,6 +714,7 @@ def execute_badfish(_host, _args, logger):
     interfaces_path = _args["i"]
     pxe = _args["pxe"]
     device = _args["boot_to"]
+    boot_to_type = _args["boot_to_type"]
     reboot_only = _args["reboot_only"]
     racreset = _args["racreset"]
     check_boot = _args["check_boot"]
@@ -695,6 +734,8 @@ def execute_badfish(_host, _args, logger):
         badfish.reset_idrac()
     elif device:
         badfish.boot_to(device)
+    elif boot_to_type:
+        badfish.boot_to_type(boot_to_type, interfaces_path)
     elif check_boot:
         badfish.check_boot(interfaces_path)
     elif firmware_inventory:
@@ -724,6 +765,7 @@ def main(argv=None):
     parser.add_argument("--host-list", help="Path to a plain text file with a list of hosts.", default=None)
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
     parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
+    parser.add_argument("--boot-to-type", help="Set next boot to one-shot boot to either director or foreman")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
