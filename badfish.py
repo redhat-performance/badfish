@@ -163,7 +163,7 @@ class Badfish:
 
         data = _response.json()
         data = str(data)
-        job_queue = re.findall("JID_.+?'", data)
+        job_queue = re.findall("[RJ]ID_.+?'", data)
         jobs = [job.strip("}").strip("\"").strip("'") for job in job_queue]
         return jobs
 
@@ -429,7 +429,7 @@ class Badfish:
             self.error_handler(_response)
 
         convert_to_string = str(_response.__dict__)
-        job_id_search = re.search("JID_.+?,", convert_to_string).group()
+        job_id_search = re.search("[RJ]ID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search).strip("}").strip("\"").strip("'")
         self.logger.info("%s job ID successfully created." % _job_id)
         return _job_id
