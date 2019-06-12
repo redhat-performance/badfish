@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from core.logger import Logger
+from logging import FileHandler, Formatter, DEBUG, INFO
 from requests.exceptions import RequestException
 
 import json
@@ -698,6 +700,8 @@ class Badfish:
             host_model = self.host.split(".")[0].split("-")[-1]
             return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
         return None
+
+
 def execute_badfish(_host, _args, logger):
     username = _args["u"]
     password = _args["p"]
@@ -767,7 +771,10 @@ def main(argv=None):
     parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
     args = vars(parser.parse_args(argv))
 
-    log_level = DEBUG if args["verbose"] else INFO
+    log_level = DEBUG
+
+    if args["verbose"]:
+        log_level = INFO
 
     logger = Logger()
     logger.start(level=log_level)
