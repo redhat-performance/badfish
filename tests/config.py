@@ -65,15 +65,11 @@ JOB_ID = 'JID_498218641680'
 RESPONSE_BOOT_TO = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
                    "- WARNING  - Job queue already cleared for iDRAC %s, DELETE command will not execute.\n" \
-                   "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
-                   "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
-                   "- INFO     - Polling for host state: On\n" \
                    "- INFO     - Command passed to set BIOS attribute pending values.\n" \
                    "- INFO     - POST command passed to create target config job.\n" \
                    "- INFO     - %s job ID successfully created.\n" \
                    "- INFO     - Command passed to check job status, code 200 returned.\n" \
-                   "- INFO     - Job id %s successfully scheduled.\n" \
-                   "- INFO     - Command passed to On server, code return is 204.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
+                   "- INFO     - Job id %s successfully scheduled.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
@@ -94,16 +90,13 @@ RESPONSE_CHANGE_BOOT = "- INFO     - Systems service: /redfish/v1/Systems/System
                        "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
                        "- WARNING  - Job queue already cleared for iDRAC r630.host.io, DELETE command will not " \
                        "execute.\n" \
-                       "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
-                       "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
                        "- WARNING  - Waiting for host to be up.\n" \
                        "- INFO     - Polling for host state: On\n" \
                        "- INFO     - PATCH command passed to update boot order.\n" \
                        "- INFO     - POST command passed to create target config job.\n" \
                        "- INFO     - JID_498218641680 job ID successfully created.\n" \
                        "- INFO     - Command passed to check job status, code 200 returned.\n" \
-                       "- INFO     - Job id JID_498218641680 successfully scheduled.\n" \
-                       "- INFO     - Command passed to On server, code return is 204.\n"
+                       "- INFO     - Job id JID_498218641680 successfully scheduled.\n"
 
 RESPONSE_CHANGE_NO_INT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                          "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
