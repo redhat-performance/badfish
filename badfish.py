@@ -702,7 +702,7 @@ class Badfish:
         return None
 
 
-def execute_badfish(_host, _args, logger):
+def execute_badfish(_host, _args):
     username = _args["u"]
     password = _args["p"]
     host_type = _args["t"]
@@ -718,7 +718,7 @@ def execute_badfish(_host, _args, logger):
     clear_jobs = _args["clear_jobs"]
     retries = _args["retries"]
 
-    badfish = Badfish(_host, username, password, logger, retries)
+    badfish = Badfish(_host, username, password, retries)
 
     if _args["host_list"]:
         badfish.logger.info("Executing actions on host: %s" % _host)
@@ -793,7 +793,7 @@ def main(argv=None):
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        execute_badfish(_host.strip(), args, logger)
+                        execute_badfish(_host.strip(), args)
                     except SystemExit:
                         continue
         except IOError as ex:
@@ -802,7 +802,7 @@ def main(argv=None):
     elif not host:
         logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
     else:
-        execute_badfish(host, args, logger)
+        execute_badfish(host, args)
     return 0
 
 
