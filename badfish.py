@@ -1,11 +1,12 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
 from core.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
 from requests.exceptions import RequestException
 
-import argparse
 import json
+import argparse
+import logging
 import os
 import re
 import requests
@@ -17,7 +18,6 @@ import yaml
 warnings.filterwarnings("ignore")
 
 RETRIES = 15
-
 
 class Badfish:
     def __init__(self, _host, _username, _password, logger, _retries=RETRIES):
@@ -62,12 +62,11 @@ class Badfish:
     def get_request(self, uri, _continue=False):
         try:
             _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
-        except RequestException as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
-            if _continue:
-                return
-            else:
+        except RequestException:
+           self.logger.exception("Failed to communicate with server.")
+           if _continue:
+               return
+           else:
                 sys.exit(1)
         return _response
 
@@ -80,9 +79,8 @@ class Badfish:
                 verify=False,
                 auth=(self.username, self.password)
             )
-        except RequestException as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
+        except RequestException:
+            self.logger.exception("Failed to communicate with server.")
             sys.exit(1)
         return _response
 
@@ -95,9 +93,8 @@ class Badfish:
                 verify=False,
                 auth=(self.username, self.password)
             )
-        except RequestException as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
+        except RequestException:
+            self.logger.exception("Failed to communicate with server.")
             if _continue:
                 return
             else:
@@ -112,9 +109,8 @@ class Badfish:
                 verify=False,
                 auth=(self.username, self.password)
             )
-        except RequestException as ex:
-            self.logger.debug(ex)
-            self.logger.error("Failed to communicate with server.")
+        except RequestException:
+            self.logger.exception("Failed to communicate with server.")
             sys.exit(1)
         return
 
@@ -163,7 +159,7 @@ class Badfish:
 
         data = _response.json()
         data = str(data)
-        job_queue = re.findall("JID_.+?'", data)
+        job_queue = re.findall("[JR]ID_.+?'", data)
         jobs = [job.strip("}").strip("\"").strip("'") for job in job_queue]
         return jobs
 
@@ -225,6 +221,11 @@ class Badfish:
 
     def find_systems_resource(self):
         response = self.get_request(self.root_uri)
+
+        if response.status_code == 401:
+            self.logger.error("Failed to authenticate. Verify your credentials.")
+            sys.exit(1)
+
         if response:
             data = response.json()
             if 'Systems' not in data:
@@ -232,12 +233,9 @@ class Badfish:
                 sys.exit(1)
             else:
                 systems = data["Systems"]["@odata.id"]
-                response = self.get_request(self.host_uri + systems)
-                if response:
-                    if response.status_code == 401:
-                        self.logger.error("Failed to authenticate. Verify your credentials.")
-                        sys.exit(1)
-                    data = response.json()
+                _response = self.get_request(self.host_uri + systems)
+                if _response:
+                    data = _response.json()
                     if data.get(u'Members'):
                         for member in data[u'Members']:
                             systems_service = member[u'@odata.id']
@@ -303,7 +301,6 @@ class Badfish:
         _type = self.get_host_type(interfaces_path)
         if _type and _type.lower() != host_type.lower():
             self.clear_job_queue()
-            self.reset_idrac()
             self.logger.warning("Waiting for host to be up.")
             host_up = self.polling_host_state("On")
             if host_up:
@@ -316,7 +313,6 @@ class Badfish:
                 if job_id:
                     self.get_job_status(job_id)
 
-                self.reboot_server()
             else:
                 self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
                 sys.exit(1)
@@ -394,16 +390,20 @@ class Badfish:
 
             self.error_handler(_response)
 
-    def clear_job_queue(self):
+    def clear_job_queue(self, force=False):
         _job_queue = self.get_job_queue()
         if _job_queue:
             _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
             _headers = {"content-type": "application/json"}
             self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
-            for _job in _job_queue:
-                job = _job.strip("'")
-                url = "%s/%s" % (_url, job)
+            if force:
+                url = "%s/JID_CLEARALL_FORCE" % _url
                 self.delete_request(url, _headers)
+            else:
+                for _job in _job_queue:
+                    job = _job.strip("'")
+                    url = "%s/%s" % (_url, job)
+                    self.delete_request(url, _headers)
 
             job_queue = self.get_job_queue()
             if not job_queue:
@@ -429,7 +429,7 @@ class Badfish:
             self.error_handler(_response)
 
         convert_to_string = str(_response.__dict__)
-        job_id_search = re.search("JID_.+?,", convert_to_string).group()
+        job_id_search = re.search("[RJ]ID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search).strip("}").strip("\"").strip("'")
         self.logger.info("%s job ID successfully created." % _job_id)
         return _job_id
@@ -459,18 +459,21 @@ class Badfish:
 
             self.error_handler(_response)
 
-    def reboot_server(self):
+    def reboot_server(self, graceful=True):
         self.logger.debug("Rebooting server: %s." % self.host)
         power_state = self.get_power_state()
         if power_state.lower() == "on":
-            self.send_reset("GracefulRestart")
+            if graceful:
+                self.send_reset("GracefulRestart")
 
-            host_down = self.polling_host_state("Off")
+                host_down = self.polling_host_state("Off")
 
-            if not host_down:
-                self.logger.warning(
-                    "Unable to graceful shutdown the server, will perform forced shutdown now."
-                )
+                if not host_down:
+                    self.logger.warning(
+                        "Unable to graceful shutdown the server, will perform forced shutdown now."
+                    )
+                    self.send_reset("ForceOff")
+            else:
                 self.send_reset("ForceOff")
 
             host_not_down = self.polling_host_state("Down", False)
@@ -507,18 +510,10 @@ class Badfish:
     def boot_to(self, device):
         if self.check_device(device):
             self.clear_job_queue()
-            self.reset_idrac()
-            host_up = self.polling_host_state("On")
-            time.sleep(5)
-            if host_up:
-                self.send_one_time_boot(device)
-                job_id = self.create_bios_config_job(self.bios_uri)
-                if job_id:
-                    self.get_job_status(job_id)
-                self.reboot_server()
-            else:
-                self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
-                sys.exit(1)
+            self.send_one_time_boot(device)
+            job_id = self.create_bios_config_job(self.bios_uri)
+            if job_id:
+                self.get_job_status(job_id)
         else:
             sys.exit(1)
         return True
@@ -532,11 +527,6 @@ class Badfish:
             if not os.path.exists(_interfaces_path):
                 self.logger.error("No such file or directory: %s." % _interfaces_path)
                 sys.exit(1)
-        else:
-            self.logger.error(
-                "You must provide a path to the interfaces yaml via `-i` optional argument."
-            )
-            sys.exit(1)
 
         device = self.get_host_type_boot_device(host_type, _interfaces_path)
 
@@ -557,8 +547,10 @@ class Badfish:
                 if status_code == 503 and i - 1 != self.retries:
                     self.logger.info("Retrying to send one time boot.")
                     continue
-                else:
-                    self.error_handler(_response)
+                elif status_code == 400:
+                    self.clear_job_queue(force=True)
+                    continue
+                self.error_handler(_response)
 
     def check_boot(self, _interfaces_path):
         if _interfaces_path:
@@ -586,7 +578,7 @@ class Badfish:
         self.logger.debug("Checking device %s." % device)
         devices = self.get_boot_devices()
         self.logger.debug(devices)
-        boot_devices = [device["Name"].lower() for device in devices]
+        boot_devices = [_device["Name"].lower() for _device in devices]
         if device.lower() in boot_devices:
             return True
         else:
@@ -698,8 +690,9 @@ class Badfish:
             with open(_interfaces_path, "r") as f:
                 try:
                     definitions = yaml.safe_load(f)
-                except yaml.YAMLError:
-                    self.logger.exception("Couldn't read file: %s" % _interfaces_path)
+                except yaml.YAMLError as ex:
+                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
+                    self.logger.debug(ex)
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
