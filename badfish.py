@@ -19,11 +19,8 @@ warnings.filterwarnings("ignore")
 
 RETRIES = 15
 
-logger = logging.getLogger(__name__)
-
-
 class Badfish:
-    def __init__(self, _host, _username, _password, _retries=RETRIES):
+    def __init__(self, _host, _username, _password, logger, _retries=RETRIES):
         self.host = _host
         self.username = _username
         self.password = _password
@@ -31,6 +28,7 @@ class Badfish:
         self.host_uri = "https://%s" % _host
         self.redfish_uri = "/redfish/v1"
         self.root_uri = "%s%s" % (self.host_uri, self.redfish_uri)
+        self.logger = logger
         self.system_resource = self.find_systems_resource()
         self.manager_resource = self.find_managers_resource()
         self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
@@ -52,12 +50,12 @@ class Badfish:
         try:
             data = _response.json()
         except ValueError:
-            logger.error("Error reading response from host.")
+            self.logger.error("Error reading response from host.")
             sys.exit(1)
 
         if "error" in data:
             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-            logger.warning(detail_message)
+            self.logger.warning(detail_message)
 
         sys.exit(1)
 
@@ -65,10 +63,10 @@ class Badfish:
         try:
             _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
         except RequestException:
-            logger.exception("Failed to communicate with server.")
-            if _continue:
-                return
-            else:
+           self.logger.exception("Failed to communicate with server.")
+           if _continue:
+               return
+           else:
                 sys.exit(1)
         return _response
 
@@ -82,7 +80,7 @@ class Badfish:
                 auth=(self.username, self.password)
             )
         except RequestException:
-            logger.exception("Failed to communicate with server.")
+            self.logger.exception("Failed to communicate with server.")
             sys.exit(1)
         return _response
 
@@ -96,7 +94,7 @@ class Badfish:
                 auth=(self.username, self.password)
             )
         except RequestException:
-            logger.exception("Failed to communicate with server.")
+            self.logger.exception("Failed to communicate with server.")
             if _continue:
                 return
             else:
@@ -112,7 +110,7 @@ class Badfish:
                 auth=(self.username, self.password)
             )
         except RequestException:
-            logger.exception("Failed to communicate with server.")
+            self.logger.exception("Failed to communicate with server.")
             sys.exit(1)
         return
 
@@ -124,21 +122,21 @@ class Badfish:
             return "BootSeq"
 
     def get_bios_boot_mode(self):
-        logger.debug("Getting bios boot mode.")
+        self.logger.debug("Getting bios boot mode.")
         _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
         _response = self.get_request(_uri)
 
         try:
             data = _response.json()
         except ValueError:
-            logger.error("Could not retrieve Bios Boot mode.")
+            self.logger.error("Could not retrieve Bios Boot mode.")
             sys.exit(1)
 
         try:
             bios_boot_mode = data[u"Attributes"]["BootMode"]
             return bios_boot_mode
         except KeyError:
-            logger.warning("Could not retrieve Bios Attributes. Assuming Bios.")
+            self.logger.warning("Could not retrieve Bios Attributes. Assuming Bios.")
             return "Bios"
 
     def get_boot_devices(self):
@@ -150,12 +148,12 @@ class Badfish:
         if "Attributes" in data:
             return data[u"Attributes"][_boot_seq]
         else:
-            logger.debug(data)
-            logger.error("Boot order modification is not supported by this host.")
+            self.logger.debug(data)
+            self.logger.error("Boot order modification is not supported by this host.")
             sys.exit(1)
 
     def get_job_queue(self):
-        logger.debug("Getting job queue.")
+        self.logger.debug("Getting job queue.")
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _response = self.get_request(_url)
 
@@ -166,7 +164,7 @@ class Badfish:
         return jobs
 
     def get_job_status(self, _job_id):
-        logger.debug("Getting job status.")
+        self.logger.debug("Getting job status.")
         _uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, _job_id)
 
         for _ in range(self.retries):
@@ -176,21 +174,21 @@ class Badfish:
 
             status_code = _response.status_code
             if status_code == 200:
-                logger.info("Command passed to check job status, code 200 returned.")
+                self.logger.info("Command passed to check job status, code 200 returned.")
                 time.sleep(10)
             else:
-                logger.error("Command failed to check job status, return code is %s." % status_code)
+                self.logger.error("Command failed to check job status, return code is %s." % status_code)
 
                 self.error_handler(_response)
 
             data = _response.json()
             if data[u"Message"] == "Task successfully scheduled.":
-                logger.info("Job id %s successfully scheduled." % _job_id)
+                self.logger.info("Job id %s successfully scheduled." % _job_id)
                 return
             else:
-                logger.warning("JobStatus not scheduled, current status is: %s." % data[u"Message"])
+                self.logger.warning("JobStatus not scheduled, current status is: %s." % data[u"Message"])
 
-        logger.error("Not able to successfully schedule the job.")
+        self.logger.error("Not able to successfully schedule the job.")
         sys.exit(1)
 
     def get_host_type(self, _interfaces_path):
@@ -201,8 +199,8 @@ class Badfish:
                 try:
                     definitions = yaml.safe_load(f)
                 except yaml.YAMLError as ex:
-                    logger.error("Couldn't read file: %s" % _interfaces_path)
-                    logger.debug(ex)
+                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
+                    self.logger.debug(ex)
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
@@ -225,13 +223,13 @@ class Badfish:
         response = self.get_request(self.root_uri)
 
         if response.status_code == 401:
-            logger.error("Failed to authenticate. Verify your credentials.")
+            self.logger.error("Failed to authenticate. Verify your credentials.")
             sys.exit(1)
 
         if response:
             data = response.json()
             if 'Systems' not in data:
-                logger.error("Systems resource not found")
+                self.logger.error("Systems resource not found")
                 sys.exit(1)
             else:
                 systems = data["Systems"]["@odata.id"]
@@ -241,10 +239,10 @@ class Badfish:
                     if data.get(u'Members'):
                         for member in data[u'Members']:
                             systems_service = member[u'@odata.id']
-                            logger.info("Systems service: %s." % systems_service)
+                            self.logger.info("Systems service: %s." % systems_service)
                             return systems_service
                     else:
-                        logger.error("ComputerSystem's Members array is either empty or missing")
+                        self.logger.error("ComputerSystem's Members array is either empty or missing")
                         sys.exit(1)
 
     def find_managers_resource(self):
@@ -252,7 +250,7 @@ class Badfish:
         if response:
             data = response.json()
             if 'Managers' not in data:
-                logger.error("Managers resource not found")
+                self.logger.error("Managers resource not found")
                 sys.exit(1)
             else:
                 managers = data["Managers"]["@odata.id"]
@@ -262,15 +260,15 @@ class Badfish:
                     if data.get(u'Members'):
                         for member in data[u'Members']:
                             managers_service = member[u'@odata.id']
-                            logger.info("Managers service: %s." % managers_service)
+                            self.logger.info("Managers service: %s." % managers_service)
                             return managers_service
                     else:
-                        logger.error("Manager's Members array is either empty or missing")
+                        self.logger.error("Manager's Members array is either empty or missing")
                         sys.exit(1)
 
     def get_power_state(self):
         _uri = '%s%s' % (self.host_uri, self.system_resource)
-        logger.debug("url: %s" % _uri)
+        self.logger.debug("url: %s" % _uri)
 
         _response = self.get_request(_uri, _continue=True)
         if not _response:
@@ -279,23 +277,23 @@ class Badfish:
         if _response.ok:
             data = _response.json()
         else:
-            logger.debug("Couldn't get power state. Retrying.")
+            self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
-        logger.debug("Current server power state is: %s." % data[u'PowerState'])
+        self.logger.debug("Current server power state is: %s." % data[u'PowerState'])
 
         return data[u'PowerState']
 
     def change_boot(self, host_type, interfaces_path, pxe=False):
         if host_type.lower() not in ("foreman", "director"):
-            logger.error('Expected values for -t argument are "foreman" or "director"')
+            self.logger.error('Expected values for -t argument are "foreman" or "director"')
             sys.exit(1)
 
         if interfaces_path:
             if not os.path.exists(interfaces_path):
-                logger.error("No such file or directory: %s." % interfaces_path)
+                self.logger.error("No such file or directory: %s." % interfaces_path)
                 sys.exit(1)
         else:
-            logger.error(
+            self.logger.error(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
             )
             sys.exit(1)
@@ -303,7 +301,7 @@ class Badfish:
         _type = self.get_host_type(interfaces_path)
         if _type and _type.lower() != host_type.lower():
             self.clear_job_queue()
-            logger.warning("Waiting for host to be up.")
+            self.logger.warning("Waiting for host to be up.")
             host_up = self.polling_host_state("On")
             if host_up:
                 self.change_boot_order(interfaces_path, host_type)
@@ -316,10 +314,10 @@ class Badfish:
                     self.get_job_status(job_id)
 
             else:
-                logger.error("Couldn't communicate with host after %s attempts." % self.retries)
+                self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
                 sys.exit(1)
         else:
-            logger.warning(
+            self.logger.warning(
                 "No changes were made since the boot order already matches the requested."
             )
         return True
@@ -329,7 +327,7 @@ class Badfish:
             try:
                 definitions = yaml.safe_load(f)
             except yaml.YAMLError as ex:
-                logger.error(ex)
+                self.logger.error(ex)
                 sys.exit(1)
 
         host_model = self.host.split(".")[0].split("-")[-1]
@@ -349,7 +347,7 @@ class Badfish:
             self.patch_boot_seq(boot_devices)
 
         else:
-            logger.warning("No changes were made since the boot order already matches the requested.")
+            self.logger.warning("No changes were made since the boot order already matches the requested.")
             sys.exit()
 
     def patch_boot_seq(self, boot_devices):
@@ -370,9 +368,9 @@ class Badfish:
                 break
 
         if _status_code == 200:
-            logger.info("PATCH command passed to update boot order.")
+            self.logger.info("PATCH command passed to update boot order.")
         else:
-            logger.error("There was something wrong with your request.")
+            self.logger.error("There was something wrong with your request.")
 
             if response:
                 self.error_handler(response)
@@ -386,9 +384,9 @@ class Badfish:
         time.sleep(5)
 
         if _response.status_code == 200:
-            logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
+            self.logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
         else:
-            logger.error("Command failed, error code is %s." % _response.status_code)
+            self.logger.error("Command failed, error code is %s." % _response.status_code)
 
             self.error_handler(_response)
 
@@ -397,7 +395,7 @@ class Badfish:
         if _job_queue:
             _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
             _headers = {"content-type": "application/json"}
-            logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
+            self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
             if force:
                 url = "%s/JID_CLEARALL_FORCE" % _url
                 self.delete_request(url, _headers)
@@ -409,12 +407,12 @@ class Badfish:
 
             job_queue = self.get_job_queue()
             if not job_queue:
-                logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+                self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
             else:
-                logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
+                self.logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
                 sys.exit(1)
         else:
-            logger.warning(
+            self.logger.warning(
                 "Job queue already cleared for iDRAC %s, DELETE command will not execute." % self.host
             )
 
@@ -424,16 +422,16 @@ class Badfish:
         status_code = _response.status_code
 
         if status_code == expected:
-            logger.info("POST command passed to create target config job.")
+            self.logger.info("POST command passed to create target config job.")
         else:
-            logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
+            self.logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
 
             self.error_handler(_response)
 
         convert_to_string = str(_response.__dict__)
         job_id_search = re.search("[RJ]ID_.+?,", convert_to_string).group()
         _job_id = re.sub("[,']", "", job_id_search).strip("}").strip("\"").strip("'")
-        logger.info("%s job ID successfully created." % _job_id)
+        self.logger.info("%s job ID successfully created." % _job_id)
         return _job_id
 
     def create_bios_config_job(self, uri):
@@ -450,19 +448,19 @@ class Badfish:
 
         status_code = _response.status_code
         if status_code in [200, 204]:
-            logger.info(
+            self.logger.info(
                 "Command passed to %s server, code return is %s." % (reset_type, status_code)
             )
             time.sleep(10)
         else:
-            logger.error(
+            self.logger.error(
                 "Command failed to %s server, status code is: %s." % (reset_type, status_code)
             )
 
             self.error_handler(_response)
 
     def reboot_server(self, graceful=True):
-        logger.debug("Rebooting server: %s." % self.host)
+        self.logger.debug("Rebooting server: %s." % self.host)
         power_state = self.get_power_state()
         if power_state.lower() == "on":
             if graceful:
@@ -471,7 +469,7 @@ class Badfish:
                 host_down = self.polling_host_state("Off")
 
                 if not host_down:
-                    logger.warning(
+                    self.logger.warning(
                         "Unable to graceful shutdown the server, will perform forced shutdown now."
                     )
                     self.send_reset("ForceOff")
@@ -488,25 +486,25 @@ class Badfish:
         return True
 
     def reset_idrac(self):
-        logger.debug("Running reset iDRAC.")
+        self.logger.debug("Running reset iDRAC.")
         _url = "%s%s/Actions/Manager.Reset/" % (self.host_uri, self.manager_resource)
         _payload = {"ResetType": "GracefulRestart"}
         _headers = {'content-type': 'application/json'}
-        logger.debug("url: %s" % _url)
-        logger.debug("payload: %s" % _payload)
-        logger.debug("headers: %s" % _headers)
+        self.logger.debug("url: %s" % _url)
+        self.logger.debug("payload: %s" % _payload)
+        self.logger.debug("headers: %s" % _headers)
         _response = self.post_request(_url, _payload, _headers)
 
         status_code = _response.status_code
         if status_code == 204:
-            logger.info("Status code %s returned for POST command to reset iDRAC." % status_code)
+            self.logger.info("Status code %s returned for POST command to reset iDRAC." % status_code)
         else:
             data = _response.json()
-            logger.error("Status code %s returned, error is: \n%s." % (status_code, data))
+            self.logger.error("Status code %s returned, error is: \n%s." % (status_code, data))
             sys.exit(1)
         time.sleep(15)
 
-        logger.info("iDRAC will now reset and be back online within a few minutes.")
+        self.logger.info("iDRAC will now reset and be back online within a few minutes.")
         return True
 
     def boot_to(self, device):
@@ -522,12 +520,12 @@ class Badfish:
 
     def boot_to_type(self, host_type, _interfaces_path):
         if host_type.lower() not in ("foreman", "director"):
-            logger.error('Expected values for -t argument are "foreman" or "director"')
+            self.logger.error('Expected values for -t argument are "foreman" or "director"')
             sys.exit(1)
 
         if _interfaces_path:
             if not os.path.exists(_interfaces_path):
-                logger.error("No such file or directory: %s." % _interfaces_path)
+                self.logger.error("No such file or directory: %s." % _interfaces_path)
                 sys.exit(1)
 
         device = self.get_host_type_boot_device(host_type, _interfaces_path)
@@ -542,12 +540,12 @@ class Badfish:
             _response = self.patch_request(_url, _payload, _headers)
             status_code = _response.status_code
             if status_code == 200:
-                logger.info("Command passed to set BIOS attribute pending values.")
+                self.logger.info("Command passed to set BIOS attribute pending values.")
                 break
             else:
-                logger.error("Command failed, error code is: %s." % status_code)
+                self.logger.error("Command failed, error code is: %s." % status_code)
                 if status_code == 503 and i - 1 != self.retries:
-                    logger.info("Retrying to send one time boot.")
+                    self.logger.info("Retrying to send one time boot.")
                     continue
                 elif status_code == 400:
                     self.clear_job_queue(force=True)
@@ -560,36 +558,36 @@ class Badfish:
             _host_type = self.get_host_type(_interfaces_path)
 
             if _host_type:
-                logger.warning("Current boot order is set to: %s." % _host_type)
+                self.logger.warning("Current boot order is set to: %s." % _host_type)
             else:
                 boot_devices = self.get_boot_devices()
 
-                logger.warning("Current boot order does not match any of the given.")
-                logger.info("Current boot order:")
+                self.logger.warning("Current boot order does not match any of the given.")
+                self.logger.info("Current boot order:")
                 for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
-                    logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+                    self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
 
         else:
             boot_devices = self.get_boot_devices()
-            logger.info("Current boot order:")
+            self.logger.info("Current boot order:")
             for device in sorted(boot_devices, key=lambda x: x[u"Index"]):
-                logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
+                self.logger.info("%s: %s" % (int(device[u"Index"]) + 1, device[u"Name"]))
         return True
 
     def check_device(self, device):
-        logger.debug("Checking device %s." % device)
+        self.logger.debug("Checking device %s." % device)
         devices = self.get_boot_devices()
-        logger.debug(devices)
+        self.logger.debug(devices)
         boot_devices = [_device["Name"].lower() for _device in devices]
         if device.lower() in boot_devices:
             return True
         else:
-            logger.error("Device %s does not match any of the existing for host %s" % (device, self.host))
+            self.logger.error("Device %s does not match any of the existing for host %s" % (device, self.host))
             return False
 
     def polling_host_state(self, state, equals=True):
         state_str = "Not %s" % state if not equals else state
-        logger.info("Polling for host state: %s" % state_str)
+        self.logger.info("Polling for host state: %s" % state_str)
         desired_state = False
         for count in range(self.retries):
             current_state = self.get_power_state()
@@ -606,7 +604,7 @@ class Badfish:
         return desired_state
 
     def get_firmware_inventory(self):
-        logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
+        self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
 
         _url = '%s/UpdateService/FirmwareInventory/' % self.root_uri
         _response = self.get_request(_url)
@@ -614,12 +612,12 @@ class Badfish:
         try:
             data = _response.json()
         except ValueError:
-            logger.error("Not able to access Firmware inventory.")
+            self.logger.error("Not able to access Firmware inventory.")
             sys.exit(1)
         installed_devices = []
         if "error" in data:
-            logger.debug(data["error"])
-            logger.error("Not able to access Firmware inventory.")
+            self.logger.debug(data["error"])
+            self.logger.error("Not able to access Firmware inventory.")
             sys.exit(1)
         for device in data[u'Members']:
             a = device[u'@odata.id']
@@ -628,7 +626,7 @@ class Badfish:
                 installed_devices.append(a)
 
         for device in installed_devices:
-            logger.debug("Getting device info for %s" % device)
+            self.logger.debug("Getting device info for %s" % device)
             _uri = '%s/UpdateService/FirmwareInventory/%s' % (self.root_uri, device)
 
             _response = self.get_request(_uri, _continue=True)
@@ -638,9 +636,9 @@ class Badfish:
             data = _response.json()
             for info in data.items():
                 if "odata" not in info[0] and "Description" not in info[0]:
-                    logger.info("%s: %s" % (info[0], info[1]))
+                    self.logger.info("%s: %s" % (info[0], info[1]))
 
-            logger.info("*" * 48)
+            self.logger.info("*" * 48)
 
     def export_configuration(self):
         _url = '%s%s/Actions/' \
@@ -660,7 +658,7 @@ class Badfish:
 
             data = _response.__dict__
             if "<SystemConfiguration Model" in str(data):
-                logger.info("Export job ID %s successfully completed." % job_id)
+                self.logger.info("Export job ID %s successfully completed." % job_id)
 
                 filename = "%s_export.xml" % self.host
 
@@ -668,7 +666,7 @@ class Badfish:
                     _content = data["_content"]
                     _file.writelines(["%s\n" % line.decode("utf-8") for line in _content.split(b"\n")])
 
-                logger.info("Exported attributes saved in file: %s" % filename)
+                self.logger.info("Exported attributes saved in file: %s" % filename)
 
                 return
             else:
@@ -678,14 +676,14 @@ class Badfish:
             data = _response.json()
 
             if status_code == 202 or status_code == 200:
-                logger.info("JobStatus not completed, current status: \"%s\", percent complete: \"%s\"" % (
+                self.logger.info("JobStatus not completed, current status: \"%s\", percent complete: \"%s\"" % (
                     data[u'Oem'][u'Dell'][u'Message'], data[u'Oem'][u'Dell'][u'PercentComplete']))
                 time.sleep(1)
             else:
-                logger.error("Execute job ID command failed, error code is: %s" % status_code)
+                self.logger.error("Execute job ID command failed, error code is: %s" % status_code)
                 sys.exit(1)
 
-        logger.error("Could not export settings after %s attempts." % self.retries)
+        self.logger.error("Could not export settings after %s attempts." % self.retries)
 
     def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
@@ -693,8 +691,8 @@ class Badfish:
                 try:
                     definitions = yaml.safe_load(f)
                 except yaml.YAMLError as ex:
-                    logger.error("Couldn't read file: %s" % _interfaces_path)
-                    logger.debug(ex)
+                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
+                    self.logger.debug(ex)
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
@@ -702,7 +700,7 @@ class Badfish:
         return None
 
 
-def execute_badfish(_host, _args):
+def execute_badfish(_host, _args, logger):
     username = _args["u"]
     password = _args["p"]
     host_type = _args["t"]
@@ -718,7 +716,7 @@ def execute_badfish(_host, _args):
     clear_jobs = _args["clear_jobs"]
     retries = _args["retries"]
 
-    badfish = Badfish(_host, username, password, retries)
+    badfish = Badfish(_host, username, password, logger, retries)
 
     if _args["host_list"]:
         badfish.logger.info("Executing actions on host: %s" % _host)
@@ -771,10 +769,7 @@ def main(argv=None):
     parser.add_argument("-r", "--retries", help="Number of retries for executing actions.", default=RETRIES)
     args = vars(parser.parse_args(argv))
 
-    log_level = DEBUG
-
-    if args["verbose"]:
-        log_level = INFO
+    log_level = DEBUG if args["verbose"] else INFO
 
     logger = Logger()
     logger.start(level=log_level)
@@ -793,7 +788,7 @@ def main(argv=None):
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        execute_badfish(_host.strip(), args)
+                        execute_badfish(_host.strip(), args, logger)
                     except SystemExit:
                         continue
         except IOError as ex:
@@ -802,7 +797,7 @@ def main(argv=None):
     elif not host:
         logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
     else:
-        execute_badfish(host, args)
+        execute_badfish(host, args, logger)
     return 0
 
 
