@@ -1,7 +1,6 @@
 ![badfish](/image/badfish-original-licensed.small.png)
 
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
-
 [![Build Status](https://img.shields.io/docker/cloud/build/quads/badfish.svg)](https://cloud.docker.com/repository/registry-1.docker.io/quads/badfish/builds)
 
 # Badfish
