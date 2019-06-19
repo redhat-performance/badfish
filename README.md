@@ -3,12 +3,37 @@
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
 [![Build Status](https://img.shields.io/docker/cloud/build/quads/badfish.svg)](https://cloud.docker.com/repository/registry-1.docker.io/quads/badfish/builds)
 
+   * [About Badfish](#badfish)
+      * [Scope](#scope)
+      * [Design](#design)
+      * [Features](#features)
+      * [Requirements](#requirements)
+      * [Usage](#usage)
+      * [Usage via Docker](#usage-via-docker)
+      * [Common Operations](#common-operations)
+         * [Enforcing an OpenStack Director-style interface order](#enforcing-and-openstack-director-style-interface-order)n
+         * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
+         * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
+         * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
+         * [Rebooting a System](#rebooting-a-system)
+         * [Resetting iDRAC](#resetting-idrac)
+         * [Check current boot order](#check-current-boot-order)
+         * [Variable number of retries](#variable-number-of-retries)
+         * [Export system configuration](#export-system-configuration)
+         * [Firmware inventory](#firmware-inventory)
+         * [Clear Job Queue](#clear-job-queue)
+         * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
+         * [Verbose Output](#verbose-output)
+         * [Log to File](#log-to-file)
+      * [iDRAC and Data Format](#idrac-and-data-format)
+         * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
+
 # Badfish
 Badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
 
 ## Scope
 Right now Badfish is focused on managing Dell systems, but can potentially work
-with any system that supports the Redfish API.  
+with any system that supports the Redfish API.
 
 We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
 
@@ -46,6 +71,8 @@ NOTE:
 * If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with --dns
 * If you would like to use a different file for config/idrac_interfaces.yml you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
 
+## Common Operations
+
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
 ```
@@ -60,7 +87,7 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ```
 
 ### Forcing a one time boot to a specific device
-To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied. 
+To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
 ```
@@ -71,7 +98,7 @@ To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` 
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --pxe
 ```
 
-### Reboot only option
+### Rebooting a system
 In certain cases you might need to only reboot the host, for this case we included the ```--reboot-only``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
@@ -131,7 +158,9 @@ If you would like to log the output of ```badfish``` you can use the ```--log```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
 ```
 
-#### Dell Foreman / PXE Interface
+## iDRAC and Data Format
+
+### Dell Foreman and PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
 | Machine Type | Network Interface      |
@@ -141,3 +170,4 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r930    |  NIC.Integrated.1-3-1  |
 | Dell r720xd  |  NIC.Integrated.1-3-1  |
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
+| Dell r740xd  |  NIC.Integrated.1-3-1  |

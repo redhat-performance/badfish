@@ -8,9 +8,11 @@ director_r620_interfaces: NIC.Slot.2-4,HardDisk.List.1-1,NIC.Slot.2-1,NIC.Slot.2
 director_r630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
 director_r720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 director_r730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+director_r740xd_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 director_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 foreman_r620_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
 foreman_r630_interfaces: NIC.Slot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
 foreman_r720xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.4-2-1
 foreman_r730xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+foreman_r740xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
 foreman_r930_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
