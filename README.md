@@ -160,7 +160,7 @@ If you would like to log the output of ```badfish``` you can use the ```--log```
 
 ## iDRAC and Data Format
 
-#### Dell Foreman and PXE Interface
+### Dell Foreman and PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
 | Machine Type | Network Interface      |
@@ -170,3 +170,4 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r930    |  NIC.Integrated.1-3-1  |
 | Dell r720xd  |  NIC.Integrated.1-3-1  |
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
+| Dell r740xd  |  NIC.Integrated.1-3-1  |
