@@ -8,7 +8,7 @@
       * [Design](#design)
       * [Features](#features)
       * [Requirements](#requirements)
-      * [Usage](#usage))
+      * [Usage](#usage)
       * [Usage via Docker](#usage-via-docker)
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-and-openstack-director-style-interface-order)n
