@@ -5,13 +5,12 @@
 
    * [About Badfish](#badfish)
       * [Scope](#scope)
-      * [Design](#design)
       * [Features](#features)
       * [Requirements](#requirements)
       * [Usage](#usage)
       * [Usage via Docker](#usage-via-docker)
       * [Common Operations](#common-operations)
-         * [Enforcing an OpenStack Director-style interface order](#enforcing-and-openstack-director-style-interface-order)n
+         * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
