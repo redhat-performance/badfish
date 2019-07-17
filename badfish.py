@@ -6,7 +6,6 @@ from requests.exceptions import RequestException
 
 import json
 import argparse
-import logging
 import os
 import re
 import requests
@@ -18,6 +17,7 @@ import yaml
 warnings.filterwarnings("ignore")
 
 RETRIES = 15
+
 
 class Badfish:
     def __init__(self, _host, _username, _password, logger, _retries=RETRIES):
@@ -63,10 +63,10 @@ class Badfish:
         try:
             _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
         except RequestException:
-           self.logger.exception("Failed to communicate with server.")
-           if _continue:
-               return
-           else:
+            self.logger.exception("Failed to communicate with server.")
+            if _continue:
+                return
+            else:
                 sys.exit(1)
         return _response
 
@@ -398,7 +398,7 @@ class Badfish:
         _url = "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/" % self.root_uri
         _response = self.get_request(_url)
         if _response.status_code != 200:
-            logger.warning("iDRAC version installed does not support DellJobService")
+            self.logger.warning("iDRAC version installed does not support DellJobService")
             return False
 
         return True
@@ -417,16 +417,16 @@ class Badfish:
     def clear_job_list(self, _job_queue):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _headers = {"content-type": "application/json"}
-        logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
+        self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
         for _job in _job_queue:
             job = _job.strip("'")
-            url = "%s/%s" % (_url, job)
+            url = "/".join([_url, job])
             self.delete_request(url, _headers)
         job_queue = self.get_job_queue()
         if not job_queue:
-            logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+            self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
-            logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
+            self.logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
             sys.exit(1)
 
     def clear_job_queue(self):
@@ -581,7 +581,6 @@ class Badfish:
                     self.clear_job_queue()
                     if not _first_reset:
                         self.reset_idrac()
-                        _self_reset = True
                         self.polling_host_state("On")
                     continue
                 self.error_handler(_response)
