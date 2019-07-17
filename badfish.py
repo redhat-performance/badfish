@@ -390,7 +390,7 @@ class Badfish:
         if _response.status_code == 200:
             self.logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
         else:
-            logger.error("Command failed, error code is %s." % _response.status_code)
+            self.logger.error("Command failed, error code is %s." % _response.status_code)
 
             self.error_handler(_response)
 
