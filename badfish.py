@@ -388,7 +388,7 @@ class Badfish:
         time.sleep(5)
 
         if _response.status_code == 200:
-            logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
+            self.logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
         else:
             logger.error("Command failed, error code is %s." % _response.status_code)
 
@@ -409,7 +409,7 @@ class Badfish:
         _headers = {'content-type': 'application/json'}
         response = self.post_request(_url, _payload, _headers)
         if response.status_code == 200:
-            logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+            self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
             logger.error("Job queue not cleared, there was something wrong with your request.")
             sys.exit(1)
