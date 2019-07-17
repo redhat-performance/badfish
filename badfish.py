@@ -313,6 +313,10 @@ class Badfish:
                 if job_id:
                     self.get_job_status(job_id)
 
+                self.reset_idrac()
+                self.polling_host_state("On")
+                self.reboot_server()
+
             else:
                 self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
                 sys.exit(1)
@@ -384,33 +388,54 @@ class Badfish:
         time.sleep(5)
 
         if _response.status_code == 200:
-            self.logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
+            logger.info('PATCH command passed to set next boot onetime boot device to: "%s".' % "Pxe")
         else:
-            self.logger.error("Command failed, error code is %s." % _response.status_code)
+            logger.error("Command failed, error code is %s." % _response.status_code)
 
             self.error_handler(_response)
 
-    def clear_job_queue(self, force=False):
+    def check_supported_idrac_version(self):
+        _url = "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/" % self.root_uri
+        _response = self.get_request(_url)
+        if _response.status_code != 200:
+            logger.warning("iDRAC version installed does not support DellJobService")
+            return False
+
+        return True
+
+    def delete_job_queue(self):
+        _url = "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue" % self.root_uri
+        _payload = {"JobID": "JID_CLEARALL"}
+        _headers = {'content-type': 'application/json'}
+        response = self.post_request(_url, _payload, _headers)
+        if response.status_code == 200:
+            logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+        else:
+            logger.error("Job queue not cleared, there was something wrong with your request.")
+            sys.exit(1)
+
+    def clear_job_list(self, _job_queue):
+        _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
+        _headers = {"content-type": "application/json"}
+        logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
+        for _job in _job_queue:
+            job = _job.strip("'")
+            url = "%s/%s" % (_url, job)
+            self.delete_request(url, _headers)
+        job_queue = self.get_job_queue()
+        if not job_queue:
+            logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+        else:
+            logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
+            sys.exit(1)
+
+    def clear_job_queue(self):
         _job_queue = self.get_job_queue()
         if _job_queue:
-            _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
-            _headers = {"content-type": "application/json"}
-            self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
-            if force:
-                url = "%s/JID_CLEARALL_FORCE" % _url
-                self.delete_request(url, _headers)
+            if self.check_supported_idrac_version():
+                self.delete_job_queue()
             else:
-                for _job in _job_queue:
-                    job = _job.strip("'")
-                    url = "%s/%s" % (_url, job)
-                    self.delete_request(url, _headers)
-
-            job_queue = self.get_job_queue()
-            if not job_queue:
-                self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
-            else:
-                self.logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
-                sys.exit(1)
+                self.clear_job_list(_job_queue)
         else:
             self.logger.warning(
                 "Job queue already cleared for iDRAC %s, DELETE command will not execute." % self.host
@@ -452,6 +477,10 @@ class Badfish:
                 "Command passed to %s server, code return is %s." % (reset_type, status_code)
             )
             time.sleep(10)
+        elif status_code == 409:
+            self.logger.warning(
+                "Command failed to %s server, host appears to be already in that state." % reset_type
+            )
         else:
             self.logger.error(
                 "Command failed to %s server, status code is: %s." % (reset_type, status_code)
@@ -536,6 +565,7 @@ class Badfish:
         _url = "%s%s" % (self.root_uri, self.bios_uri)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": device}}
         _headers = {"content-type": "application/json"}
+        _first_reset = False
         for i in range(self.retries):
             _response = self.patch_request(_url, _payload, _headers)
             status_code = _response.status_code
@@ -548,7 +578,11 @@ class Badfish:
                     self.logger.info("Retrying to send one time boot.")
                     continue
                 elif status_code == 400:
-                    self.clear_job_queue(force=True)
+                    self.clear_job_queue()
+                    if not _first_reset:
+                        self.reset_idrac()
+                        _self_reset = True
+                        self.polling_host_state("On")
                     continue
                 self.error_handler(_response)
 
