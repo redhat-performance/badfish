@@ -411,7 +411,7 @@ class Badfish:
         if response.status_code == 200:
             self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
-            logger.error("Job queue not cleared, there was something wrong with your request.")
+            self.logger.error("Job queue not cleared, there was something wrong with your request.")
             sys.exit(1)
 
     def clear_job_list(self, _job_queue):
