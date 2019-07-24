@@ -28,13 +28,16 @@
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
 
 # Badfish
-Badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
+Badfish is a Redfish-based API tool for managing bare-metal systems via the [Redfish API](https://www.dmtf.org/standards/redfish)
+
+We will be adding support for a plethora of SuperMicro systems also in the near future.
+
+You can read more [about badfish](https://quads.dev/about-badfish/) at the [QUADS](https://quads.dev/) website.
 
 ## Scope
-Right now Badfish is focused on managing Dell systems, but can potentially work
-with any system that supports the Redfish API.
+Right now Badfish is focused on managing Dell systems, but can potentially work with any system that supports the Redfish API.
 
-We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).
+We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).  Badfish can be useful as a general standalone, unified vendor IPMI/OOB tool however as support for more vendors is added.
 
 ## Features
 * Toggle and save a persistent interface/device boot order on remote systems
@@ -51,7 +54,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 
 ## Requirements
 * iDRAC7,8 or newer
-* Firmware version ```2.60.60.60```
+* Firmware version ```2.60.60.60``` or higher
 * iDRAC administrative account
 
 ## Usage
@@ -86,10 +89,12 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ```
 
 ### Forcing a one time boot to a specific device
-To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and automatically reboot the host after changes are applied.
+To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
 ```
+
+* Note: this will occur on the next reboot of the system, this command just stages a one-time boot.
 
 ### Forcing a one-time boot to PXE
 To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.
