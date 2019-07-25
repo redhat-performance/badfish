@@ -15,6 +15,7 @@
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
          * [Rebooting a System](#rebooting-a-system)
+         * [Power Cycling a System](#power-cycling-a-system)
          * [Resetting iDRAC](#resetting-idrac)
          * [Check current boot order](#check-current-boot-order)
          * [Variable number of retries](#variable-number-of-retries)
@@ -101,6 +102,12 @@ To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` 
 In certain cases you might need to only reboot the host, for this case we included the ```--reboot-only``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
+```
+
+### Power cycling a system
+For a hard reset you can use ```--power-cycle``` flag which will run a ForceOff instruction on the target host. Note that this option is not to be used with any other option.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
 ```
 
 ### Resetting iDRAC
