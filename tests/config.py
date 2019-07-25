@@ -75,7 +75,7 @@ RESPONSE_BOOT_TO = "- INFO     - Systems service: /redfish/v1/Systems/System.Emb
 RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                                "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
                                "- INFO     - Command passed to GracefulRestart server, code return is 204.\n" \
-                               "- INFO     - Polling for host state: Off\n" \
+                               "- WARNING  - Graceful shutdown executed. This might take a few minutes.\n" \
                                "- INFO     - Polling for host state: Not Down\n" \
                                "- INFO     - Command passed to On server, code return is 204.\n"
 
