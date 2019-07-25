@@ -499,13 +499,9 @@ class Badfish:
             if graceful:
                 self.send_reset("GracefulRestart")
 
-                host_down = self.polling_host_state("Off")
-
-                if not host_down:
-                    self.logger.warning(
-                        "Unable to graceful shutdown the server, will perform forced shutdown now."
-                    )
-                    self.send_reset("ForceOff")
+                self.logger.warning(
+                    "Graceful shutdown executed. This might take a few minutes."
+                )
             else:
                 self.send_reset("ForceOff")
 
@@ -748,6 +744,7 @@ def execute_badfish(_host, _args, logger):
     device = _args["boot_to"]
     boot_to_type = _args["boot_to_type"]
     reboot_only = _args["reboot_only"]
+    power_cycle = _args["power_cycle"]
     racreset = _args["racreset"]
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
@@ -762,6 +759,8 @@ def execute_badfish(_host, _args, logger):
 
     if reboot_only:
         badfish.reboot_server()
+    elif power_cycle:
+        badfish.reboot_server(graceful=False)
     elif racreset:
         badfish.reset_idrac()
     elif device:
@@ -799,6 +798,7 @@ def main(argv=None):
     parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--boot-to-type", help="Set next boot to one-shot boot to either director or foreman")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
+    parser.add_argument("--power-cycle", help="Flag for sending ForceOff instruction to the host", action="store_true")
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--check-boot", help="Flag for checking the host boot order", action="store_true")
     parser.add_argument("--firmware-inventory", help="Get firmware inventory", action="store_true")
