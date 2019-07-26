@@ -97,9 +97,6 @@ RESPONSE_CHANGE_BOOT = "- INFO     - Systems service: /redfish/v1/Systems/System
                        "- INFO     - JID_498218641680 job ID successfully created.\n" \
                        "- INFO     - Command passed to check job status, code 200 returned.\n" \
                        "- INFO     - Job id JID_498218641680 successfully scheduled.\n" \
-                       "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n" \
-                       "- INFO     - iDRAC will now reset and be back online within a few minutes.\n" \
-                       "- INFO     - Polling for host state: On\n" \
                        "- INFO     - Command passed to On server, code return is 204.\n" \
 
 RESPONSE_CHANGE_NO_INT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
