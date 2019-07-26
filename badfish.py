@@ -313,9 +313,7 @@ class Badfish:
                 if job_id:
                     self.get_job_status(job_id)
 
-                self.reset_idrac()
-                self.polling_host_state("On")
-                self.reboot_server()
+                self.reboot_server(graceful=False)
 
             else:
                 self.logger.error("Couldn't communicate with host after %s attempts." % self.retries)
