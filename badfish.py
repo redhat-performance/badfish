@@ -204,6 +204,8 @@ class Badfish:
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
+            if host_model.startswith("r"):
+                host_model = host_model[1:]
             interfaces = {}
             for _host in ["foreman", "director"]:
                 match = True
@@ -299,7 +301,7 @@ class Badfish:
             sys.exit(1)
 
         _type = self.get_host_type(interfaces_path)
-        if _type and _type.lower() != host_type.lower():
+        if (_type and _type.lower() != host_type.lower()) or not _type:
             self.clear_job_queue()
             self.logger.warning("Waiting for host to be up.")
             host_up = self.polling_host_state("On")
@@ -333,6 +335,8 @@ class Badfish:
                 sys.exit(1)
 
         host_model = self.host.split(".")[0].split("-")[-1]
+        if host_model.startswith("r"):
+            host_model = host_model[1:]
         interfaces = definitions["%s_%s_interfaces" % (_host_type, host_model)].split(",")
 
         boot_devices = self.get_boot_devices()
@@ -723,6 +727,8 @@ class Badfish:
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
+            if host_model.startswith("r"):
+                host_model = host_model[1:]
             return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
         return None
 
