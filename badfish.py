@@ -144,6 +144,11 @@ class Badfish:
         _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
         _response = self.get_request(_uri)
 
+        if _response.status_code == 404:
+            self.logger.debug(_response.text)
+            self.logger.error("Boot order modification is not supported by this host.")
+            sys.exit(1)
+
         data = _response.json()
         if "Attributes" in data:
             return data[u"Attributes"][_boot_seq]
