@@ -13,6 +13,7 @@
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
+         * [Forcing a one time boot to a specific type](#forcing-a-one-time-boot-to-a-specific-type)
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
          * [Rebooting a System](#rebooting-a-system)
          * [Power Cycling a System](#power-cycling-a-system)
@@ -93,6 +94,14 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
+```
+
+* Note: this will occur on the next reboot of the system, this command just stages a one-time boot.
+
+### Forcing a one time boot to a specific type
+To force systems to perform a one-time boot to a specific type you can use the ```--boot-to-type``` option and pass as an argument the device type of either foreman or director that you want the one-time boot to be set to. For this action you must also include the path to your interfaces yaml. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from the first interface defined for that host type on the interfaces yaml file.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --boot-to-type foreman
 ```
 
 * Note: this will occur on the next reboot of the system, this command just stages a one-time boot.
