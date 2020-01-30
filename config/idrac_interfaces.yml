@@ -6,12 +6,14 @@
 #
 director_620_interfaces: NIC.Slot.2-4,HardDisk.List.1-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3,NIC.Integrated.1-3-1
 director_630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
+director_640_interfaces: NIC.Slot.3-1,HardDisk.List.1-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
 director_720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 director_730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 director_740xd_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 director_930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 foreman_620_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
 foreman_630_interfaces: NIC.Slot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+foreman_640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
 foreman_720xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.4-2-1
 foreman_730xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
 foreman_740xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
