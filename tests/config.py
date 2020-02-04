@@ -69,7 +69,10 @@ RESPONSE_BOOT_TO = "- INFO     - Systems service: /redfish/v1/Systems/System.Emb
                    "- INFO     - POST command passed to create target config job.\n" \
                    "- INFO     - %s job ID successfully created.\n" \
                    "- INFO     - Command passed to check job status, code 200 returned.\n" \
-                   "- INFO     - Job id %s successfully scheduled.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
+                   f"- INFO     - Job id {JOB_ID} successfully scheduled.\n" \
+                   "- INFO     - Command passed to ForceOff server, code return is 204.\n" \
+                   "- INFO     - Polling for host state: Not Down\n" \
+                   "- INFO     - Command passed to On server, code return is 204.\n"
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
