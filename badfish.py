@@ -546,6 +546,8 @@ class Badfish:
             job_id = self.create_bios_config_job(self.bios_uri)
             if job_id:
                 self.get_job_status(job_id)
+
+            self.reboot_server(graceful=False)
         else:
             sys.exit(1)
         return True
@@ -760,13 +762,7 @@ def execute_badfish(_host, _args, logger):
     if _args["host_list"]:
         badfish.logger.info("Executing actions on host: %s" % _host)
 
-    if reboot_only:
-        badfish.reboot_server()
-    elif power_cycle:
-        badfish.reboot_server(graceful=False)
-    elif racreset:
-        badfish.reset_idrac()
-    elif device:
+    if device:
         badfish.boot_to(device)
     elif boot_to_type:
         badfish.boot_to_type(boot_to_type, interfaces_path)
@@ -780,6 +776,12 @@ def execute_badfish(_host, _args, logger):
         badfish.clear_job_queue()
     elif host_type:
         badfish.change_boot(host_type, interfaces_path, pxe)
+    elif racreset:
+        badfish.reset_idrac()
+    elif power_cycle:
+        badfish.reboot_server(graceful=False)
+    elif reboot_only:
+        badfish.reboot_server()
 
     if pxe and not host_type:
         badfish.set_next_boot_pxe()
