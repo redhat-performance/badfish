@@ -64,12 +64,15 @@ ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the existing 
 JOB_ID = 'JID_498218641680'
 RESPONSE_BOOT_TO = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
-                   "- WARNING  - Job queue already cleared for iDRAC %s, DELETE command will not execute.\n" \
+                   f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n" \
                    "- INFO     - Command passed to set BIOS attribute pending values.\n" \
                    "- INFO     - POST command passed to create target config job.\n" \
-                   "- INFO     - %s job ID successfully created.\n" \
+                   f"- INFO     - {JOB_ID} job ID successfully created.\n" \
                    "- INFO     - Command passed to check job status, code 200 returned.\n" \
-                   "- INFO     - Job id %s successfully scheduled.\n" % (MOCK_HOST, JOB_ID, JOB_ID)
+                   f"- INFO     - Job id {JOB_ID} successfully scheduled.\n" \
+                   "- INFO     - Command passed to ForceOff server, code return is 204.\n" \
+                   "- INFO     - Polling for host state: Not Down\n" \
+                   "- INFO     - Command passed to On server, code return is 204.\n"
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
@@ -88,7 +91,7 @@ RESPONSE_RESET = "- INFO     - Systems service: /redfish/v1/Systems/System.Embed
 # test_change_boot
 RESPONSE_CHANGE_BOOT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                        "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
-                       "- WARNING  - Job queue already cleared for iDRAC r630.host.io, DELETE command will not " \
+                       f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not " \
                        "execute.\n" \
                        "- WARNING  - Waiting for host to be up.\n" \
                        "- INFO     - Polling for host state: On\n" \
