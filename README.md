@@ -28,6 +28,8 @@
          * [Log to File](#log-to-file)
       * [iDRAC and Data Format](#idrac-and-data-format)
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
+      * [Contributing](#contributing)
+      * [Contact](#contact)
 
 # Badfish
 Badfish is a Redfish-based API tool for managing bare-metal systems via the [Redfish API](https://www.dmtf.org/standards/redfish)
@@ -193,3 +195,20 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r720xd  |  NIC.Integrated.1-3-1  |
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
+
+## Contributing
+We love pull requests and welcome contributions from everyone!  Please use the `development` branch to send pull requests.  Here are the general steps you'd want to follow.
+
+1) Fork the Badfish Github repository
+2) Clone the forked repository
+3) Push your changes to your forked clone
+4) Open a pull request against our `development` branch.
+
+* Here is some useful documentation
+  - [Creating a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request)
+  - [Keeping a cloned fork up to date](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork)
+
+## Contact
+
+* You can find us on IRC in `#quads` on `irc.freenode.net` if you have questions or need help.  [Click here](https://webchat.freenode.net/?channels=quads) to join in your browser.
+
