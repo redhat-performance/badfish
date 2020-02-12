@@ -96,15 +96,17 @@ To force systems to perform a one-time boot to a specific device you can use the
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
 ```
 
-* Note: this will occur on the next reboot of the system, this command just stages a one-time boot.
+### Forcing a one time boot to a specific mac address
+To force systems to perform a one-time boot to a specific mac address you can use the ```--boot-to-mac``` option and pass as an argument the device mac address for a specific NIC that you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface.
+```
+./badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to-mac A9:BB:4B:50:CA:54
+```
 
 ### Forcing a one time boot to a specific type
 To force systems to perform a one-time boot to a specific type you can use the ```--boot-to-type``` option and pass as an argument the device type of either foreman or director that you want the one-time boot to be set to. For this action you must also include the path to your interfaces yaml. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from the first interface defined for that host type on the interfaces yaml file.
 ```
 ./badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --boot-to-type foreman
 ```
-
-* Note: this will occur on the next reboot of the system, this command just stages a one-time boot.
 
 ### Forcing a one-time boot to PXE
 To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.

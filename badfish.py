@@ -211,12 +211,11 @@ class Badfish:
             host_model = self.host.split(".")[0].split("-")[-1]
             if host_model.startswith("r"):
                 host_model = host_model[1:]
-            interfaces = {}
             for _host in ["foreman", "director"]:
                 match = True
-                interfaces[_host] = definitions["%s_%s_interfaces" % (_host, host_model)].split(",")
+                interfaces = definitions["%s_%s_interfaces" % (_host, host_model)].split(",")
                 for device in sorted(boot_devices[: len(interfaces)], key=lambda x: x[u"Index"]):
-                    if device[u"Name"] == interfaces[_host][device[u"Index"]]:
+                    if device[u"Name"] == interfaces[device[u"Index"]]:
                         continue
                     else:
                         match = False
@@ -225,6 +224,39 @@ class Badfish:
                     return _host
 
         return None
+
+    def get_interfaces_endpoints(self):
+        _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
+        _response = self.get_request(_uri)
+
+        if _response.status_code == 404:
+            self.logger.debug(_response.text)
+            self.logger.error("EthernetInterfaces entry point not supported by this host.")
+            sys.exit(1)
+
+        data = _response.json()
+        endpoints = []
+        if data.get(u'Members'):
+            for member in data[u'Members']:
+                endpoints.append(member[u'@odata.id'])
+        else:
+            self.logger.error("EthernetInterfaces's Members array is either empty or missing")
+            sys.exit(1)
+
+        return endpoints
+
+    def get_interface(self, endpoint):
+        _uri = "%s%s" % (self.host_uri, endpoint)
+        _response = self.get_request(_uri)
+
+        if _response.status_code == 404:
+            self.logger.debug(_response.text)
+            self.logger.error("EthernetInterface entry point not supported by this host.")
+            sys.exit(1)
+
+        data = _response.json()
+
+        return data
 
     def find_systems_resource(self):
         response = self.get_request(self.root_uri)
@@ -566,6 +598,22 @@ class Badfish:
 
         self.boot_to(device)
 
+    def boot_to_mac(self, mac_address):
+        interfaces_endpoints = self.get_interfaces_endpoints()
+
+        device = None
+        for endpoint in interfaces_endpoints:
+            interface = self.get_interface(endpoint)
+            if interface.get("MACAddress", "").upper() == mac_address.upper():
+                device = interface.get("Id")
+                break
+
+        if device:
+            self.boot_to(device)
+        else:
+            self.logger.error("MAC Address does not match any of the existing")
+            sys.exit(1)
+
     def send_one_time_boot(self, device):
         _url = "%s%s" % (self.root_uri, self.bios_uri)
         _payload = {"Attributes": {"OneTimeBootMode": "OneTimeBootSeq", "OneTimeBootSeqDev": device}}
@@ -620,7 +668,9 @@ class Badfish:
         if device.lower() in boot_devices:
             return True
         else:
-            self.logger.error("Device %s does not match any of the existing for host %s" % (device, self.host))
+            self.logger.error(
+                "Device %s does not match any of the available boot devices for host %s" % (device, self.host)
+            )
             return False
 
     def polling_host_state(self, state, equals=True):
@@ -748,6 +798,7 @@ def execute_badfish(_host, _args, logger):
     pxe = _args["pxe"]
     device = _args["boot_to"]
     boot_to_type = _args["boot_to_type"]
+    boot_to_mac = _args["boot_to_mac"]
     reboot_only = _args["reboot_only"]
     power_cycle = _args["power_cycle"]
     racreset = _args["racreset"]
@@ -766,6 +817,8 @@ def execute_badfish(_host, _args, logger):
         badfish.boot_to(device)
     elif boot_to_type:
         badfish.boot_to_type(boot_to_type, interfaces_path)
+    elif boot_to_mac:
+        badfish.boot_to_mac(boot_to_mac)
     elif check_boot:
         badfish.check_boot(interfaces_path)
     elif firmware_inventory:
@@ -802,6 +855,7 @@ def main(argv=None):
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
     parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
     parser.add_argument("--boot-to-type", help="Set next boot to one-shot boot to either director or foreman")
+    parser.add_argument("--boot-to-mac", help="Set next boot to one-shot boot to a specific MAC address on the target")
     parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
     parser.add_argument("--power-cycle", help="Flag for sending ForceOff instruction to the host", action="store_true")
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
