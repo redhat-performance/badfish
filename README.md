@@ -13,6 +13,7 @@
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
+         * [Forcing a one time boot to a specific mac address](#forcing-a-one-time-boot-to-a-specific-mac-address)
          * [Forcing a one time boot to a specific type](#forcing-a-one-time-boot-to-a-specific-type)
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
          * [Rebooting a System](#rebooting-a-system)
