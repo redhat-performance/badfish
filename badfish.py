@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+from urllib3.exceptions import MaxRetryError
 
 from core.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, ConnectionError
 
 import json
 import argparse
@@ -62,6 +63,15 @@ class Badfish:
     def get_request(self, uri, _continue=False):
         try:
             _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
+        except ConnectionError as e:
+            self.logger.error("Failed to communicate with server.")
+
+            if type(e.args[0]) == MaxRetryError:
+                self.logger.error("Max retry error: verify server FQDN.")
+            if _continue:
+                return
+            else:
+                sys.exit(1)
         except RequestException:
             self.logger.exception("Failed to communicate with server.")
             if _continue:
@@ -273,16 +283,19 @@ class Badfish:
             else:
                 systems = data["Systems"]["@odata.id"]
                 _response = self.get_request(self.host_uri + systems)
-                if _response:
-                    data = _response.json()
-                    if data.get(u'Members'):
-                        for member in data[u'Members']:
-                            systems_service = member[u'@odata.id']
-                            self.logger.info("Systems service: %s." % systems_service)
-                            return systems_service
-                    else:
-                        self.logger.error("ComputerSystem's Members array is either empty or missing")
-                        sys.exit(1)
+                if _response.status_code == 401:
+                    self.logger.error("Authorization Error: verify credentials.")
+                    sys.exit(1)
+
+                data = _response.json()
+                if data.get(u'Members'):
+                    for member in data[u'Members']:
+                        systems_service = member[u'@odata.id']
+                        self.logger.info("Systems service: %s." % systems_service)
+                        return systems_service
+                else:
+                    self.logger.error("ComputerSystem's Members array is either empty or missing")
+                    sys.exit(1)
 
     def find_managers_resource(self):
         response = self.get_request(self.root_uri)
