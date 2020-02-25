@@ -273,16 +273,19 @@ class Badfish:
             else:
                 systems = data["Systems"]["@odata.id"]
                 _response = self.get_request(self.host_uri + systems)
-                if _response:
-                    data = _response.json()
-                    if data.get(u'Members'):
-                        for member in data[u'Members']:
-                            systems_service = member[u'@odata.id']
-                            self.logger.info("Systems service: %s." % systems_service)
-                            return systems_service
-                    else:
-                        self.logger.error("ComputerSystem's Members array is either empty or missing")
-                        sys.exit(1)
+                if _response.status_code == 401:
+                    self.logger.error("Authorization Error: verify credentials.")
+                    sys.exit(1)
+
+                data = _response.json()
+                if data.get(u'Members'):
+                    for member in data[u'Members']:
+                        systems_service = member[u'@odata.id']
+                        self.logger.info("Systems service: %s." % systems_service)
+                        return systems_service
+                else:
+                    self.logger.error("ComputerSystem's Members array is either empty or missing")
+                    sys.exit(1)
 
     def find_managers_resource(self):
         response = self.get_request(self.root_uri)
