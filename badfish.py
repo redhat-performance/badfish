@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+from urllib3.exceptions import MaxRetryError
 
 from core.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, ConnectionError
 
 import json
 import argparse
@@ -62,6 +63,15 @@ class Badfish:
     def get_request(self, uri, _continue=False):
         try:
             _response = requests.get(uri, auth=(self.username, self.password), verify=False, timeout=60)
+        except ConnectionError as e:
+            self.logger.error("Failed to communicate with server.")
+
+            if type(e.args[0]) == MaxRetryError:
+                self.logger.error("Max retry error: verify server FQDN.")
+            if _continue:
+                return
+            else:
+                sys.exit(1)
         except RequestException:
             self.logger.exception("Failed to communicate with server.")
             if _continue:
