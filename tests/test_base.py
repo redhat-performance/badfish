@@ -69,6 +69,9 @@ class TestBase(unittest.TestCase):
         _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (config.MOCK_HOST, config.JOB_ID),
                   json={u"Message": "Task successfully scheduled."})
 
+        _mock.get("https://%s/redfish/v1/Dell/Managers/iDRAC.Embedded.1/DellJobService/" % config.MOCK_HOST,
+                  json={})
+
         _mock.post("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % config.MOCK_HOST,
                    json={}, status_code=204)
         _mock.post("https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % config.MOCK_HOST,
