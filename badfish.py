@@ -270,12 +270,12 @@ class Badfish:
 
     def find_systems_resource(self):
         response = self.get_request(self.root_uri)
-
-        if response.status_code == 401:
-            self.logger.error("Failed to authenticate. Verify your credentials.")
-            sys.exit(1)
-
         if response:
+
+            if response.status_code == 401:
+                self.logger.error("Failed to authenticate. Verify your credentials.")
+                sys.exit(1)
+
             data = response.json()
             if 'Systems' not in data:
                 self.logger.error("Systems resource not found")
@@ -296,6 +296,9 @@ class Badfish:
                 else:
                     self.logger.error("ComputerSystem's Members array is either empty or missing")
                     sys.exit(1)
+        else:
+            self.logger.error("Failed to communicate with server.")
+            sys.exit(1)
 
     def find_managers_resource(self):
         response = self.get_request(self.root_uri)
@@ -390,10 +393,15 @@ class Badfish:
         interfaces = definitions["%s_%s_interfaces" % (_host_type, host_model)].split(",")
 
         boot_devices = self.get_boot_devices()
+        devices = [device["Name"] for device in boot_devices]
+        valid_devices = [device for device in interfaces if device in devices]
+        if len(valid_devices) < len(interfaces):
+            diff = [device for device in interfaces if device not in valid_devices]
+            self.logger.warning("Some interfaces are not valid boot devices. Ignoring: %s" % ", ".join(diff))
         change = False
-        for i in range(len(interfaces)):
+        for i, interface in enumerate(interfaces):
             for device in boot_devices:
-                if interfaces[i] == device[u"Name"]:
+                if interface == device[u"Name"]:
                     if device[u"Index"] != i:
                         device[u"Index"] = i
                         change = True
@@ -455,14 +463,21 @@ class Badfish:
 
         return True
 
-    def delete_job_queue(self):
+    def delete_job_queue(self, force=False):
         _url = "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue" % self.root_uri
-        _payload = {"JobID": "JID_CLEARALL"}
+        job_id = "JID_CLEARALL"
+        if force:
+            job_id = f"{job_id}_FORCE"
+        _payload = {"JobID": job_id}
         _headers = {'content-type': 'application/json'}
         response = self.post_request(_url, _payload, _headers)
         if response.status_code == 200:
             self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
+            data = response.json()
+            if data.get("error"):
+                if data["error"].get("@Message.ExtendedInfo"):
+                    self.logger.debug(data["error"].get("@Message.ExtendedInfo"))
             self.logger.error("Job queue not cleared, there was something wrong with your request.")
             sys.exit(1)
 
@@ -481,17 +496,22 @@ class Badfish:
             self.logger.error("Job queue not cleared, current job queue contains jobs: %s." % job_queue)
             sys.exit(1)
 
-    def clear_job_queue(self):
+    def clear_job_queue(self, force=False):
+        supported = self.check_supported_idrac_version()
+        if force and supported:
+            self.delete_job_queue(force)
+            return
         _job_queue = self.get_job_queue()
         if _job_queue:
-            if self.check_supported_idrac_version():
+            if supported:
                 self.delete_job_queue()
-            else:
-                self.clear_job_list(_job_queue)
+                return
+            self.clear_job_list(_job_queue)
         else:
             self.logger.warning(
                 "Job queue already cleared for iDRAC %s, DELETE command will not execute." % self.host
             )
+        return
 
     def create_job(self, _url, _payload, _headers, expected=200):
         _response = self.post_request(_url, _payload, _headers)
@@ -808,6 +828,7 @@ def execute_badfish(_host, _args, logger):
     password = _args["p"]
     host_type = _args["t"]
     interfaces_path = _args["i"]
+    force = _args["force"]
     pxe = _args["pxe"]
     device = _args["boot_to"]
     boot_to_type = _args["boot_to_type"]
@@ -839,7 +860,7 @@ def execute_badfish(_host, _args, logger):
     elif export_configuration:
         badfish.export_configuration()
     elif clear_jobs:
-        badfish.clear_job_queue()
+        badfish.clear_job_queue(force)
     elif host_type:
         badfish.change_boot(host_type, interfaces_path, pxe)
     elif racreset:
@@ -864,6 +885,8 @@ def main(argv=None):
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
     parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
     parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
+    parser.add_argument("-f", "--force", dest='force', action='store_true',
+                        help="Optional argument for forced clear-jobs")
     parser.add_argument("--host-list", help="Path to a plain text file with a list of hosts.", default=None)
     parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
     parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
