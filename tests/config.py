@@ -1,6 +1,6 @@
 import os
 
-MOCK_HOST = "r630.000.host.io"
+MOCK_HOST = "000-r630.host.io"
 MOCK_USER = "mock_user"
 MOCK_PASS = "mock_pass"
 
