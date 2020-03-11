@@ -219,6 +219,9 @@ class Badfish:
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
+            host_blade = self.host.split(".")[0].split("-")[-2]
+            if host_blade != "000":
+                host_model = "%s_%s" % (host_model, host_blade)
             if host_model.startswith("r"):
                 host_model = host_model[1:]
             for _host in ["foreman", "director"]:
@@ -388,6 +391,9 @@ class Badfish:
                 sys.exit(1)
 
         host_model = self.host.split(".")[0].split("-")[-1]
+        host_blade = self.host.split(".")[0].split("-")[-2]
+        if host_blade != "000":
+            host_model = "%s_%s" % (host_model, host_blade)
         if host_model.startswith("r"):
             host_model = host_model[1:]
         interfaces = definitions["%s_%s_interfaces" % (_host_type, host_model)].split(",")
@@ -817,6 +823,9 @@ class Badfish:
                     sys.exit(1)
 
             host_model = self.host.split(".")[0].split("-")[-1]
+            host_blade = self.host.split(".")[0].split("-")[-2]
+            if host_blade != "000":
+                host_model = "%s_%s" % (host_model, host_blade)
             if host_model.startswith("r"):
                 host_model = host_model[1:]
             return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
