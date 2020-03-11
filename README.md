@@ -198,7 +198,7 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 
 | Machine Type | Network Interface      |
 | ------------ | ----------------------:|
-| Dell FC640   |  NIC.Integrated.1-1-1  |
+| Dell fc640   |  NIC.Integrated.1-1-1  |
 | Dell r620	   |  NIC.Integrated.1-3-1  |
 | Dell r630    |  NIC.Slot.2-1-1        |
 | Dell r930    |  NIC.Integrated.1-3-1  |
