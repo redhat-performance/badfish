@@ -407,7 +407,7 @@ class Badfish:
             diff = [device for device in interfaces if device not in valid_devices]
             self.logger.warning("Some interfaces are not valid boot devices. Ignoring: %s" % ", ".join(diff))
         change = False
-        for i, interface in enumerate(interfaces):
+        for i, interface in enumerate(valid_devices):
             for device in boot_devices:
                 if interface == device[u"Name"]:
                     if device[u"Index"] != i:
