@@ -3,7 +3,7 @@ import requests_mock
 import unittest
 import time
 
-from badfish import main
+from src.badfish import main
 from tests import config
 
 

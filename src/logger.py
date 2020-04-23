@@ -8,7 +8,6 @@ from logging import Formatter, INFO
 from logging import Logger as _Logger
 from logging import NullHandler
 from logging import StreamHandler
-from logging import FileHandler
 
 
 __all__ = "logger", "Logger"

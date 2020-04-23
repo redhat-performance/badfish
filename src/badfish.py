@@ -4,7 +4,7 @@ import asyncio
 import aiohttp as aiohttp
 from aiohttp import BasicAuth
 
-from core.logger import Logger
+from src.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
 
 import json
@@ -785,7 +785,7 @@ class Badfish:
             raise BadfishException
         return True
 
-    def boot_to_type(self, host_type, _interfaces_path):
+    async def boot_to_type(self, host_type, _interfaces_path):
         if host_type.lower() not in ("foreman", "director"):
             self.logger.error(
                 'Expected values for -t argument are "foreman" or "director"'
@@ -801,7 +801,7 @@ class Badfish:
 
         await self.boot_to(device)
 
-    def boot_to_mac(self, mac_address):
+    async def boot_to_mac(self, mac_address):
         interfaces_endpoints = await self.get_interfaces_endpoints()
 
         device = None
@@ -1032,7 +1032,7 @@ class Badfish:
         return None
 
 
-def execute_badfish(_host, _args, logger):
+async def execute_badfish(_host, _args, logger):
     username = _args["u"]
     password = _args["p"]
     host_type = _args["t"]
@@ -1179,12 +1179,13 @@ def main(argv=None):
     host_list = args["host_list"]
     host = args["H"]
 
+    loop = asyncio.get_event_loop()
     if host_list:
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        execute_badfish(_host.strip(), args, logger)
+                        loop.run_until_complete(execute_badfish(_host.strip(), args, logger))
                     except BadfishException:
                         continue
         except IOError as ex:
@@ -1196,7 +1197,7 @@ def main(argv=None):
         )
     else:
         try:
-            execute_badfish(host, args, logger)
+            loop.run_until_complete(execute_badfish(host, args, logger))
         except KeyboardInterrupt:
             logger.warning("Badfish terminated.")
         except BadfishException as ex:
