@@ -105,3 +105,11 @@ RESPONSE_CHANGE_BOOT = "- INFO     - Systems service: /redfish/v1/Systems/System
 RESPONSE_CHANGE_NO_INT = "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n" \
                          "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n" \
                          "- WARNING  - No changes were made since the boot order already matches the requested.\n"
+
+ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'
+SYS_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}]}'
+MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
+RESET_TYPE_RESP = (
+    '{"Actions":{"#Manager.Reset":{"ResetType@Redfish.AllowableValues":["GracefulRestart"],'
+    '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
+)

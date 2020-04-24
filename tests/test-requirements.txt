@@ -7,3 +7,4 @@ PyYAML==3.13
 requests==2.20.1
 pytest==4.0.1
 requests-mock==1.5.2
+asynctest==0.13.0

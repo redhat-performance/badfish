@@ -4,7 +4,7 @@ import asyncio
 import aiohttp as aiohttp
 from aiohttp import BasicAuth
 
-from src.logger import Logger
+from logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
 
 import json
@@ -95,14 +95,14 @@ class Badfish:
     async def get_request(self, uri, _continue=False):
         try:
             async with self.semaphore:
-                async with aiohttp.ClientSession(loop=self.loop) as session:
+                async with aiohttp.ClientSession() as session:
                     async with session.get(
                         uri,
                         auth=BasicAuth(self.username, self.password),
                         verify_ssl=False,
                         timeout=60,
                     ) as _response:
-                        await _response.text("utf-8", "ignore")
+                        await _response.read()
         except (Exception, TimeoutError) as ex:
             if _continue:
                 return
@@ -115,7 +115,7 @@ class Badfish:
     async def post_request(self, uri, payload, headers):
         try:
             async with self.semaphore:
-                async with aiohttp.ClientSession(loop=self.loop) as session:
+                async with aiohttp.ClientSession() as session:
                     async with session.post(
                         uri,
                         data=json.dumps(payload),
@@ -1185,7 +1185,9 @@ def main(argv=None):
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
                     try:
-                        loop.run_until_complete(execute_badfish(_host.strip(), args, logger))
+                        loop.run_until_complete(
+                            execute_badfish(_host.strip(), args, logger)
+                        )
                     except BadfishException:
                         continue
         except IOError as ex:
