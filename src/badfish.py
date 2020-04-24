@@ -54,6 +54,7 @@ class Badfish:
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None
+        self.boot_devices = None
 
     async def init(self):
         await self.validate_credentials()
@@ -196,23 +197,25 @@ class Badfish:
             return "Bios"
 
     async def get_boot_devices(self):
-        _boot_seq = await self.get_boot_seq()
-        _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
-        _response = await self.get_request(_uri)
+        if not self.boot_devices:
+            _boot_seq = await self.get_boot_seq()
+            _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
+            _response = await self.get_request(_uri)
 
-        if _response.status == 404:
-            self.logger.debug(_response.text)
-            self.logger.error("Boot order modification is not supported by this host.")
-            sys.exit(1)
+            if _response.status == 404:
+                self.logger.debug(_response.text)
+                self.logger.error("Boot order modification is not supported by this host.")
+                sys.exit(1)
 
-        raw = await _response.text("utf-8", "ignore")
-        data = json.loads(raw.strip())
-        if "Attributes" in data:
-            return data["Attributes"][_boot_seq]
-        else:
-            self.logger.debug(data)
-            self.logger.error("Boot order modification is not supported by this host.")
-            raise BadfishException
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            if "Attributes" in data:
+                self.boot_devices = data["Attributes"][_boot_seq]
+            else:
+                self.logger.debug(data)
+                self.logger.error("Boot order modification is not supported by this host.")
+                raise BadfishException
+        return self.boot_devices
 
     async def get_job_queue(self):
         self.logger.debug("Getting job queue.")

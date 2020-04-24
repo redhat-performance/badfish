@@ -1,36 +1,59 @@
-import pytest
-
-from tests import config
+from asynctest import patch
+from tests.config import (
+    BOOT_MODE_RESP,
+    BOOT_SEQ_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    BOOT_SEQ_RESPONSE_FOREMAN,
+    RESPONSE_WITHOUT,
+    RESPONSE_DIRECTOR,
+    RESPONSE_FOREMAN,
+    BOOT_SEQ_RESPONSE_NO_MATCH,
+    INTERFACES_PATH,
+    WARN_NO_MATCH,
+)
 from tests.test_aiohttp_base import TestBase
 
 
 class TestCheckBoot(TestBase):
     option_arg = "--check-boot"
 
-    @pytest.mark.skip(reason="Needs to be transformed to async")
-    def test_check_boot_without_interfaces(self):
-        self.boot_seq = config.BOOT_SEQ_RESPONSE_DIRECTOR
+    @patch("aiohttp.ClientSession.get")
+    def test_check_boot_without_interfaces(self, mock_get):
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
+        responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert config.RESPONSE_WITHOUT == err
+        assert err == RESPONSE_WITHOUT
 
-    @pytest.mark.skip(reason="Needs to be transformed to async")
-    def test_check_boot_with_interfaces_director(self):
-        self.boot_seq = config.BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = ["-i", config.INTERFACES_PATH, self.option_arg]
+    @patch("aiohttp.ClientSession.get")
+    def test_check_boot_with_interfaces_director(self, mock_get):
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
+        responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.args = ["-i", INTERFACES_PATH, self.option_arg]
         _, err = self.badfish_call()
-        assert config.RESPONSE_DIRECTOR == err
+        assert err == RESPONSE_DIRECTOR
 
-    @pytest.mark.skip(reason="Needs to be transformed to async")
-    def test_check_boot_with_interfaces_foreman(self):
-        self.boot_seq = config.BOOT_SEQ_RESPONSE_FOREMAN
-        self.args = ["-i", config.INTERFACES_PATH, self.option_arg]
+    @patch("aiohttp.ClientSession.get")
+    def test_check_boot_with_interfaces_foreman(self, mock_get):
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_FOREMAN)
+        responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.args = ["-i", INTERFACES_PATH, self.option_arg]
         _, err = self.badfish_call()
-        assert config.RESPONSE_FOREMAN == err
+        assert err == RESPONSE_FOREMAN
 
-    @pytest.mark.skip(reason="Needs to be transformed to async")
-    def test_check_boot_no_match(self):
-        self.boot_seq = config.BOOT_SEQ_RESPONSE_NO_MATCH
-        self.args = ["-i", config.INTERFACES_PATH, self.option_arg]
+    @patch("aiohttp.ClientSession.get")
+    def test_check_boot_no_match(self, mock_get):
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_NO_MATCH)
+        responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.args = ["-i", INTERFACES_PATH, self.option_arg]
         _, err = self.badfish_call()
-        assert config.WARN_NO_MATCH == err
+        assert err == WARN_NO_MATCH

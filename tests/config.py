@@ -8,7 +8,7 @@ MOCK_PASS = "mock_pass"
 def render_device_dict(index, device):
     device_dict = {
         "Index": index,
-        "Enabled": True,
+        "Enabled": "True",
         "Id": "BIOS.Setup.1-1#BootSeq#{name}#{hash}".format(**device),
         "Name": device["name"],
     }
@@ -144,3 +144,6 @@ INIT_RESP = [ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
 
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
+
+BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
+BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'

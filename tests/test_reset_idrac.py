@@ -20,4 +20,4 @@ class TestResetIdrac(TestBase):
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert RESPONSE_RESET == err
+        assert err == RESPONSE_RESET
