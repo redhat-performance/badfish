@@ -1,7 +1,7 @@
 import pytest
 
-from tests.test_base import TestBase
 from tests import config
+from tests.test_aiohttp_base import TestBase
 
 
 class TestBootTo(TestBase):

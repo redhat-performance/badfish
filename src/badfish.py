@@ -433,7 +433,6 @@ class Badfish:
         _response = await self.get_request(_uri, _continue=True)
         if not _response:
             return "Down"
-
         if _response.status == 200:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
