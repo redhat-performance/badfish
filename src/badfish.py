@@ -21,10 +21,8 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(
-    _host, _username, _password, _logger, _loop=None, _retries=RETRIES
-):
-    badfish = Badfish(_host, _username, _password, _logger, _loop, _retries=RETRIES)
+async def badfish_factory(_host, _username, _password, _logger, _retries, _loop=None):
+    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
     await badfish.init()
     return badfish
 
@@ -34,9 +32,7 @@ class BadfishException(Exception):
 
 
 class Badfish:
-    def __init__(
-        self, _host, _username, _password, _logger, _loop=None, _retries=RETRIES
-    ):
+    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None):
         self.host = _host
         self.username = _username
         self.password = _password
@@ -66,15 +62,17 @@ class Badfish:
 
     @staticmethod
     def progress_bar(value, end_value, state, bar_length=20):
-        percent = float(value) / end_value
-        arrow = "-" * int(round(percent * bar_length) - 1) + ">"
+        ratio = float(value) / end_value
+        arrow = "-" * int(round(ratio * bar_length) - 1) + ">"
         spaces = " " * (bar_length - len(arrow))
+        percent = int(round(ratio * 100))
 
         if state.lower() == "on":
             state = "On  "
+        ret = "\r" if percent != 100 else "\n"
         sys.stdout.write(
-            "\r  Polling: [{0}] {1}% - Host state: {2}\n".format(
-                arrow + spaces, int(round(percent * 100)), state
+            "\r- POLLING: [{0}] {1}% - Host state: {2}{3}".format(
+                arrow + spaces, percent, state, ret
             )
         )
         sys.stdout.flush()
@@ -125,7 +123,7 @@ class Badfish:
                         verify_ssl=False,
                     ) as _response:
                         if _response.status != 204:
-                            await _response.text("utf-8", "ignore")
+                            await _response.read()
                         else:
                             return _response
         except (Exception, TimeoutError):
@@ -136,7 +134,7 @@ class Badfish:
     async def patch_request(self, uri, payload, headers, _continue=False):
         try:
             async with self.semaphore:
-                async with aiohttp.ClientSession(loop=self.loop) as session:
+                async with aiohttp.ClientSession() as session:
                     async with session.patch(
                         uri,
                         data=json.dumps(payload),
@@ -144,7 +142,7 @@ class Badfish:
                         auth=BasicAuth(self.username, self.password),
                         verify_ssl=False,
                     ) as _response:
-                        await _response.text("utf-8", "ignore")
+                        await _response.read()
         except Exception as ex:
             if _continue:
                 return
@@ -157,18 +155,18 @@ class Badfish:
     async def delete_request(self, uri, headers):
         try:
             async with self.semaphore:
-                async with aiohttp.ClientSession(loop=self.loop) as session:
+                async with aiohttp.ClientSession() as session:
                     async with session.delete(
                         uri,
                         headers=headers,
                         auth=BasicAuth(self.username, self.password),
                         ssl=False,
                     ) as _response:
-                        await _response.text("utf-8", "ignore")
+                        await _response.read()
         except (Exception, TimeoutError):
             self.logger.exception("Failed to communicate with server.")
             raise BadfishException
-        return
+        return _response
 
     async def get_boot_seq(self):
         bios_boot_mode = await self.get_bios_boot_mode()
@@ -204,7 +202,9 @@ class Badfish:
 
             if _response.status == 404:
                 self.logger.debug(_response.text)
-                self.logger.error("Boot order modification is not supported by this host.")
+                self.logger.error(
+                    "Boot order modification is not supported by this host."
+                )
                 sys.exit(1)
 
             raw = await _response.text("utf-8", "ignore")
@@ -213,7 +213,9 @@ class Badfish:
                 self.boot_devices = data["Attributes"][_boot_seq]
             else:
                 self.logger.debug(data)
-                self.logger.error("Boot order modification is not supported by this host.")
+                self.logger.error(
+                    "Boot order modification is not supported by this host."
+                )
                 raise BadfishException
         return self.boot_devices
 
@@ -296,8 +298,6 @@ class Badfish:
             b_pattern = re.compile("b0[0-9]")
             if b_pattern.match(host_blade):
                 host_model = "%s_%s" % (host_model, host_blade)
-            if host_model.startswith("r"):
-                host_model = host_model[1:]
             for _host in ["foreman", "director"]:
                 match = True
                 interfaces = definitions[
@@ -474,9 +474,7 @@ class Badfish:
                 if pxe:
                     await self.set_next_boot_pxe()
 
-                job_id = await self.create_bios_config_job(self.bios_uri)
-                if job_id:
-                    await self.get_job_status(job_id)
+                await self.create_bios_config_job(self.bios_uri)
 
                 await self.reboot_server(graceful=False)
 
@@ -484,7 +482,7 @@ class Badfish:
                 self.logger.error(
                     "Couldn't communicate with host after %s attempts." % self.retries
                 )
-            raise BadfishException
+                raise BadfishException
         else:
             self.logger.warning(
                 "No changes were made since the boot order already matches the requested."
@@ -548,6 +546,8 @@ class Badfish:
             if _status_code != 200:
                 response = await self.patch_request(url, payload, headers, True)
                 if response:
+                    raw = await response.text("utf-8", "ignore")
+                    self.logger.debug(raw)
                     _status_code = response.status
             else:
                 break
@@ -643,7 +643,7 @@ class Badfish:
 
     async def clear_job_queue(self, force=False):
         _job_queue = await self.get_job_queue()
-        if _job_queue:
+        if _job_queue or force:
             supported = await self.check_supported_idrac_version()
             if supported:
                 await self.delete_job_queue_dell(force)
@@ -659,12 +659,14 @@ class Badfish:
                 % self.host
             )
 
-    async def create_job(self, _url, _payload, _headers, expected=200):
+    async def create_job(self, _url, _payload, _headers, expected=None):
+        if not expected:
+            expected = [200, 204]
         _response = await self.post_request(_url, _payload, _headers)
 
         status_code = _response.status
 
-        if status_code == expected:
+        if status_code in expected:
             self.logger.info("POST command passed to create target config job.")
         else:
             self.logger.error(
@@ -674,17 +676,11 @@ class Badfish:
 
             await self.error_handler(_response)
 
-        convert_to_string = str(_response.__dict__)
-        job_id_search = re.search("[RJ]ID_.+?,", convert_to_string).group()
-        _job_id = re.sub("[,']", "", job_id_search).strip("}").strip('"').strip("'")
-        self.logger.info("%s job ID successfully created." % _job_id)
-        return _job_id
-
     async def create_bios_config_job(self, uri):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _payload = {"TargetSettingsURI": "%s%s" % (self.redfish_uri, uri)}
         _headers = {"content-type": "application/json"}
-        return self.create_job(_url, _payload, _headers)
+        await self.create_job(_url, _payload, _headers)
 
     async def send_reset(self, reset_type):
         _url = "%s%s/Actions/ComputerSystem.Reset" % (
@@ -780,9 +776,7 @@ class Badfish:
         if device_check:
             await self.clear_job_queue()
             await self.send_one_time_boot(device)
-            job_id = await self.create_bios_config_job(self.bios_uri)
-            if job_id:
-                await self.get_job_status(job_id)
+            await self.create_bios_config_job(self.bios_uri)
         else:
             raise BadfishException
         return True
@@ -948,69 +942,6 @@ class Badfish:
 
             self.logger.info("*" * 48)
 
-    async def export_configuration(self):
-        _url = "%s%s/Actions/" "Oem/EID_674_Manager.ExportSystemConfiguration" % (
-            self.host_uri,
-            self.manager_resource,
-        )
-        _payload = {
-            "ExportFormat": "XML",
-            "ShareParameters": {"Target": "ALL"},
-            "IncludeInExport": "IncludeReadOnly,IncludePasswordHashValues",
-        }
-        _headers = {"content-type": "application/json"}
-        job_id = await self.create_job(_url, _payload, _headers, 202)
-
-        _uri = "%s/TaskService/Tasks/%s" % (self.root_uri, job_id)
-
-        for _ in range(self.retries):
-
-            _response = await self.get_request(_uri, _continue=True)
-            if not _response:
-                continue
-
-            data = _response.__dict__
-            if "<SystemConfiguration Model" in str(data):
-                self.logger.info("Export job ID %s successfully completed." % job_id)
-
-                filename = "%s_export.xml" % self.host
-
-                with open(filename, "w") as _file:
-                    _content = data["_content"]
-                    _file.writelines(
-                        [
-                            "%s\n" % line.decode("utf-8")
-                            for line in _content.split(b"\n")
-                        ]
-                    )
-
-                self.logger.info("Exported attributes saved in file: %s" % filename)
-
-                return
-            else:
-                pass
-
-            status_code = _response.status
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-
-            if status_code == 202 or status_code == 200:
-                self.logger.info(
-                    'JobStatus not completed, current status: "%s", percent complete: "%s"'
-                    % (
-                        data["Oem"]["Dell"]["Message"],
-                        data["Oem"]["Dell"]["PercentComplete"],
-                    )
-                )
-                time.sleep(1)
-            else:
-                self.logger.error(
-                    "Execute job ID command failed, error code is: %s" % status_code
-                )
-                raise BadfishException
-
-        self.logger.error("Could not export settings after %s attempts." % self.retries)
-
     def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
             with open(_interfaces_path, "r") as f:
@@ -1035,8 +966,8 @@ class Badfish:
 
 
 async def execute_badfish(_host, _args, logger):
-    username = _args["u"]
-    password = _args["p"]
+    _username = _args["u"]
+    _password = _args["p"]
     host_type = _args["t"]
     interfaces_path = _args["i"]
     force = _args["force"]
@@ -1049,12 +980,17 @@ async def execute_badfish(_host, _args, logger):
     racreset = _args["racreset"]
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
-    export_configuration = _args["export_configuration"]
     clear_jobs = _args["clear_jobs"]
-    retries = _args["retries"]
+    retries = int(_args["retries"])
 
     try:
-        badfish = await badfish_factory(_host, username, password, logger, retries)
+        badfish = await badfish_factory(
+            _host=_host,
+            _username=_username,
+            _password=_password,
+            _logger=logger,
+            _retries=retries,
+        )
 
         if _args["host_list"]:
             badfish.logger.info("Executing actions on host: %s" % _host)
@@ -1069,8 +1005,6 @@ async def execute_badfish(_host, _args, logger):
             await badfish.check_boot(interfaces_path)
         elif firmware_inventory:
             await badfish.get_firmware_inventory()
-        elif export_configuration:
-            await badfish.export_configuration()
         elif clear_jobs:
             await badfish.clear_job_queue(force)
         elif host_type:
@@ -1149,11 +1083,6 @@ def main(argv=None):
         "--firmware-inventory", help="Get firmware inventory", action="store_true"
     )
     parser.add_argument(
-        "--export-configuration",
-        help="Export system configuration to XML",
-        action="store_true",
-    )
-    parser.add_argument(
         "--clear-jobs",
         help="Clear any schedule jobs from the queue",
         action="store_true",
@@ -1206,7 +1135,7 @@ def main(argv=None):
             logger.warning("Badfish terminated.")
         except BadfishException as ex:
             logger.debug(ex)
-            return 1
+            raise
     return 0
 
 

@@ -122,10 +122,9 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Polling for host state: On\n"
     "- INFO     - PATCH command passed to update boot order.\n"
     "- INFO     - POST command passed to create target config job.\n"
-    "- INFO     - JID_498218641680 job ID successfully created.\n"
-    "- INFO     - Command passed to check job status, code 200 returned.\n"
-    "- INFO     - Job id JID_498218641680 successfully scheduled.\n"
-    "- INFO     - Command passed to On server, code return is 204.\n"
+    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
 )
 RESPONSE_CHANGE_NO_INT = (
     "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
@@ -147,3 +146,7 @@ STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
+
+BLANK_RESP = '"OK"'
+TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'
+JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
