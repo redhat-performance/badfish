@@ -7,7 +7,6 @@ from aiohttp.test_utils import AioHTTPTestCase
 
 from src.badfish import main, BadfishException
 from tests import config
-from tests.config import JOB_ID
 
 
 class TestBase(AioHTTPTestCase):
