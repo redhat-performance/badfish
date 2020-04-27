@@ -5,7 +5,7 @@ from asynctest import CoroutineMock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 
-from src.badfish import main
+from src.badfish import main, BadfishException
 from tests import config
 from tests.config import JOB_ID
 
@@ -35,6 +35,9 @@ class TestBase(AioHTTPTestCase):
     def badfish_call(self):
         argv = ["-H", config.MOCK_HOST, "-u", config.MOCK_USER, "-p", config.MOCK_PASS]
         argv.extend(self.args)
-        main(argv)
+        try:
+            main(argv)
+        except BadfishException:
+            pass
         out, err = self._capsys.readouterr()
         return out, err

@@ -53,10 +53,10 @@ RESPONSE_NO_MATCH = (
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 WARN_NO_MATCH = (
-        "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
-        "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
-        "- WARNING  - Current boot order does not match any of the given.\n%s"
-        % RESPONSE_NO_MATCH
+    "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
+    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
+    "- WARNING  - Current boot order does not match any of the given.\n%s"
+    % RESPONSE_NO_MATCH
 )
 RESPONSE_DIRECTOR = (
     "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
@@ -76,8 +76,11 @@ INTERFACES_PATH = os.path.join(
 # test_boot_to constants
 BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
 ERROR_DEV_NO_MATCH = (
-        "- ERROR    - Device %s does not match any of the existing for host %s"
-        % (BAD_DEVICE_NAME, MOCK_HOST)
+    "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
+    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
+    "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
+    "- ERROR    - There was something wrong executing Badfish.\n"
+    % (BAD_DEVICE_NAME, MOCK_HOST)
 )
 JOB_ID = "JID_498218641680"
 RESPONSE_BOOT_TO = (
@@ -86,12 +89,6 @@ RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
     "- INFO     - POST command passed to create target config job.\n"
-    f"- INFO     - {JOB_ID} job ID successfully created.\n"
-    "- INFO     - Command passed to check job status, code 200 returned.\n"
-    f"- INFO     - Job id {JOB_ID} successfully scheduled.\n"
-    "- INFO     - Command passed to ForceOff server, code return is 204.\n"
-    "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 204.\n"
 )
 
 # test_reboot_only
@@ -126,10 +123,22 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
-RESPONSE_CHANGE_NO_INT = (
+RESPONSE_CHANGE_BAD_TYPE = (
+    "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
+    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
+    '- ERROR    - Expected values for -t argument are "foreman" or "director"\n'
+    "- ERROR    - There was something wrong executing Badfish.\n"
+)
+RESPONSE_CHANGE_TO_SAME = (
     "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
     "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
     "- WARNING  - No changes were made since the boot order already matches the requested.\n"
+)
+RESPONSE_CHANGE_NO_INT = (
+    "- INFO     - Systems service: /redfish/v1/Systems/System.Embedded.1.\n"
+    "- INFO     - Managers service: /redfish/v1/Managers/iDRAC.Embedded.1.\n"
+    "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
+    "- ERROR    - There was something wrong executing Badfish.\n"
 )
 
 ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'

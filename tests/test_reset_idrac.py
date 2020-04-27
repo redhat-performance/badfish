@@ -5,7 +5,7 @@ from tests.config import (
     RESPONSE_RESET,
     INIT_RESP,
 )
-from tests.test_aiohttp_base import TestBase
+from tests.test_base import TestBase
 
 
 class TestResetIdrac(TestBase):

@@ -1,7 +1,4 @@
-import pytest
 from asynctest import patch
-
-from tests import config
 from tests.config import (
     BOOT_SEQ_RESPONSE_DIRECTOR,
     INTERFACES_PATH,
@@ -12,9 +9,12 @@ from tests.config import (
     BLANK_RESP,
     STATE_ON_RESP,
     JOB_OK_RESP,
-    BOOT_SEQ_RESPONSE_FOREMAN, RESPONSE_CHANGE_NO_INT,
+    BOOT_SEQ_RESPONSE_FOREMAN,
+    RESPONSE_CHANGE_TO_SAME,
+    RESPONSE_CHANGE_BAD_TYPE,
+    RESPONSE_CHANGE_NO_INT,
 )
-from tests.test_aiohttp_base import TestBase
+from tests.test_base import TestBase
 
 
 class TestChangeBoot(TestBase):
@@ -79,8 +79,8 @@ class TestChangeBoot(TestBase):
         responses = INIT_RESP + get_resp
         self.set_mock_response(mock_get, 200, responses)
         self.args = ["-i", INTERFACES_PATH, self.option_arg, "bad_type"]
-        with pytest.raises(Exception):
-            self.badfish_call()
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHANGE_BAD_TYPE
 
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
@@ -102,7 +102,7 @@ class TestChangeBoot(TestBase):
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
         self.args = ["-i", INTERFACES_PATH, self.option_arg, "director"]
         _, err = self.badfish_call()
-        assert err == RESPONSE_CHANGE_NO_INT
+        assert err == RESPONSE_CHANGE_TO_SAME
 
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
@@ -122,7 +122,6 @@ class TestChangeBoot(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_patch, 200, ["OK"])
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
-        self.boot_seq = BOOT_SEQ_RESPONSE_FOREMAN
         self.args = [self.option_arg, "director"]
-        with pytest.raises(Exception):
-            self.badfish_call()
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHANGE_NO_INT

@@ -17,6 +17,7 @@ class Logger(_Logger):
     """ Message logger.
 
     """
+
     LOGFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
     STDFMT = "- %(levelname)-8s - %(message)s"
 
@@ -76,4 +77,3 @@ class Logger(_Logger):
             # Remove everything but the NullHandler.
             self.removeHandler(handler)
         return
-

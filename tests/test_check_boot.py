@@ -12,7 +12,7 @@ from tests.config import (
     INTERFACES_PATH,
     WARN_NO_MATCH,
 )
-from tests.test_aiohttp_base import TestBase
+from tests.test_base import TestBase
 
 
 class TestCheckBoot(TestBase):
