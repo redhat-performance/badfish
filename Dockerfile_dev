@@ -9,6 +9,8 @@ WORKDIR badfish
 RUN git checkout development
 
 RUN pip install -r requirements.txt
+RUN python setup.py build
+RUN python setup.py develop
 
-ENTRYPOINT ["python", "badfish.py"]
+ENTRYPOINT ["badfish"]
 CMD ["-v"]
