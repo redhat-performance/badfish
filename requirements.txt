@@ -5,4 +5,3 @@
 
 pyyaml>=4.2b1
 aiohttp==3.6.2
-aiocache==0.11.1
