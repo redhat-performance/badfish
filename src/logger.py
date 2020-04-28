@@ -8,7 +8,6 @@ from logging import Formatter, INFO
 from logging import Logger as _Logger
 from logging import NullHandler
 from logging import StreamHandler
-from logging import FileHandler
 
 
 __all__ = "logger", "Logger"
@@ -18,6 +17,7 @@ class Logger(_Logger):
     """ Message logger.
 
     """
+
     LOGFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
     STDFMT = "- %(levelname)-8s - %(message)s"
 
@@ -77,4 +77,3 @@ class Logger(_Logger):
             # Remove everything but the NullHandler.
             self.removeHandler(handler)
         return
-

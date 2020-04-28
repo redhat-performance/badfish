@@ -4,4 +4,4 @@
 ##
 
 pyyaml>=4.2b1
-requests==2.20.1
+aiohttp==3.6.2

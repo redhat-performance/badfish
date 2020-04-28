@@ -3,7 +3,9 @@
 ##    pip install --requirement=test-requirements.txt
 ##
 
-PyYAML==3.13
 requests==2.20.1
 pytest==4.0.1
 requests-mock==1.5.2
+asynctest==0.13.0
+pyyaml>=4.2b1
+aiohttp==3.6.2
