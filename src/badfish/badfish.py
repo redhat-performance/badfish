@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import functools
 
 import aiohttp as aiohttp
 from aiohttp import BasicAuth
@@ -1094,43 +1095,47 @@ def main(argv=None):
         help="Number of retries for executing actions.",
         default=RETRIES,
     )
-    args = vars(parser.parse_args(argv))
+    _args = vars(parser.parse_args(argv))
 
-    log_level = DEBUG if args["verbose"] else INFO
+    log_level = DEBUG if _args["verbose"] else INFO
 
     logger = Logger()
     logger.start(level=log_level)
 
-    if args["log"]:
-        file_handler = FileHandler(args["log"])
+    if _args["log"]:
+        file_handler = FileHandler(_args["log"])
         file_handler.setFormatter(Formatter(logger.LOGFMT))
         file_handler.setLevel(DEBUG)
         logger.addHandler(file_handler)
 
-    host_list = args["host_list"]
-    host = args["H"]
+    host_list = _args["host_list"]
+    host = _args["H"]
 
     loop = asyncio.get_event_loop()
+    tasks = []
     if host_list:
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
-                    try:
-                        loop.run_until_complete(
-                            execute_badfish(_host.strip(), args, logger)
-                        )
-                    except BadfishException:
-                        continue
+                    fn = functools.partial(execute_badfish, _host.strip(), _args, logger)
+                    tasks.append(fn)
         except IOError as ex:
             logger.debug(ex)
             logger.error("There was something wrong reading from %s" % host_list)
+
+        try:
+            loop.run_until_complete(
+                asyncio.gather(*[task() for task in tasks])
+            )
+        except (asyncio.CancelledError, BadfishException):
+            logger.error('There was something wrong executing Badfish.')
     elif not host:
         logger.error(
             "You must specify at least either a host (-H) or a host list (--host-list)."
         )
     else:
         try:
-            loop.run_until_complete(execute_badfish(host, args, logger))
+            loop.run_until_complete(execute_badfish(host, _args, logger))
         except KeyboardInterrupt:
             logger.warning("Badfish terminated.")
         except BadfishException as ex:
