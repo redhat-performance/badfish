@@ -4,7 +4,7 @@ import asyncio
 import aiohttp as aiohttp
 from aiohttp import BasicAuth
 
-from src.logger import Logger
+from badfish.logger import Logger
 from logging import FileHandler, Formatter, DEBUG, INFO
 
 import json
@@ -1135,7 +1135,6 @@ def main(argv=None):
             logger.warning("Badfish terminated.")
         except BadfishException as ex:
             logger.debug(ex)
-            raise
     return 0
 
 
