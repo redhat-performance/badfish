@@ -8,6 +8,9 @@
       * [Features](#features)
       * [Requirements](#requirements)
       * [Setup](#setup)
+         * [Badfish Standalone CLI](#badfish-standalone-cli)
+         * [Badfish Standalone Script](#badfish-standalone-script)
+         * [Badfish Standalone within a virtualenv](#badfish-standalone-within-a-virtualenv)
       * [Usage](#usage)
       * [Usage via Docker](#usage-via-docker)
       * [Common Operations](#common-operations)
@@ -72,7 +75,7 @@ python setup.py install --prefix ~/.local
 NOTE:
 * This will allow Badfish to be called from the terminal via the ```badfish``` command
 
-### Badfish Standalone script
+### Badfish Standalone Script
 ```
 git clone https://github.com/redhat-performance/badfish && cd badfish
 pip install -r requirements.txt
@@ -93,7 +96,7 @@ NOTE:
 ## Usage
 Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
-## Usage via docker
+## Usage via Docker
 Badfish can now be run via a docker-image. For this you need to first pull the Badfish image via:
 ```
 docker pull quads/badfish
