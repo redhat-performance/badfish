@@ -63,7 +63,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Python >= ```3.6``` or podman/docker
 
 ## Setup
-### Badfish Standalone cli
+### Badfish Standalone CLI
 ```
 git clone https://github.com/redhat-performance/badfish && cd badfish
 python setup.py build
@@ -72,14 +72,23 @@ python setup.py install --prefix ~/.local
 NOTE:
 * This will allow Badfish to be called from the terminal via the ```badfish``` command
 
-### Badfish Standalone
+### Badfish Standalone script
 ```
 git clone https://github.com/redhat-performance/badfish && cd badfish
 pip install -r requirements.txt
 ```
 NOTE:
 * This will allow the badfish script execution via ```./src/badfish.py```
-* This method could also be used from within a virtualenv
+
+### Badfish Standalone within a virtualenv
+```
+git clone https://github.com/redhat-performance/badfish && cd badfish
+virtualenv .badfish_venv
+source .badfish_venv/bin/activate
+```
+NOTE:
+* Both setup methods above can be used within a virtualenv
+* After using badfish, the virtual environment can be deactivated running the ```deactivate``` command
 
 ## Usage
 Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
