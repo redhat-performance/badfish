@@ -70,7 +70,7 @@ python setup.py build
 python setup.py install
 ```
 NOTE:
-* This will allow Badfish to be call from the terminal via the ```badfish``` command
+* This will allow Badfish to be called from the terminal via the ```badfish``` command
 
 ### Badfish Standalone
 ```
@@ -78,7 +78,8 @@ git clone https://github.com/redhat-performance/badfish && cd badfish
 pip install -r requirements.txt
 ```
 NOTE:
-* This will allow the badfish script via ```./src/badfish.py```
+* This will allow the badfish script execution via ```./src/badfish.py```
+* This method could also be used from within a virtualenv
 
 ## Usage
 Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
