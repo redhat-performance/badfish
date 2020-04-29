@@ -67,7 +67,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 ```
 git clone https://github.com/redhat-performance/badfish && cd badfish
 python setup.py build
-python setup.py install
+python setup.py install --prefix ~/.local
 ```
 NOTE:
 * This will allow Badfish to be called from the terminal via the ```badfish``` command
