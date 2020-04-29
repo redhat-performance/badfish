@@ -10,7 +10,6 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/redhat-performance/badfish",
-    package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     project_urls={
         "Bug Tracker": "https://github.com/redhat-performance/badfish/issues",
@@ -23,5 +22,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    entry_points={"console_scripts": ["badfish=badfish:main",],},
+    entry_points={"console_scripts": ["badfish=src.badfish:main"]},
 )

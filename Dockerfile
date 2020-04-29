@@ -8,8 +8,8 @@ WORKDIR badfish
 
 RUN apk add build-base
 RUN pip install -r requirements.txt
-RUN python setup.py build
-RUN python setup.py develop
+RUN python setup.py bdist
+RUN python setup.py install
 
 ENTRYPOINT ["badfish"]
 CMD ["-v"]
