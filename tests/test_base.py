@@ -5,7 +5,7 @@ from asynctest import CoroutineMock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 
-from src.badfish import main, BadfishException
+from badfish.badfish import main, BadfishException
 from tests import config
 
 
