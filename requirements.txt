@@ -5,3 +5,4 @@
 
 pyyaml>=4.2b1
 aiohttp==3.6.2
+async-lru==1.0.2
