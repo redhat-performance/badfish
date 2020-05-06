@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 import asyncio
 import functools
+import queue
+from logging.handlers import QueueHandler, QueueListener
 
-import aiohttp as aiohttp
-from aiohttp import BasicAuth
-
-from badfish.logger import Logger
-from logging import FileHandler, Formatter, DEBUG, INFO
-
+import aiohttp
 import json
 import argparse
 import os
@@ -16,6 +13,9 @@ import sys
 import time
 import warnings
 import yaml
+
+from async_lru import alru_cache
+from logging import Formatter, FileHandler, DEBUG, INFO, StreamHandler, getLogger
 
 warnings.filterwarnings("ignore")
 
@@ -92,13 +92,14 @@ class Badfish:
 
         raise BadfishException
 
+    @alru_cache(maxsize=32)
     async def get_request(self, uri, _continue=False):
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
                         uri,
-                        auth=BasicAuth(self.username, self.password),
+                        auth=aiohttp.BasicAuth(self.username, self.password),
                         verify_ssl=False,
                         timeout=60,
                     ) as _response:
@@ -120,7 +121,7 @@ class Badfish:
                         uri,
                         data=json.dumps(payload),
                         headers=headers,
-                        auth=BasicAuth(self.username, self.password),
+                        auth=aiohttp.BasicAuth(self.username, self.password),
                         verify_ssl=False,
                     ) as _response:
                         if _response.status != 204:
@@ -140,7 +141,7 @@ class Badfish:
                         uri,
                         data=json.dumps(payload),
                         headers=headers,
-                        auth=BasicAuth(self.username, self.password),
+                        auth=aiohttp.BasicAuth(self.username, self.password),
                         verify_ssl=False,
                     ) as _response:
                         await _response.read()
@@ -160,7 +161,7 @@ class Badfish:
                     async with session.delete(
                         uri,
                         headers=headers,
-                        auth=BasicAuth(self.username, self.password),
+                        auth=aiohttp.BasicAuth(self.username, self.password),
                         ssl=False,
                     ) as _response:
                         await _response.read()
@@ -397,9 +398,17 @@ class Badfish:
                         self.logger.info("Systems service: %s." % systems_service)
                         return systems_service
                 else:
-                    self.logger.error(
-                        "ComputerSystem's Members array is either empty or missing"
-                    )
+                    try:
+                        msg = data.get("error").get('@Message.ExtendedInfo')[0].get('Message')
+                        resolution = data.get("error").get('@Message.ExtendedInfo')[0].get('Resolution')
+                        self.logger.error(msg)
+                        self.logger.info(resolution)
+                    except (IndexError, TypeError, AttributeError):
+                        pass
+                    else:
+                        self.logger.error(
+                            "ComputerSystem's Members array is either empty or missing"
+                        )
                     raise BadfishException
         else:
             self.logger.error("Failed to communicate with server.")
@@ -443,7 +452,12 @@ class Badfish:
         else:
             self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
-        self.logger.debug("Current server power state is: %s." % data["PowerState"])
+
+        if not data["PowerState"]:
+            self.logger.debug("Power state not found. Try to racreset.")
+            raise BadfishException
+        else:
+            self.logger.debug("Current server power state is: %s." % data["PowerState"])
 
         return data["PowerState"]
 
@@ -984,6 +998,8 @@ async def execute_badfish(_host, _args, logger):
     clear_jobs = _args["clear_jobs"]
     retries = int(_args["retries"])
 
+    result = True
+
     try:
         badfish = await badfish_factory(
             _host=_host,
@@ -1019,13 +1035,16 @@ async def execute_badfish(_host, _args, logger):
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
+
     except BadfishException as ex:
         logger.debug(ex)
         logger.error("There was something wrong executing Badfish.")
-        raise
+        result = False
 
     if _args["host_list"]:
         logger.info("*" * 48)
+
+    return _host, result
 
 
 def main(argv=None):
@@ -1097,16 +1116,24 @@ def main(argv=None):
     )
     _args = vars(parser.parse_args(argv))
 
+    LOGFMT = "- %(levelname)-8s - %(message)s"
     log_level = DEBUG if _args["verbose"] else INFO
 
-    logger = Logger()
-    logger.start(level=log_level)
+    _queue = queue.Queue(-1)
+    _queue_handler = QueueHandler(_queue)
+    _stream_handler = StreamHandler()
+    _queue_listener = QueueListener(_queue, _stream_handler)
+    _logger = getLogger()
+    _logger.addHandler(_queue_handler)
+    _logger.setLevel(log_level)
+    _stream_handler.setFormatter(Formatter(LOGFMT))
+    _queue_listener.start()
 
     if _args["log"]:
         file_handler = FileHandler(_args["log"])
-        file_handler.setFormatter(Formatter(logger.LOGFMT))
+        file_handler.setFormatter(Formatter(LOGFMT))
         file_handler.setLevel(DEBUG)
-        logger.addHandler(file_handler)
+        _logger.addHandler(file_handler)
 
     host_list = _args["host_list"]
     host = _args["H"]
@@ -1117,29 +1144,42 @@ def main(argv=None):
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
-                    fn = functools.partial(execute_badfish, _host.strip(), _args, logger)
+                    fn = functools.partial(
+                        execute_badfish, _host.strip(), _args, _logger
+                    )
                     tasks.append(fn)
         except IOError as ex:
-            logger.debug(ex)
-            logger.error("There was something wrong reading from %s" % host_list)
-
+            _logger.debug(ex)
+            _logger.error("There was something wrong reading from %s" % host_list)
         try:
-            loop.run_until_complete(
-                asyncio.gather(*[task() for task in tasks])
-            )
+            results = loop.run_until_complete(asyncio.gather(*[task() for task in tasks], return_exceptions=True))
+        except KeyboardInterrupt:
+            _logger.warning("\nBadfish terminated.")
+            _queue_listener.stop()
+            return 1
         except (asyncio.CancelledError, BadfishException):
-            logger.error('There was something wrong executing Badfish.')
+            _logger.warning("There was something wrong executing Badfish.")
+            _queue_listener.stop()
+            return 1
+        _logger.info("\nRESULTS:")
+        for result in results:
+            if result[1]:
+                _logger.info(f"{result[0]}: SUCCESSFUL")
+            else:
+                _logger.info(f"{result[0]}: FAILED")
     elif not host:
-        logger.error(
+        _logger.error(
             "You must specify at least either a host (-H) or a host list (--host-list)."
         )
     else:
         try:
-            loop.run_until_complete(execute_badfish(host, _args, logger))
+            loop.run_until_complete(execute_badfish(host, _args, _logger))
         except KeyboardInterrupt:
-            logger.warning("Badfish terminated.")
+            _logger.warning("Badfish terminated.")
         except BadfishException as ex:
-            logger.debug(ex)
+            _logger.warning("There was something wrong executing Badfish.")
+            _logger.debug(ex)
+    _queue_listener.stop()
     return 0
 
 
