@@ -443,7 +443,12 @@ class Badfish:
         else:
             await self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
-        await self.logger.debug("Current server power state is: %s." % data["PowerState"])
+
+        if not data["PowerState"]:
+            await self.logger.debug("Power state not found. Retrying.")
+            return "Down"
+        else:
+            await self.logger.debug("Current server power state is: %s." % data["PowerState"])
 
         return data["PowerState"]
 
@@ -984,6 +989,8 @@ async def execute_badfish(_host, _args, logger):
     clear_jobs = _args["clear_jobs"]
     retries = int(_args["retries"])
 
+    result = True
+
     try:
         badfish = await badfish_factory(
             _host=_host,
@@ -1019,12 +1026,16 @@ async def execute_badfish(_host, _args, logger):
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
+
     except BadfishException as ex:
         await logger.debug(ex)
         await logger.error("There was something wrong executing Badfish.")
+        result = False
 
     if _args["host_list"]:
         await logger.info("*" * 48)
+
+    return _host, result
 
 
 def main(argv=None):
@@ -1096,7 +1107,7 @@ def main(argv=None):
     )
     _args = vars(parser.parse_args(argv))
 
-    LOGFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
+    LOGFMT = "- %(levelname)-8s - %(message)s"
     log_level = DEBUG if _args["verbose"] else INFO
     logger = Logger.with_default_handlers(name=__name__, level=log_level, formatter=Formatter(LOGFMT))
 
@@ -1120,24 +1131,33 @@ def main(argv=None):
                     )
                     tasks.append(fn)
         except IOError as ex:
-            logger.debug(ex)
-            logger.error("There was something wrong reading from %s" % host_list)
-
+            print(ex)
+            print("There was something wrong reading from %s" % host_list)
         try:
-            loop.run_until_complete(asyncio.gather(*[task() for task in tasks]))
+            results = loop.run_until_complete(asyncio.gather(*[task() for task in tasks], return_exceptions=True))
+        except KeyboardInterrupt:
+            print("\nBadfish terminated.")
+            return 1
         except (asyncio.CancelledError, BadfishException):
-            logger.error("There was something wrong executing Badfish.")
+            print("There was something wrong executing Badfish.")
+            return 1
+        print("\nRESULTS:")
+        for result in results:
+            if result[1]:
+                print(f"{result[0]}: SUCCESSFUL")
+            else:
+                print(f"{result[0]}: FAILED")
     elif not host:
-        logger.error(
+        print(
             "You must specify at least either a host (-H) or a host list (--host-list)."
         )
     else:
         try:
             loop.run_until_complete(execute_badfish(host, _args, logger))
         except KeyboardInterrupt:
-            logger.warning("Badfish terminated.")
+            print("Badfish terminated.")
         except BadfishException as ex:
-            logger.debug(ex)
+            print(ex)
     return 0
 
 
