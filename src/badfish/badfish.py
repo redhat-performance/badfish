@@ -397,9 +397,17 @@ class Badfish:
                         await self.logger.info("Systems service: %s." % systems_service)
                         return systems_service
                 else:
-                    await self.logger.error(
-                        "ComputerSystem's Members array is either empty or missing"
-                    )
+                    try:
+                        msg = data.get("error").get('@Message.ExtendedInfo')[0].get('Message')
+                        resolution = data.get("error").get('@Message.ExtendedInfo')[0].get('Resolution')
+                        await self.logger.error(msg)
+                        await self.logger.info(resolution)
+                    except (IndexError, TypeError, AttributeError):
+                        pass
+                    else:
+                        await self.logger.error(
+                            "ComputerSystem's Members array is either empty or missing"
+                        )
                     raise BadfishException
         else:
             await self.logger.error("Failed to communicate with server.")
@@ -445,8 +453,8 @@ class Badfish:
             return "Down"
 
         if not data["PowerState"]:
-            await self.logger.debug("Power state not found. Retrying.")
-            return "Down"
+            await self.logger.debug("Power state not found. Try to racreset.")
+            raise BadfishException
         else:
             await self.logger.debug("Current server power state is: %s." % data["PowerState"])
 
