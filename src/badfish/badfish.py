@@ -32,7 +32,7 @@ from logging import (
 
 warnings.filterwarnings("ignore")
 
-RETRIES = 15
+RETRIES = 30
 
 
 async def badfish_factory(_host, _username, _password, _logger, _retries, _loop=None):
@@ -1012,6 +1012,7 @@ async def execute_badfish(_host, _args, logger):
     boot_to_type = _args["boot_to_type"]
     boot_to_mac = _args["boot_to_mac"]
     reboot_only = _args["reboot_only"]
+    power_state = _args["power_state"]
     power_cycle = _args["power_cycle"]
     racreset = _args["racreset"]
     check_boot = _args["check_boot"]
@@ -1049,6 +1050,9 @@ async def execute_badfish(_host, _args, logger):
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif racreset:
             await badfish.reset_idrac()
+        elif power_state:
+            state = await badfish.get_power_state()
+            logger.info(f"Power state for {_host}: {state}")
         elif power_cycle:
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
@@ -1112,6 +1116,11 @@ def main(argv=None):
     parser.add_argument(
         "--power-cycle",
         help="Flag for sending ForceOff instruction to the host",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--power-state",
+        help="Get power state",
         action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
