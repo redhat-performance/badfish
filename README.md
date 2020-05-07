@@ -22,6 +22,7 @@
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
          * [Rebooting a System](#rebooting-a-system)
          * [Power Cycling a System](#power-cycling-a-system)
+         * [Check Power State](#check-power-state)
          * [Resetting iDRAC](#resetting-idrac)
          * [Check current boot order](#check-current-boot-order)
          * [Variable number of retries](#variable-number-of-retries)
@@ -158,6 +159,16 @@ In certain cases you might need to only reboot the host, for this case we includ
 For a hard reset you can use ```--power-cycle``` flag which will run a ForceOff instruction on the target host. Note that this option is not to be used with any other option.
 ```
 ./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
+```
+
+### Check Power State
+For checking the current power state of a server you can run badfish with the `--power-state` option.
+```
+./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-state
+```
+Partial Output:
+```
+- INFO     - Power state for mgmt-your-server.example.com: On
 ```
 
 ### Resetting iDRAC
