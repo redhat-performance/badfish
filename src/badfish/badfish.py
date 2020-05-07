@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 import asyncio
 import functools
-import queue
+
+try:
+    # Python 3.7 and newer, fast reentrant implementation
+    # witohut task tracking (not needed for that when logging)
+    from queue import SimpleQueue as Queue
+except ImportError:
+    from queue import Queue
 from logging.handlers import QueueHandler, QueueListener
 
 import aiohttp
@@ -15,7 +21,14 @@ import warnings
 import yaml
 
 from async_lru import alru_cache
-from logging import Formatter, FileHandler, DEBUG, INFO, StreamHandler, getLogger
+from logging import (
+    Formatter,
+    FileHandler,
+    DEBUG,
+    INFO,
+    StreamHandler,
+    getLogger,
+)
 
 warnings.filterwarnings("ignore")
 
@@ -399,8 +412,16 @@ class Badfish:
                         return systems_service
                 else:
                     try:
-                        msg = data.get("error").get('@Message.ExtendedInfo')[0].get('Message')
-                        resolution = data.get("error").get('@Message.ExtendedInfo')[0].get('Resolution')
+                        msg = (
+                            data.get("error")
+                            .get("@Message.ExtendedInfo")[0]
+                            .get("Message")
+                        )
+                        resolution = (
+                            data.get("error")
+                            .get("@Message.ExtendedInfo")[0]
+                            .get("Resolution")
+                        )
                         self.logger.error(msg)
                         self.logger.info(resolution)
                     except (IndexError, TypeError, AttributeError):
@@ -1115,28 +1136,35 @@ def main(argv=None):
         default=RETRIES,
     )
     _args = vars(parser.parse_args(argv))
+    FILEFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
 
-    LOGFMT = "- %(levelname)-8s - %(message)s"
     log_level = DEBUG if _args["verbose"] else INFO
 
-    _queue = queue.Queue(-1)
-    _queue_handler = QueueHandler(_queue)
+    host_list = _args["host_list"]
+    host = _args["H"]
+    result = 0
+
+    if host_list:
+        FMT = "[%(name)s] - %(levelname)-8s - %(message)s"
+    else:
+        FMT = "- %(levelname)-8s - %(message)s"
+
+    _queue = Queue()
     _stream_handler = StreamHandler()
+    _stream_handler.setFormatter(Formatter(FMT))
     _queue_listener = QueueListener(_queue, _stream_handler)
-    _logger = getLogger()
+    _logger = getLogger(__name__)
+    _queue_handler = QueueHandler(_queue)
     _logger.addHandler(_queue_handler)
     _logger.setLevel(log_level)
-    _stream_handler.setFormatter(Formatter(LOGFMT))
+
     _queue_listener.start()
 
     if _args["log"]:
         file_handler = FileHandler(_args["log"])
-        file_handler.setFormatter(Formatter(LOGFMT))
+        file_handler.setFormatter(Formatter(FILEFMT))
         file_handler.setLevel(DEBUG)
         _logger.addHandler(file_handler)
-
-    host_list = _args["host_list"]
-    host = _args["H"]
 
     loop = asyncio.get_event_loop()
     tasks = []
@@ -1144,29 +1172,35 @@ def main(argv=None):
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
+                    logger = getLogger(_host.split(".")[0])
+                    logger.addHandler(_queue_handler)
+                    logger.setLevel(log_level)
                     fn = functools.partial(
-                        execute_badfish, _host.strip(), _args, _logger
+                        execute_badfish, _host.strip(), _args, logger
                     )
                     tasks.append(fn)
         except IOError as ex:
             _logger.debug(ex)
             _logger.error("There was something wrong reading from %s" % host_list)
+        results = []
         try:
-            results = loop.run_until_complete(asyncio.gather(*[task() for task in tasks], return_exceptions=True))
+            results = loop.run_until_complete(
+                asyncio.gather(*[task() for task in tasks], return_exceptions=True)
+            )
         except KeyboardInterrupt:
             _logger.warning("\nBadfish terminated.")
-            _queue_listener.stop()
-            return 1
-        except (asyncio.CancelledError, BadfishException):
+            result = 1
+        except (asyncio.CancelledError, BadfishException) as ex:
             _logger.warning("There was something wrong executing Badfish.")
-            _queue_listener.stop()
-            return 1
-        _logger.info("\nRESULTS:")
-        for result in results:
-            if result[1]:
-                _logger.info(f"{result[0]}: SUCCESSFUL")
-            else:
-                _logger.info(f"{result[0]}: FAILED")
+            _logger.debug(ex)
+            result = 1
+        if results:
+            _logger.info("RESULTS:")
+            for res in results:
+                if res[1]:
+                    _logger.info(f"{res[0]}: SUCCESSFUL")
+                else:
+                    _logger.info(f"{res[0]}: FAILED")
     elif not host:
         _logger.error(
             "You must specify at least either a host (-H) or a host list (--host-list)."
@@ -1179,8 +1213,9 @@ def main(argv=None):
         except BadfishException as ex:
             _logger.warning("There was something wrong executing Badfish.")
             _logger.debug(ex)
+            result = 1
     _queue_listener.stop()
-    return 0
+    return result
 
 
 if __name__ == "__main__":
