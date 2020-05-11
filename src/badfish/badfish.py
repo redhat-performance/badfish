@@ -32,7 +32,7 @@ from logging import (
 
 warnings.filterwarnings("ignore")
 
-RETRIES = 30
+RETRIES = 15
 
 
 async def badfish_factory(_host, _username, _password, _logger, _retries, _loop=None):
@@ -97,7 +97,7 @@ class Badfish:
             data = json.loads(raw.strip())
         except ValueError:
             self.logger.error("Error reading response from host.")
-            sys.exit(1)
+            raise BadfishException
 
         if "error" in data:
             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
@@ -105,7 +105,7 @@ class Badfish:
 
         raise BadfishException
 
-    @alru_cache(maxsize=32)
+    @alru_cache(maxsize=64)
     async def get_request(self, uri, _continue=False):
         try:
             async with self.semaphore:
@@ -220,7 +220,7 @@ class Badfish:
                 self.logger.error(
                     "Boot order modification is not supported by this host."
                 )
-                sys.exit(1)
+                raise BadfishException
 
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
@@ -352,7 +352,7 @@ class Badfish:
             self.logger.error(
                 "EthernetInterfaces entry point not supported by this host."
             )
-            sys.exit(1)
+            raise BadfishException
 
         endpoints = []
         if data.get("Members"):
@@ -482,6 +482,39 @@ class Badfish:
 
         return data["PowerState"]
 
+    async def set_power_state(self, state):
+        if state.lower() not in ["on", "off"]:
+            self.logger.error("Power state not valid. 'on' or 'off' only accepted.")
+            raise BadfishException
+
+        _uri = "%s%s" % (self.host_uri, self.system_resource)
+        self.logger.debug("url: %s" % _uri)
+
+        _response = await self.get_request(_uri, _continue=True)
+        if not _response and state.lower() == "off":
+            self.logger.warning("Power state appears to be already set to 'off'.")
+            return
+
+        if _response.status == 200:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        else:
+            self.logger.debug("Couldn't get power state.")
+            raise BadfishException
+
+        if not data["PowerState"]:
+            self.logger.debug("Power state not found. Try to racreset.")
+            raise BadfishException
+        else:
+            self.logger.debug("Current server power state is: %s." % data["PowerState"])
+
+        if state.lower() == "off":
+            await self.send_reset("ForceOff")
+        elif state.lower() == "on":
+            await self.send_reset("On")
+
+        return data["PowerState"]
+
     async def change_boot(self, host_type, interfaces_path, pxe=False):
         if host_type.lower() not in ("foreman", "director"):
             self.logger.error(
@@ -531,7 +564,7 @@ class Badfish:
                 definitions = yaml.safe_load(f)
             except yaml.YAMLError as ex:
                 self.logger.error(ex)
-                sys.exit(1)
+                raise BadfishException
 
         host_model = self.host.split(".")[0].split("-")[-1]
         host_blade = self.host.split(".")[0].split("-")[-2]
@@ -567,7 +600,6 @@ class Badfish:
             self.logger.warning(
                 "No changes were made since the boot order already matches the requested."
             )
-            sys.exit()
 
     async def patch_boot_seq(self, boot_devices):
         _boot_seq = await self.get_boot_seq()
@@ -807,6 +839,33 @@ class Badfish:
         )
         return True
 
+    async def reset_bios(self):
+        self.logger.debug("Running BIOS reset.")
+        _url = "%s%s/Bios/Actions/Bios.ResetBios/" % (self.host_uri, self.system_resource)
+        _payload = {}
+        _headers = {"content-type": "application/json"}
+        self.logger.debug("url: %s" % _url)
+        self.logger.debug("payload: %s" % _payload)
+        self.logger.debug("headers: %s" % _headers)
+        _response = await self.post_request(_url, _payload, _headers)
+
+        status_code = _response.status
+        if status_code in [200, 204]:
+            self.logger.info(
+                "Status code %s returned for POST command to reset BIOS." % status_code
+            )
+        else:
+            data = await _response.text("utf-8", "ignore")
+            self.logger.error(
+                "Status code %s returned, error is: \n%s." % (status_code, data)
+            )
+            raise BadfishException
+
+        self.logger.info(
+            "BIOS will now reset and be back online within a few minutes."
+        )
+        return True
+
     async def boot_to(self, device):
         device_check = await self.check_device(device)
         if device_check:
@@ -986,7 +1045,7 @@ class Badfish:
                 except yaml.YAMLError as ex:
                     self.logger.error("Couldn't read file: %s" % _interfaces_path)
                     self.logger.debug(ex)
-                    sys.exit(1)
+                    raise BadfishException
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
@@ -1013,8 +1072,11 @@ async def execute_badfish(_host, _args, logger):
     boot_to_mac = _args["boot_to_mac"]
     reboot_only = _args["reboot_only"]
     power_state = _args["power_state"]
+    power_on = _args["power_on"]
+    power_off = _args["power_off"]
     power_cycle = _args["power_cycle"]
-    racreset = _args["racreset"]
+    rac_reset = _args["racreset"]
+    bios_reset = _args["bios_reset"]
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
@@ -1048,11 +1110,17 @@ async def execute_badfish(_host, _args, logger):
             await badfish.clear_job_queue(force)
         elif host_type:
             await badfish.change_boot(host_type, interfaces_path, pxe)
-        elif racreset:
+        elif rac_reset:
             await badfish.reset_idrac()
+        elif bios_reset:
+            await badfish.reset_bios()
         elif power_state:
             state = await badfish.get_power_state()
             logger.info(f"Power state for {_host}: {state}")
+        elif power_on:
+            await badfish.set_power_state("on")
+        elif power_off:
+            await badfish.set_power_state("off")
         elif power_cycle:
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
@@ -1119,11 +1187,16 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
-        "--power-state",
-        help="Get power state",
-        action="store_true",
+        "--power-state", help="Get power state", action="store_true",
+    )
+    parser.add_argument(
+        "--power-on", help="Power on host", action="store_true",
+    )
+    parser.add_argument(
+        "--power-off", help="Power off host", action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--bios-reset", help="Flag for BIOS reset", action="store_true")
     parser.add_argument(
         "--check-boot",
         help="Flag for checking the host boot order",
