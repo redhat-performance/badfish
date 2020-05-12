@@ -832,7 +832,6 @@ class Badfish:
                 "Status code %s returned, error is: \n%s." % (status_code, data)
             )
             raise BadfishException
-        await asyncio.sleep(15)
 
         self.logger.info(
             "iDRAC will now reset and be back online within a few minutes."
@@ -933,6 +932,7 @@ class Badfish:
                     await self.clear_job_queue()
                     if not _first_reset:
                         await self.reset_idrac()
+                        await asyncio.sleep(10)
                         _first_reset = True
                         await self.polling_host_state("On")
                     continue
