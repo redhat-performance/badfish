@@ -1196,7 +1196,7 @@ def main(argv=None):
         "--power-off", help="Power off host", action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--bios-reset", help="Flag for BIOS reset", action="store_true")
+    parser.add_argument("--bios-reset", help="Reset BIOS to default factory settings", action="store_true")
     parser.add_argument(
         "--check-boot",
         help="Flag for checking the host boot order",
