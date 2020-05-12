@@ -22,8 +22,10 @@
          * [Forcing a one-time boot to PXE](#forcing-a-one-time-boot-to-pxe)
          * [Rebooting a System](#rebooting-a-system)
          * [Power Cycling a System](#power-cycling-a-system)
+         * [Power State Control](#power-state-control)
          * [Check Power State](#check-power-state)
          * [Resetting iDRAC](#resetting-idrac)
+         * [BIOS factory reset](#bios-factory-reset)
          * [Check current boot order](#check-current-boot-order)
          * [Variable number of retries](#variable-number-of-retries)
          * [Firmware inventory](#firmware-inventory)
@@ -161,6 +163,12 @@ For a hard reset you can use ```--power-cycle``` flag which will run a ForceOff 
 ./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
 ```
 
+### Power State Control
+You can also turn a server on or off by using options `--power-on` and `--power-off` respectively.
+```
+./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-on
+```
+
 ### Check Power State
 For checking the current power state of a server you can run badfish with the `--power-state` option.
 ```
@@ -176,6 +184,14 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 ```
 ./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
+
+### BIOS factory reset
+You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
+```
+./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
+```
+NOTE:
+* WARNING: Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
 
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match (Foreman or Director).
