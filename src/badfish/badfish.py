@@ -256,7 +256,7 @@ class Badfish:
             status_code = _response.status
             if status_code == 200:
                 self.logger.info(f"Command passed to check job status {_job_id}")
-                time.sleep(10)
+                await asyncio.sleep(10)
             else:
                 self.logger.error(
                     f"Command failed to check job status {_job_id}, return code is %s."
@@ -408,7 +408,7 @@ class Badfish:
                 if data.get("Members"):
                     for member in data["Members"]:
                         systems_service = member["@odata.id"]
-                        self.logger.info("Systems service: %s." % systems_service)
+                        self.logger.debug("Systems service: %s." % systems_service)
                         return systems_service
                 else:
                     try:
@@ -452,7 +452,7 @@ class Badfish:
                     if data.get("Members"):
                         for member in data["Members"]:
                             managers_service = member["@odata.id"]
-                            self.logger.info("Managers service: %s." % managers_service)
+                            self.logger.debug("Managers service: %s." % managers_service)
                             return managers_service
                     else:
                         self.logger.error(
@@ -634,7 +634,7 @@ class Badfish:
         _headers = {"content-type": "application/json"}
         _response = await self.patch_request(_url, _payload, _headers)
 
-        time.sleep(5)
+        await asyncio.sleep(5)
 
         if _response.status == 200:
             self.logger.info(
@@ -765,7 +765,7 @@ class Badfish:
                 "Command passed to %s server, code return is %s."
                 % (reset_type, status_code)
             )
-            time.sleep(10)
+            await asyncio.sleep(10)
         elif status_code == 409:
             self.logger.warning(
                 "Command failed to %s server, host appears to be already in that state."
@@ -832,7 +832,7 @@ class Badfish:
                 "Status code %s returned, error is: \n%s." % (status_code, data)
             )
             raise BadfishException
-        time.sleep(15)
+        await asyncio.sleep(15)
 
         self.logger.info(
             "iDRAC will now reset and be back online within a few minutes."
@@ -988,7 +988,7 @@ class Badfish:
                 desired_state = current_state.lower() == state.lower()
             else:
                 desired_state = current_state.lower() != state.lower()
-            time.sleep(5)
+            await asyncio.sleep(5)
             if desired_state:
                 self.progress_bar(self.retries, self.retries, current_state)
                 break
@@ -1076,7 +1076,7 @@ async def execute_badfish(_host, _args, logger):
     power_off = _args["power_off"]
     power_cycle = _args["power_cycle"]
     rac_reset = _args["racreset"]
-    bios_reset = _args["bios_reset"]
+    factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
@@ -1112,7 +1112,7 @@ async def execute_badfish(_host, _args, logger):
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif rac_reset:
             await badfish.reset_idrac()
-        elif bios_reset:
+        elif factory_reset:
             await badfish.reset_bios()
         elif power_state:
             state = await badfish.get_power_state()
@@ -1196,7 +1196,7 @@ def main(argv=None):
         "--power-off", help="Power off host", action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--bios-reset", help="Reset BIOS to default factory settings", action="store_true")
+    parser.add_argument("--factory-reset", help="Reset BIOS to default factory settings", action="store_true")
     parser.add_argument(
         "--check-boot",
         help="Flag for checking the host boot order",

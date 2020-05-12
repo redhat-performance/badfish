@@ -186,10 +186,12 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 ```
 
 ### BIOS factory reset
-You can restore BIOS default settings by calling Badfish with the option `--bios-reset`.
+You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --bios-reset
+./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
 ```
+NOTE:
+* WARNING: Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
 
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match (Foreman or Director).
