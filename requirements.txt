@@ -8,5 +8,4 @@ aiohttp==3.6.2
 async-lru==1.0.2
 pytest~=4.3.0
 asynctest~=0.13.0
-badfish~=1.0.0
 setuptools~=46.1.3
