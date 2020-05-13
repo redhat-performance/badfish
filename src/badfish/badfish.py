@@ -1218,7 +1218,6 @@ def main(argv=None):
         default=RETRIES,
     )
     _args = vars(parser.parse_args(argv))
-    FILEFMT = "%(asctime)-12s : %(levelname)-8s - %(message)s"
 
     log_level = DEBUG if _args["verbose"] else INFO
 
@@ -1228,8 +1227,10 @@ def main(argv=None):
 
     if host_list:
         FMT = "[%(name)s] - %(levelname)-8s - %(message)s"
+        FILEFMT = "%(asctime)-12s: [%(name)s] - %(levelname)-8s - %(message)s"
     else:
         FMT = "- %(levelname)-8s - %(message)s"
+        FILEFMT = "%(asctime)-12s: %(levelname)-8s - %(message)s"
 
     _queue = Queue()
     _stream_handler = StreamHandler()
@@ -1245,8 +1246,8 @@ def main(argv=None):
     if _args["log"]:
         file_handler = FileHandler(_args["log"])
         file_handler.setFormatter(Formatter(FILEFMT))
-        file_handler.setLevel(DEBUG)
-        _logger.addHandler(file_handler)
+        file_handler.setLevel(log_level)
+        _queue_listener.handlers = _queue_listener.handlers + (file_handler,)
 
     loop = asyncio.get_event_loop()
     tasks = []
