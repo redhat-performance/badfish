@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 import asyncio
 import functools
+import aiohttp
+import json
+import argparse
+import os
+import re
+import sys
+import warnings
+import yaml
 
 try:
     # Python 3.7 and newer, fast reentrant implementation
@@ -9,16 +17,6 @@ try:
 except ImportError:
     from queue import Queue
 from logging.handlers import QueueHandler, QueueListener
-
-import aiohttp
-import json
-import argparse
-import os
-import re
-import sys
-import time
-import warnings
-import yaml
 
 from async_lru import alru_cache
 from logging import (
@@ -452,7 +450,9 @@ class Badfish:
                     if data.get("Members"):
                         for member in data["Members"]:
                             managers_service = member["@odata.id"]
-                            self.logger.debug("Managers service: %s." % managers_service)
+                            self.logger.debug(
+                                "Managers service: %s." % managers_service
+                            )
                             return managers_service
                     else:
                         self.logger.error(
@@ -840,7 +840,10 @@ class Badfish:
 
     async def reset_bios(self):
         self.logger.debug("Running BIOS reset.")
-        _url = "%s%s/Bios/Actions/Bios.ResetBios/" % (self.host_uri, self.system_resource)
+        _url = "%s%s/Bios/Actions/Bios.ResetBios/" % (
+            self.host_uri,
+            self.system_resource,
+        )
         _payload = {}
         _headers = {"content-type": "application/json"}
         self.logger.debug("url: %s" % _url)
@@ -860,9 +863,7 @@ class Badfish:
             )
             raise BadfishException
 
-        self.logger.info(
-            "BIOS will now reset and be back online within a few minutes."
-        )
+        self.logger.info("BIOS will now reset and be back online within a few minutes.")
         return True
 
     async def boot_to(self, device):
@@ -1196,7 +1197,11 @@ def main(argv=None):
         "--power-off", help="Power off host", action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--factory-reset", help="Reset BIOS to default factory settings", action="store_true")
+    parser.add_argument(
+        "--factory-reset",
+        help="Reset BIOS to default factory settings",
+        action="store_true",
+    )
     parser.add_argument(
         "--check-boot",
         help="Flag for checking the host boot order",
