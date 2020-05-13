@@ -1285,7 +1285,7 @@ def main(argv=None):
         if results:
             _logger.info("RESULTS:")
             for res in results:
-                if res[1]:
+                if len(res) > 1 and res[1]:
                     _logger.info(f"{res[0]}: SUCCESSFUL")
                 else:
                     _logger.info(f"{res[0]}: FAILED")
