@@ -1,12 +1,23 @@
+from asynctest import patch
+from tests.config import (
+    RESET_TYPE_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    RESPONSE_RESET,
+    INIT_RESP,
+)
 from tests.test_base import TestBase
-from tests import config
 
 
 class TestResetIdrac(TestBase):
     option_arg = "--racreset"
 
-    def test_reset_idrac(self):
-        self.boot_seq = config.BOOT_SEQ_RESPONSE_DIRECTOR
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_reset_idrac(self, mock_get, mock_post):
+        responses = INIT_RESP + [RESET_TYPE_RESP]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 204, ["ok"])
+        self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert config.RESPONSE_RESET == err
+        assert err == RESPONSE_RESET

@@ -1,84 +1,42 @@
-import pytest
-import requests_mock
-import unittest
 import time
 
-from badfish import main
+import pytest
+from asynctest import CoroutineMock
+from aiohttp import web
+from aiohttp.test_utils import AioHTTPTestCase
+
+from badfish.badfish import main, BadfishException
 from tests import config
 
 
-class TestBase(unittest.TestCase):
+class TestBase(AioHTTPTestCase):
     time.sleep = lambda x: None
-    first_call = True
-    last_on = True
 
-    def jobs_callback(self, request, context):
-        if self.first_call:
-            return {}
-        else:
-            self.first_call = False
-            return {"JobID": config.JOB_ID}
+    async def get_application(self):
+        return web.Application()
 
-    def state_callback(self, request, context):
-        response = {u"Members": [{u"@odata.id": "/redfish/v1/Systems/System.Embedded.1"}]}
-        if self.last_on:
-            self.last_on = False
-            response[u"PowerState"] = "Off"
+    @staticmethod
+    def set_mock_response(mock, status, responses):
+        mock.return_value.__aenter__.return_value.status = status
+        mock.return_value.__aenter__.return_value.read = CoroutineMock()
+        if type(responses) == list:
+            mock.return_value.__aenter__.return_value.text = CoroutineMock()
+            mock.return_value.__aenter__.return_value.text.side_effect = responses
         else:
-            self.last_on = True
-            response[u"PowerState"] = "On"
-        return response
+            mock.return_value.__aenter__.return_value.text = CoroutineMock(
+                return_value=responses
+            )
 
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
         self._capsys = capsys
 
-    @requests_mock.mock()
-    def badfish_call(self, _mock):
-        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1" % config.MOCK_HOST,
-                  json=self.state_callback)
-        _mock.get("https://%s/redfish/v1" % config.MOCK_HOST,
-                  json={
-                      "Systems": {
-                          "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
-                      },
-                      "Managers": {
-                          "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"
-                      }
-                  })
-        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/Bios" % config.MOCK_HOST,
-                  json={"Attributes": {"BootMode": u"Bios"}})
-        _mock.patch("https://%s/redfish/v1/Systems/System.Embedded.1/Bios/Settings" % config.MOCK_HOST,
-                    json={})
-
-        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % config.MOCK_HOST,
-                  json={"Attributes": {"BootSeq": self.boot_seq}})
-        _mock.get("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources" % config.MOCK_HOST,
-                  json={"Attributes": {"BootSeq": self.boot_seq}})
-        _mock.patch("https://%s/redfish/v1/Systems/System.Embedded.1/BootSources/Settings" % config.MOCK_HOST,
-                    json={})
-
-        _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1" % config.MOCK_HOST,
-                   json={u"Members": [{u"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"}]})
-        _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % config.MOCK_HOST,
-                  json=self.jobs_callback)
-        _mock.post("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs" % config.MOCK_HOST,
-                   json={"JobID": config.JOB_ID})
-        _mock.delete("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (config.MOCK_HOST, config.JOB_ID),
-                     json={"JobID": config.JOB_ID})
-        _mock.get("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/%s" % (config.MOCK_HOST, config.JOB_ID),
-                  json={u"Message": "Task successfully scheduled."})
-
-        _mock.get("https://%s/redfish/v1/Dell/Managers/iDRAC.Embedded.1/DellJobService/" % config.MOCK_HOST,
-                  json={})
-
-        _mock.post("https://%s/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset/" % config.MOCK_HOST,
-                   json={}, status_code=204)
-        _mock.post("https://%s/redfish/v1/Systems/System.Embedded.1/Actions/ComputerSystem.Reset" % config.MOCK_HOST,
-                   json={}, status_code=204)
-
+    def badfish_call(self):
         argv = ["-H", config.MOCK_HOST, "-u", config.MOCK_USER, "-p", config.MOCK_PASS]
         argv.extend(self.args)
-        main(argv)
+        try:
+            main(argv)
+        except BadfishException:
+            pass
         out, err = self._capsys.readouterr()
         return out, err
