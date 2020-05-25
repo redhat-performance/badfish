@@ -84,7 +84,7 @@ git clone https://github.com/redhat-performance/badfish && cd badfish
 pip install -r requirements.txt
 ```
 NOTE:
-* This will allow the badfish script execution via ```./src/badfish.py```
+* This will allow the badfish script execution via ```./src/badfish/badfish.py```
 
 ### Badfish Standalone within a virtualenv
 ```
@@ -117,62 +117,62 @@ NOTE:
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t director
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t director
 ```
 
 ### Enforcing a Foreman-style interface order
 Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed systems to first always PXE from the interface that is Foreman-managed (DHCP/PXE).  If the system is not set to build it will simply boot to local disk.  In our setup we utilize a specific NIC for this interface based on system type.
 
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
 ```
 
 ### Forcing a one time boot to a specific device
 To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
 ```
 
 ### Forcing a one time boot to a specific mac address
 To force systems to perform a one-time boot to a specific mac address you can use the ```--boot-to-mac``` option and pass as an argument the device mac address for a specific NIC that you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to-mac A9:BB:4B:50:CA:54
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --boot-to-mac A9:BB:4B:50:CA:54
 ```
 
 ### Forcing a one time boot to a specific type
 To force systems to perform a one-time boot to a specific type you can use the ```--boot-to-type``` option and pass as an argument the device type of either foreman or director that you want the one-time boot to be set to. For this action you must also include the path to your interfaces yaml. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from the first interface defined for that host type on the interfaces yaml file.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --boot-to-type foreman
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --boot-to-type foreman
 ```
 
 ### Forcing a one-time boot to PXE
 To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --pxe
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --pxe
 ```
 
 ### Rebooting a system
 In certain cases you might need to only reboot the host, for this case we included the ```--reboot-only``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
 ```
 
 ### Power cycling a system
 For a hard reset you can use ```--power-cycle``` flag which will run a ForceOff instruction on the target host. Note that this option is not to be used with any other option.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
 ```
 
 ### Power State Control
 You can also turn a server on or off by using options `--power-on` and `--power-off` respectively.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-on
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-on
 ```
 
 ### Check Power State
 For checking the current power state of a server you can run badfish with the `--power-state` option.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-state
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --power-state
 ```
 Partial Output:
 ```
@@ -182,13 +182,13 @@ Partial Output:
 ### Resetting iDRAC
 For the replacement of `racadm racreset`, the optional argument `--racreset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the iDRAC itself.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --racreset
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
 
 ### BIOS factory reset
 You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
 ```
 NOTE:
 * WARNING: Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
@@ -196,31 +196,31 @@ NOTE:
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match (Foreman or Director).
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
 ```
 
 ### Variable number of retries
 At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
 ```
 
 ### Firmware inventory
 If you would like to get a detailed list of all the devices supported by iDRAC you can run ```badfish``` with the ```--firware-inventory``` option which will return a list of devices with additional device info.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
 ```
 
 ### Clear Job Queue
 If you would like to clear all the jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--clear-jobs``` option which query for all active jobs in the iDRAC queue and will post a request to clear the queue.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs
 ```
 
 You can also force the clearing of Dell iDRAC job queues by passing the `--force` option.
 
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs --force
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs --force
 ```
 
 This is the same as passing `racadm jobqueue delete -i JID_CLEARALL_FORCE`
@@ -228,19 +228,19 @@ This is the same as passing `racadm jobqueue delete -i JID_CLEARALL_FORCE`
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
 ```
-./src/badfish.py --host-list /tmp/bad-hosts -u root -p yourpass --clear-jobs
+./src/badfish/badfish.py --host-list /tmp/bad-hosts -u root -p yourpass --clear-jobs
 ```
 
 ### Verbose output
 If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. Note: this is the default log level for the ```--log``` argument.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
 ```
 
 ### Log to file
 If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
 ```
-./src/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
 ```
 
 ## iDRAC and Data Format
