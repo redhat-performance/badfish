@@ -1101,7 +1101,6 @@ async def execute_badfish(_host, _args, logger):
         )
 
         if _args["host_list"]:
-            import ipdb;ipdb.set_trace()
             badfish.logger.info("Executing actions on host: %s" % _host)
 
         if device:
