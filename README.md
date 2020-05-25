@@ -76,7 +76,9 @@ python setup.py build
 python setup.py install --prefix ~/.local
 ```
 NOTE:
+
 * This will allow Badfish to be called from the terminal via the ```badfish``` command
+* This is ideal for a non-root user, otherwise you'll get badfish in `/root/.local/bin/badfish` for example. 
 
 ### Badfish Standalone Script
 ```
