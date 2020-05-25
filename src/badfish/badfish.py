@@ -330,11 +330,17 @@ class Badfish:
         return None
 
     async def validate_credentials(self):
-        response = await self.get_request(self.root_uri)
+        response = await self.get_request(self.root_uri + "/Systems")
 
         if response.status == 401:
             self.logger.error(
                 f"Failed to authenticate. Verify your credentials for {self.host}"
+            )
+            raise BadfishException
+
+        if response.status not in [200, 201]:
+            self.logger.error(
+                f"Failed to communicate with {self.host}"
             )
             raise BadfishException
 
@@ -1095,6 +1101,7 @@ async def execute_badfish(_host, _args, logger):
         )
 
         if _args["host_list"]:
+            import ipdb;ipdb.set_trace()
             badfish.logger.info("Executing actions on host: %s" % _host)
 
         if device:
