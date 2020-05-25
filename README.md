@@ -77,8 +77,15 @@ python setup.py install --prefix ~/.local
 ```
 NOTE:
 
-* This will allow Badfish to be called from the terminal via the ```badfish``` command
-* This is ideal for a non-root user, otherwise you'll get badfish in `/root/.local/bin/badfish` for example. 
+* This will allow Badfish to be called from the terminal via the `badfish` command
+* This is **ideal** for a non-root user, otherwise you'll get badfish in `/root/.local/bin/badfish` for example.
+* If you have problems running as root you will need to add whatever you set in `--prefix=` to your `$PATH` by adding something like the following to the end of your `~/.bashrc` file.
+
+```
+if [ -d "$HOME/.local/bin" ] ; then
+  PATH="$PATH:$HOME/.local/bin"
+fi
+```
 
 ### Badfish Standalone Script
 ```
