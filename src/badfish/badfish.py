@@ -12,7 +12,7 @@ import yaml
 
 try:
     # Python 3.7 and newer, fast reentrant implementation
-    # witohut task tracking (not needed for that when logging)
+    # without task tracking (not needed for that when logging)
     from queue import SimpleQueue as Queue
 except ImportError:
     from queue import Queue
@@ -1149,7 +1149,7 @@ async def execute_badfish(_host, _args, logger):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Client tool for changing boot order via Redfish API."
+        description="Tool for managing server hardware via the Redfish API."
     )
     parser.add_argument("-H", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username", required=True)
