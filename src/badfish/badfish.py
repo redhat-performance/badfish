@@ -330,11 +330,17 @@ class Badfish:
         return None
 
     async def validate_credentials(self):
-        response = await self.get_request(self.root_uri)
+        response = await self.get_request(self.root_uri + "/Systems")
 
         if response.status == 401:
             self.logger.error(
                 f"Failed to authenticate. Verify your credentials for {self.host}"
+            )
+            raise BadfishException
+
+        if response.status not in [200, 201]:
+            self.logger.error(
+                f"Failed to communicate with {self.host}"
             )
             raise BadfishException
 
