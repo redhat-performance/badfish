@@ -238,7 +238,7 @@ class Badfish:
         _response = await self.get_request(_url)
 
         data = await _response.text("utf-8", "ignore")
-        job_queue = re.findall("[JR]ID_.+?'", data)
+        job_queue = re.findall(r"[JR]ID_.+?\d+", data)
         jobs = [job.strip("}").strip('"').strip("'") for job in job_queue]
         return jobs
 
@@ -339,9 +339,7 @@ class Badfish:
             raise BadfishException
 
         if response.status not in [200, 201]:
-            self.logger.error(
-                f"Failed to communicate with {self.host}"
-            )
+            self.logger.error(f"Failed to communicate with {self.host}")
             raise BadfishException
 
     async def get_interfaces_endpoints(self):
@@ -636,7 +634,12 @@ class Badfish:
 
     async def set_next_boot_pxe(self):
         _url = "%s%s" % (self.host_uri, self.system_resource)
-        _payload = {"Boot": {"BootSourceOverrideTarget": "Pxe"}}
+        _payload = {
+            "Boot": {
+                "BootSourceOverrideTarget": "Pxe",
+                "BootSourceOverrideEnabled": "Once",
+            }
+        }
         _headers = {"content-type": "application/json"}
         _response = await self.patch_request(_url, _payload, _headers)
 
@@ -692,26 +695,29 @@ class Badfish:
         _headers = {"content-type": "application/json"}
         url = "%s/JID_CLEARALL_FORCE" % _url
         try:
-            await self.delete_request(url, _headers)
+            _response = await self.delete_request(url, _headers)
         except BadfishException:
             self.logger.warning("There was something wrong clearing the job queue.")
             raise
+        return _response
 
     async def clear_job_list(self, _job_queue):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _headers = {"content-type": "application/json"}
         self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
+        failed = False
         for _job in _job_queue:
             job = _job.strip("'")
             url = "/".join([_url, job])
-            await self.delete_request(url, _headers)
-        job_queue = await self.get_job_queue()
-        if not job_queue:
+            response = await self.delete_request(url, _headers)
+            if response.status != 200:
+                failed = True
+
+        if not failed:
             self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
             self.logger.error(
-                "Job queue not cleared, current job queue contains jobs: %s."
-                % job_queue
+                "Job queue not cleared, there was something wrong with your request."
             )
             raise BadfishException
 
@@ -723,7 +729,9 @@ class Badfish:
                 await self.delete_job_queue_dell(force)
             else:
                 try:
-                    await self.delete_job_queue_force()
+                    _response = await self.delete_job_queue_force()
+                    if _response.status == 400:
+                        await self.clear_job_list(_job_queue)
                 except BadfishException:
                     self.logger.info("Attempting to clear job list instead.")
                     await self.clear_job_list(_job_queue)
@@ -1061,9 +1069,7 @@ class Badfish:
                 host_model = "%s_%s" % (host_model, host_blade)
             if host_model.startswith("r"):
                 host_model = host_model[1:]
-            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[
-                0
-            ]
+            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
         return None
 
 
@@ -1234,7 +1240,7 @@ def main(argv=None):
 
     host_list = _args["host_list"]
     host = _args["H"]
-    result = 0
+    result = True
 
     if host_list:
         FMT = "[%(name)s] - %(levelname)-8s - %(message)s"
@@ -1283,33 +1289,38 @@ def main(argv=None):
             )
         except KeyboardInterrupt:
             _logger.warning("\nBadfish terminated.")
-            result = 1
+            result = False
         except (asyncio.CancelledError, BadfishException) as ex:
             _logger.warning("There was something wrong executing Badfish.")
             _logger.debug(ex)
-            result = 1
+            result = False
         if results:
+            result = True
             _logger.info("RESULTS:")
             for res in results:
                 if len(res) > 1 and res[1]:
                     _logger.info(f"{res[0]}: SUCCESSFUL")
                 else:
                     _logger.info(f"{res[0]}: FAILED")
+                    result = False
     elif not host:
         _logger.error(
             "You must specify at least either a host (-H) or a host list (--host-list)."
         )
     else:
         try:
-            loop.run_until_complete(execute_badfish(host, _args, _logger))
+            _host, result = loop.run_until_complete(execute_badfish(host, _args, _logger))
         except KeyboardInterrupt:
             _logger.warning("Badfish terminated.")
         except BadfishException as ex:
             _logger.warning("There was something wrong executing Badfish.")
             _logger.debug(ex)
-            result = 1
+            result = False
     _queue_listener.stop()
-    return result
+
+    if result:
+        return 0
+    return 1
 
 
 if __name__ == "__main__":
