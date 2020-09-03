@@ -741,6 +741,15 @@ class Badfish:
                 % self.host
             )
 
+    async def list_job_queue(self):
+        _job_queue = await self.get_job_queue()
+        if _job_queue:
+            self.logger.info("Found active jobs:")
+            for job in _job_queue:
+                self.logger.info(job)
+        else:
+            self.logger.info("No active jobs found.")
+
     async def create_job(self, _url, _payload, _headers, expected=None):
         if not expected:
             expected = [200, 204]
@@ -1069,7 +1078,9 @@ class Badfish:
                 host_model = "%s_%s" % (host_model, host_blade)
             if host_model.startswith("r"):
                 host_model = host_model[1:]
-            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[0]
+            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[
+                0
+            ]
         return None
 
 
@@ -1093,6 +1104,7 @@ async def execute_badfish(_host, _args, logger):
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
+    list_jobs = _args["ls_jobs"]
     retries = int(_args["retries"])
 
     result = True
@@ -1121,6 +1133,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.get_firmware_inventory()
         elif clear_jobs:
             await badfish.clear_job_queue(force)
+        elif list_jobs:
+            await badfish.list_job_queue()
         elif host_type:
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif rac_reset:
@@ -1224,8 +1238,11 @@ def main(argv=None):
     )
     parser.add_argument(
         "--clear-jobs",
-        help="Clear any schedule jobs from the queue",
+        help="Clear any scheduled jobs from the queue",
         action="store_true",
+    )
+    parser.add_argument(
+        "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(
@@ -1309,7 +1326,9 @@ def main(argv=None):
         )
     else:
         try:
-            _host, result = loop.run_until_complete(execute_badfish(host, _args, _logger))
+            _host, result = loop.run_until_complete(
+                execute_badfish(host, _args, _logger)
+            )
         except KeyboardInterrupt:
             _logger.warning("Badfish terminated.")
         except BadfishException as ex:

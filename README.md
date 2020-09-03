@@ -30,6 +30,7 @@
          * [Variable number of retries](#variable-number-of-retries)
          * [Firmware inventory](#firmware-inventory)
          * [Clear Job Queue](#clear-job-queue)
+         * [List Job Queue](#list-job-queue)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -232,7 +233,11 @@ You can also force the clearing of Dell iDRAC job queues by passing the `--force
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs --force
 ```
 
-This is the same as passing `racadm jobqueue delete -i JID_CLEARALL_FORCE`
+### List Job Queue
+If you would like to list all active jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--ls-jobs``` option which query for all active jobs in the iDRAC queue and will return a list with all active items.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-jobs
+```
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
