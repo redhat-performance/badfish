@@ -31,6 +31,8 @@
          * [Firmware inventory](#firmware-inventory)
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
+         * [Check Virtual Media](#check-virtual-media)
+         * [Unmount Virtual Media](#unmount-virtual-media)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -238,6 +240,20 @@ If you would like to list all active jobs that are queued on the remote iDRAC yo
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-jobs
 ```
+
+### Check Virtual Media
+If you would like to check for any active virtual media you can run ```badfish``` with the ```--check-virtual-media``` option which query for all active virtual devices.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --check-virtual-media
+```
+
+### Unmount Virtual Media
+If you would like to unmount all active virtual media you can run ```badfish``` with the ```--unmount-virtual-media``` option which post a request for unmounting all active virtual devices.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --unmount-virtual-media
+```
+NOTE:
+* This functionality is only available for SuperMicro devices.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
