@@ -666,6 +666,41 @@ class Badfish:
 
         return True
 
+    async def get_virtual_media_config_uri(self):
+        _url = "%s%s" % (self.host_uri, self.manager_resource)
+        _response = await self.get_request(_url)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            self.logger.error("Not able to access Firmware inventory.")
+            raise BadfishException
+
+        vm_endpoint = data.get("VirtualMedia")
+        if vm_endpoint:
+            virtual_media = vm_endpoint.get('@odata.id')
+            if virtual_media:
+                vm_url = "%s%s" % (self.host_uri, virtual_media)
+                vm_response = await self.get_request(vm_url)
+                try:
+                    raw = await vm_response.text("utf-8", "ignore")
+                    vm_data = json.loads(raw.strip())
+
+                    oem = vm_data.get("Oem")
+                    if oem:
+                        sm = oem.get("Supermicro")
+                        if sm:
+                            vmc = sm.get("VirtualMediaConfig")
+                            if vmc:
+                                return vmc.get("@odata.id")
+
+                except ValueError:
+                    self.logger.error("Not able to check for supported virtual media unmount")
+                    raise BadfishException
+
+        return None
+
     async def delete_job_queue_dell(self, force):
         _url = (
             "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
@@ -1083,6 +1118,91 @@ class Badfish:
             ]
         return None
 
+    async def get_virtual_media(self):
+        _url = "%s%s" % (self.host_uri, self.manager_resource)
+        _response = await self.get_request(_url)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            self.logger.error("Not able to access Firmware inventory.")
+            raise BadfishException
+
+        vm_endpoint = data.get("VirtualMedia")
+        vms = []
+        if vm_endpoint:
+            virtual_media = vm_endpoint.get('@odata.id')
+            if virtual_media:
+                vm_url = "%s%s" % (self.host_uri, virtual_media)
+                vm_response = await self.get_request(vm_url)
+                try:
+                    raw = await vm_response.text("utf-8", "ignore")
+                    vm_data = json.loads(raw.strip())
+
+                    if vm_data.get("Members"):
+                        for member in vm_data["Members"]:
+                            vms.append(member["@odata.id"])
+                    else:
+                        self.logger.warning("No active VirtualMedia found")
+                        return vms
+
+                except ValueError:
+                    self.logger.error("Not able to access Firmware inventory.")
+                    raise BadfishException
+            else:
+                self.logger.error("No VirtualMedia endpoint found")
+                raise BadfishException
+        else:
+            self.logger.error("No VirtualMedia endpoint found")
+            raise BadfishException
+
+        return vms
+
+    async def check_virtual_media(self):
+        vms = await self.get_virtual_media()
+        for vm in vms:
+            disc_url = "%s%s" % (self.host_uri, vm)
+            disc_response = await self.get_request(disc_url)
+            try:
+                raw = await disc_response.text("utf-8", "ignore")
+                disc_data = json.loads(raw.strip())
+                _id = disc_data.get("Id")
+                name = disc_data.get("Name")
+                image_name = disc_data.get("ImageName")
+                inserted = disc_data.get("Inserted")
+                self.logger.info(f"ID: {_id} - Name: {name} - ImageName: {image_name} - Inserted: {inserted}")
+            except ValueError:
+                self.logger.error("There was something wrong getting values for VirtualMedia")
+                raise BadfishException
+
+        return True
+
+    async def unmount_virtual_media(self):
+
+        vmc = await self.get_virtual_media_config_uri()
+        if not vmc:
+            self.logger.warning(
+                "OOB management does not support Virtual Media unmount"
+            )
+            return False
+
+        _vmc_url = "%s%s/Actions/IsoConfig.UnMount" % (self.host_uri, vmc)
+        _headers = {"content-type": "application/json"}
+        _payload = {}
+        try:
+            disc_response = await self.post_request(_vmc_url, _payload, _headers)
+            if disc_response.status == 200:
+                self.logger.info("Successfully unmounted all VirtualMedia")
+            else:
+                self.logger.error("There was something wrong unmounting the VirtualMedia")
+                raise BadfishException
+        except ValueError:
+            self.logger.error("There was something wrong getting values for VirtualMedia")
+            raise BadfishException
+
+        return True
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1105,6 +1225,8 @@ async def execute_badfish(_host, _args, logger):
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
     list_jobs = _args["ls_jobs"]
+    check_virtual_media = _args["check_virtual_media"]
+    unmount_virtual_media = _args["unmount_virtual_media"]
     retries = int(_args["retries"])
 
     result = True
@@ -1152,6 +1274,10 @@ async def execute_badfish(_host, _args, logger):
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
             await badfish.reboot_server()
+        elif check_virtual_media:
+            await badfish.check_virtual_media()
+        elif unmount_virtual_media:
+            await badfish.unmount_virtual_media()
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -1244,6 +1370,16 @@ def main(argv=None):
     parser.add_argument(
         "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
     )
+    parser.add_argument(
+        "--check-virtual-media",
+        help="Check for mounted iso images",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--unmount-virtual-media",
+        help="Unmount any mounted iso images",
+        action="store_true",
+    )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(
         "-r",
@@ -1289,7 +1425,7 @@ def main(argv=None):
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
-                    logger = getLogger(_host.split(".")[0])
+                    logger = getLogger(_host.strip().split(".")[0])
                     logger.addHandler(_queue_handler)
                     logger.setLevel(log_level)
                     fn = functools.partial(
