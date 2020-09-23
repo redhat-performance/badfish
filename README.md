@@ -294,7 +294,7 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 Every other method that requires passing the `-i` argument, is going to parse the key strings from this and look for the most adequate candidate for the given FQDN.
 We format the key strings with the following criteria:
 ```
-{host_type}_[{rack}_[{ULocation}_[{blade}_]]]{model}
+{host_type}_[{rack}_[{ULocation}_[{blade}_]]]{model}_interfaces
 ```
 With rack, ULocation and blade being optional in a hierarchical fashion otherwise mandatory, ergo you can't define blade without ULocation and so forth. host_type and model values are always mandatory.
 
