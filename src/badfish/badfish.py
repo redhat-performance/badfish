@@ -294,24 +294,39 @@ class Badfish:
                         self.logger.warning("Could not get allowable reset types")
         return reset_types
 
+    async def read_yaml(self, _yaml_file):
+        with open(_yaml_file, "r") as f:
+            try:
+                definitions = yaml.safe_load(f)
+            except yaml.YAMLError as ex:
+                self.logger.error("Couldn't read file: %s" % _yaml_file)
+                self.logger.debug(ex)
+                raise BadfishException
+        return definitions
+
+    async def get_host_types_from_yaml(self, _interfaces_path):
+        definitions = await self.read_yaml(_interfaces_path)
+        host_types = set()
+        for line in definitions:
+            _split = line.split("_")
+            host_types.add(_split[0])
+
+        ordered_types = sorted(list(host_types))
+        return ordered_types
+
     async def get_host_type(self, _interfaces_path):
         boot_devices = await self.get_boot_devices()
 
         if _interfaces_path:
-            with open(_interfaces_path, "r") as f:
-                try:
-                    definitions = yaml.safe_load(f)
-                except yaml.YAMLError as ex:
-                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
-                    self.logger.debug(ex)
-                    raise BadfishException
+            definitions = await self.read_yaml(_interfaces_path)
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
             b_pattern = re.compile("b0[0-9]")
             if b_pattern.match(host_blade):
                 host_model = "%s_%s" % (host_model, host_blade)
-            for _host in ["foreman", "director"]:
+            host_types = await self.get_host_types_from_yaml(_interfaces_path)
+            for _host in host_types:
                 match = True
                 interfaces = definitions[
                     "%s_%s_interfaces" % (_host, host_model)
@@ -520,13 +535,11 @@ class Badfish:
         return data["PowerState"]
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
-        if host_type.lower() not in ("foreman", "director"):
-            self.logger.error(
-                'Expected values for -t argument are "foreman" or "director"'
-            )
-            raise BadfishException
-
         if interfaces_path:
+            host_types = await self.get_host_types_from_yaml(interfaces_path)
+            if host_type.lower() not in host_types:
+                self.logger.error(f"Expected values for -t argument are: {host_types}")
+                raise BadfishException
             if not os.path.exists(interfaces_path):
                 self.logger.error("No such file or directory: %s." % interfaces_path)
                 raise BadfishException
@@ -539,23 +552,15 @@ class Badfish:
         _type = await self.get_host_type(interfaces_path)
         if (_type and _type.lower() != host_type.lower()) or not _type:
             await self.clear_job_queue()
-            self.logger.warning("Waiting for host to be up.")
-            host_up = await self.polling_host_state("On")
-            if host_up:
-                await self.change_boot_order(interfaces_path, host_type)
+            await self.change_boot_order(interfaces_path, host_type)
 
-                if pxe:
-                    await self.set_next_boot_pxe()
+            if pxe:
+                await self.set_next_boot_pxe()
 
-                await self.create_bios_config_job(self.bios_uri)
+            await self.create_bios_config_job(self.bios_uri)
 
-                await self.reboot_server(graceful=False)
+            await self.reboot_server(graceful=False)
 
-            else:
-                self.logger.error(
-                    "Couldn't communicate with host after %s attempts." % self.retries
-                )
-                raise BadfishException
         else:
             self.logger.warning(
                 "No changes were made since the boot order already matches the requested."
@@ -563,12 +568,7 @@ class Badfish:
         return True
 
     async def change_boot_order(self, _interfaces_path, _host_type):
-        with open(_interfaces_path, "r") as f:
-            try:
-                definitions = yaml.safe_load(f)
-            except yaml.YAMLError as ex:
-                self.logger.error(ex)
-                raise BadfishException
+        definitions = await self.read_yaml(_interfaces_path)
 
         host_model = self.host.split(".")[0].split("-")[-1]
         host_blade = self.host.split(".")[0].split("-")[-2]
@@ -679,7 +679,7 @@ class Badfish:
 
         vm_endpoint = data.get("VirtualMedia")
         if vm_endpoint:
-            virtual_media = vm_endpoint.get('@odata.id')
+            virtual_media = vm_endpoint.get("@odata.id")
             if virtual_media:
                 vm_url = "%s%s" % (self.host_uri, virtual_media)
                 vm_response = await self.get_request(vm_url)
@@ -696,7 +696,9 @@ class Badfish:
                                 return vmc.get("@odata.id")
 
                 except ValueError:
-                    self.logger.error("Not able to check for supported virtual media unmount")
+                    self.logger.error(
+                        "Not able to check for supported virtual media unmount"
+                    )
                     raise BadfishException
 
         return None
@@ -935,10 +937,9 @@ class Badfish:
         return True
 
     async def boot_to_type(self, host_type, _interfaces_path):
-        if host_type.lower() not in ("foreman", "director"):
-            self.logger.error(
-                'Expected values for -t argument are "foreman" or "director"'
-            )
+        host_types = await self.get_host_types_from_yaml(_interfaces_path)
+        if host_type.lower() not in host_types:
+            self.logger.error(f"Expected values for -t argument are: {host_types}")
             raise BadfishException
 
         if _interfaces_path:
@@ -946,7 +947,7 @@ class Badfish:
                 self.logger.error("No such file or directory: %s." % _interfaces_path)
                 raise BadfishException
 
-        device = self.get_host_type_boot_device(host_type, _interfaces_path)
+        device = await self.get_host_type_boot_device(host_type, _interfaces_path)
 
         await self.boot_to(device)
 
@@ -1096,15 +1097,9 @@ class Badfish:
 
             self.logger.info("*" * 48)
 
-    def get_host_type_boot_device(self, host_type, _interfaces_path):
+    async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
-            with open(_interfaces_path, "r") as f:
-                try:
-                    definitions = yaml.safe_load(f)
-                except yaml.YAMLError as ex:
-                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
-                    self.logger.debug(ex)
-                    raise BadfishException
+            definitions = await self.read_yaml(_interfaces_path)
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
@@ -1132,7 +1127,7 @@ class Badfish:
         vm_endpoint = data.get("VirtualMedia")
         vms = []
         if vm_endpoint:
-            virtual_media = vm_endpoint.get('@odata.id')
+            virtual_media = vm_endpoint.get("@odata.id")
             if virtual_media:
                 vm_url = "%s%s" % (self.host_uri, virtual_media)
                 vm_response = await self.get_request(vm_url)
@@ -1171,9 +1166,13 @@ class Badfish:
                 name = disc_data.get("Name")
                 image_name = disc_data.get("ImageName")
                 inserted = disc_data.get("Inserted")
-                self.logger.info(f"ID: {_id} - Name: {name} - ImageName: {image_name} - Inserted: {inserted}")
+                self.logger.info(
+                    f"ID: {_id} - Name: {name} - ImageName: {image_name} - Inserted: {inserted}"
+                )
             except ValueError:
-                self.logger.error("There was something wrong getting values for VirtualMedia")
+                self.logger.error(
+                    "There was something wrong getting values for VirtualMedia"
+                )
                 raise BadfishException
 
         return True
@@ -1182,9 +1181,7 @@ class Badfish:
 
         vmc = await self.get_virtual_media_config_uri()
         if not vmc:
-            self.logger.warning(
-                "OOB management does not support Virtual Media unmount"
-            )
+            self.logger.warning("OOB management does not support Virtual Media unmount")
             return False
 
         _vmc_url = "%s%s/Actions/IsoConfig.UnMount" % (self.host_uri, vmc)
@@ -1195,10 +1192,14 @@ class Badfish:
             if disc_response.status == 200:
                 self.logger.info("Successfully unmounted all VirtualMedia")
             else:
-                self.logger.error("There was something wrong unmounting the VirtualMedia")
+                self.logger.error(
+                    "There was something wrong unmounting the VirtualMedia"
+                )
                 raise BadfishException
         except ValueError:
-            self.logger.error("There was something wrong getting values for VirtualMedia")
+            self.logger.error(
+                "There was something wrong getting values for VirtualMedia"
+            )
             raise BadfishException
 
         return True
@@ -1301,7 +1302,7 @@ def main(argv=None):
     parser.add_argument("-u", help="iDRAC username", required=True)
     parser.add_argument("-p", help="iDRAC password", required=True)
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
-    parser.add_argument("-t", help="Type of host. Accepts: foreman, director")
+    parser.add_argument("-t", help="Type of host as defined on iDRAC interfaces yaml")
     parser.add_argument(
         "-l", "--log", help="Optional argument for logging results to a file"
     )
@@ -1325,7 +1326,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--boot-to-type",
-        help="Set next boot to one-shot boot to either director or foreman",
+        help="Set next boot to one-shot boot to a specific type as defined on iDRAC interfaces yaml",
     )
     parser.add_argument(
         "--boot-to-mac",

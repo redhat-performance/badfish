@@ -97,8 +97,6 @@ RESPONSE_RESET = (
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- WARNING  - Waiting for host to be up.\n"
-    "- INFO     - Polling for host state: On\n"
     "- INFO     - PATCH command passed to update boot order.\n"
     "- INFO     - POST command passed to create target config job.\n"
     "- INFO     - Command passed to ForceOff server, code return is 200.\n"
@@ -106,7 +104,7 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
 RESPONSE_CHANGE_BAD_TYPE = (
-    '- ERROR    - Expected values for -t argument are "foreman" or "director"\n'
+    '- ERROR    - Expected values for -t argument are: [\'director\', \'foreman\']\n'
     "- ERROR    - There was something wrong executing Badfish.\n"
 )
 RESPONSE_CHANGE_TO_SAME = (

@@ -1,3 +1,4 @@
+import sys
 import time
 
 import pytest
@@ -30,6 +31,12 @@ class TestBase(AioHTTPTestCase):
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
         self._capsys = capsys
+
+    @pytest.fixture(autouse=True)
+    def capture_wrap(self):
+        sys.stderr.close = lambda *args: None
+        sys.stdout.close = lambda *args: None
+        yield
 
     def badfish_call(self):
         argv = ["-H", config.MOCK_HOST, "-u", config.MOCK_USER, "-p", config.MOCK_PASS]
