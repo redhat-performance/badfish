@@ -306,12 +306,13 @@ class Badfish:
 
     async def get_host_types_from_yaml(self, _interfaces_path):
         definitions = await self.read_yaml(_interfaces_path)
-        host_types = set()
+        host_types = []
         for line in definitions:
             _split = line.split("_")
-            host_types.add(_split[0])
+            host_types.append(_split[0])
 
-        return host_types
+        ordered_types = set(sorted(host_types))
+        return ordered_types
 
     async def get_host_type(self, _interfaces_path):
         boot_devices = await self.get_boot_devices()
@@ -534,14 +535,13 @@ class Badfish:
         return data["PowerState"]
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
-        host_types = await self.get_host_types_from_yaml(interfaces_path)
-        if host_type.lower() not in host_types:
-            self.logger.error(
-                f'Expected values for -t argument are: {host_types}'
-            )
-            raise BadfishException
-
         if interfaces_path:
+            host_types = await self.get_host_types_from_yaml(interfaces_path)
+            if host_type.lower() not in host_types:
+                self.logger.error(
+                    f'Expected values for -t argument are: {host_types}'
+                )
+                raise BadfishException
             if not os.path.exists(interfaces_path):
                 self.logger.error("No such file or directory: %s." % interfaces_path)
                 raise BadfishException
