@@ -322,15 +322,29 @@ class Badfish:
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
+            uloc = self.host.split(".")[0].split("-")[-3]
+            rack = self.host.split(".")[0].split("-")[-4]
             b_pattern = re.compile("b0[0-9]")
             if b_pattern.match(host_blade):
                 host_model = "%s_%s" % (host_model, host_blade)
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for _host in host_types:
                 match = True
-                interfaces = definitions[
-                    "%s_%s_interfaces" % (_host, host_model)
-                ].split(",")
+                interfaces = None
+                interfaces_string = definitions.get("%s_%s_%s_%s_interfaces" % (_host, rack, uloc, host_model))
+                if interfaces_string:
+                    interfaces = interfaces_string.split(",")
+                interfaces_string = definitions.get("%s_%s_%s_interfaces" % (_host, rack, host_model))
+                if interfaces_string:
+                    interfaces = interfaces_string.split(",")
+                interfaces_string = definitions.get("%s_%s_interfaces" % (_host, host_model))
+                if interfaces_string:
+                    interfaces = interfaces_string.split(",")
+
+                if not interfaces:
+                    self.logger.error("Couldn't find a valid key defined on the interfaces yaml")
+                    raise BadfishException
+
                 for device in sorted(
                     boot_devices[: len(interfaces)], key=lambda x: x["Index"]
                 ):
@@ -572,12 +586,25 @@ class Badfish:
 
         host_model = self.host.split(".")[0].split("-")[-1]
         host_blade = self.host.split(".")[0].split("-")[-2]
+        uloc = self.host.split(".")[0].split("-")[-3]
+        rack = self.host.split(".")[0].split("-")[-4]
         b_pattern = re.compile("b0[0-9]")
         if b_pattern.match(host_blade):
             host_model = "%s_%s" % (host_model, host_blade)
-        interfaces = definitions["%s_%s_interfaces" % (_host_type, host_model)].split(
-            ","
-        )
+        interfaces = None
+        interfaces_string = definitions.get("%s_%s_%s_%s_interfaces" % (_host_type, rack, uloc, host_model))
+        if interfaces_string:
+            interfaces = interfaces_string.split(",")
+        interfaces_string = definitions.get("%s_%s_%s_interfaces" % (_host_type, rack, host_model))
+        if interfaces_string:
+            interfaces = interfaces_string.split(",")
+        interfaces_string = definitions.get("%s_%s_interfaces" % (_host_type, host_model))
+        if interfaces_string:
+            interfaces = interfaces_string.split(",")
+
+        if not interfaces:
+            self.logger.error("Couldn't find a valid key defined on the interfaces yaml")
+            raise BadfishException
 
         boot_devices = await self.get_boot_devices()
         devices = [device["Name"] for device in boot_devices]
@@ -1103,14 +1130,20 @@ class Badfish:
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
+            uloc = self.host.split(".")[0].split("-")[-3]
+            rack = self.host.split(".")[0].split("-")[-4]
             b_pattern = re.compile("b0[0-9]")
             if b_pattern.match(host_blade):
                 host_model = "%s_%s" % (host_model, host_blade)
-            if host_model.startswith("r"):
-                host_model = host_model[1:]
-            return definitions["%s_%s_interfaces" % (host_type, host_model)].split(",")[
-                0
-            ]
+            device = definitions.get("%s_%s_%s_%s_interfaces" % (host_type, rack, uloc, host_model))
+            if device:
+                return device.split(",")[0]
+            device = definitions.get("%s_%s_%s_interfaces" % (host_type, rack, host_model))
+            if device:
+                return device.split(",")[0]
+            device = definitions.get("%s_%s_interfaces" % (host_type, host_model))
+            if device:
+                return device.split(",")[0]
         return None
 
     async def get_virtual_media(self):
