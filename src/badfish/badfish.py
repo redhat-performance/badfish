@@ -181,6 +181,29 @@ class Badfish:
             raise BadfishException
         return _response
 
+    async def get_interfaces_by_type(self, host_type, _interfaces_path):
+        definitions = await self.read_yaml(_interfaces_path)
+
+        host_model = self.host.split(".")[0].split("-")[-1]
+        host_blade = self.host.split(".")[0].split("-")[-2]
+        uloc = self.host.split(".")[0].split("-")[-3]
+        rack = self.host.split(".")[0].split("-")[-4]
+        prefix = [host_type, rack, uloc]
+        b_pattern = re.compile("b0[0-9]")
+        if b_pattern.match(host_blade):
+            host_model = "%s_%s" % (host_model, host_blade)
+        for _ in prefix:
+            prefix_string = "_".join(prefix)
+            key = "%s_%s_interfaces" % (prefix_string, host_model)
+            interfaces_string = definitions.get(key)
+            if interfaces_string:
+                return interfaces_string.split(",")
+            else:
+                prefix.pop()
+
+        self.logger.error(f"Couldn't find a valid key defined on the interfaces yaml: {key}")
+        raise BadfishException
+
     async def get_boot_seq(self):
         bios_boot_mode = await self.get_bios_boot_mode()
         if bios_boot_mode == "Uefi":
@@ -318,32 +341,10 @@ class Badfish:
         boot_devices = await self.get_boot_devices()
 
         if _interfaces_path:
-            definitions = await self.read_yaml(_interfaces_path)
-
-            host_model = self.host.split(".")[0].split("-")[-1]
-            host_blade = self.host.split(".")[0].split("-")[-2]
-            uloc = self.host.split(".")[0].split("-")[-3]
-            rack = self.host.split(".")[0].split("-")[-4]
-            b_pattern = re.compile("b0[0-9]")
-            if b_pattern.match(host_blade):
-                host_model = "%s_%s" % (host_model, host_blade)
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
-            for _host in host_types:
+            for host_type in host_types:
                 match = True
-                interfaces = None
-                interfaces_string = definitions.get("%s_%s_%s_%s_interfaces" % (_host, rack, uloc, host_model))
-                if interfaces_string:
-                    interfaces = interfaces_string.split(",")
-                interfaces_string = definitions.get("%s_%s_%s_interfaces" % (_host, rack, host_model))
-                if interfaces_string:
-                    interfaces = interfaces_string.split(",")
-                interfaces_string = definitions.get("%s_%s_interfaces" % (_host, host_model))
-                if interfaces_string:
-                    interfaces = interfaces_string.split(",")
-
-                if not interfaces:
-                    self.logger.error("Couldn't find a valid key defined on the interfaces yaml")
-                    raise BadfishException
+                interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
 
                 for device in sorted(
                     boot_devices[: len(interfaces)], key=lambda x: x["Index"]
@@ -354,7 +355,7 @@ class Badfish:
                         match = False
                         break
                 if match:
-                    return _host
+                    return host_type
 
         return None
 
@@ -582,29 +583,7 @@ class Badfish:
         return True
 
     async def change_boot_order(self, _interfaces_path, _host_type):
-        definitions = await self.read_yaml(_interfaces_path)
-
-        host_model = self.host.split(".")[0].split("-")[-1]
-        host_blade = self.host.split(".")[0].split("-")[-2]
-        uloc = self.host.split(".")[0].split("-")[-3]
-        rack = self.host.split(".")[0].split("-")[-4]
-        b_pattern = re.compile("b0[0-9]")
-        if b_pattern.match(host_blade):
-            host_model = "%s_%s" % (host_model, host_blade)
-        interfaces = None
-        interfaces_string = definitions.get("%s_%s_%s_%s_interfaces" % (_host_type, rack, uloc, host_model))
-        if interfaces_string:
-            interfaces = interfaces_string.split(",")
-        interfaces_string = definitions.get("%s_%s_%s_interfaces" % (_host_type, rack, host_model))
-        if interfaces_string:
-            interfaces = interfaces_string.split(",")
-        interfaces_string = definitions.get("%s_%s_interfaces" % (_host_type, host_model))
-        if interfaces_string:
-            interfaces = interfaces_string.split(",")
-
-        if not interfaces:
-            self.logger.error("Couldn't find a valid key defined on the interfaces yaml")
-            raise BadfishException
+        interfaces = await self.get_interfaces_by_type(_host_type, _interfaces_path)
 
         boot_devices = await self.get_boot_devices()
         devices = [device["Name"] for device in boot_devices]
@@ -1126,24 +1105,13 @@ class Badfish:
 
     async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
-            definitions = await self.read_yaml(_interfaces_path)
+            try:
+                devices = await self.get_interfaces_by_type(host_type, _interfaces_path)
+            except BadfishException:
+                return None
 
-            host_model = self.host.split(".")[0].split("-")[-1]
-            host_blade = self.host.split(".")[0].split("-")[-2]
-            uloc = self.host.split(".")[0].split("-")[-3]
-            rack = self.host.split(".")[0].split("-")[-4]
-            b_pattern = re.compile("b0[0-9]")
-            if b_pattern.match(host_blade):
-                host_model = "%s_%s" % (host_model, host_blade)
-            device = definitions.get("%s_%s_%s_%s_interfaces" % (host_type, rack, uloc, host_model))
-            if device:
-                return device.split(",")[0]
-            device = definitions.get("%s_%s_%s_interfaces" % (host_type, rack, host_model))
-            if device:
-                return device.split(",")[0]
-            device = definitions.get("%s_%s_interfaces" % (host_type, host_model))
-            if device:
-                return device.split(",")[0]
+            return devices.split(",")[0]
+
         return None
 
     async def get_virtual_media(self):
