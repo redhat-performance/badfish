@@ -538,9 +538,7 @@ class Badfish:
         if interfaces_path:
             host_types = await self.get_host_types_from_yaml(interfaces_path)
             if host_type.lower() not in host_types:
-                self.logger.error(
-                    f'Expected values for -t argument are: {host_types}'
-                )
+                self.logger.error(f"Expected values for -t argument are: {host_types}")
                 raise BadfishException
             if not os.path.exists(interfaces_path):
                 self.logger.error("No such file or directory: %s." % interfaces_path)
@@ -570,12 +568,7 @@ class Badfish:
         return True
 
     async def change_boot_order(self, _interfaces_path, _host_type):
-        with open(_interfaces_path, "r") as f:
-            try:
-                definitions = yaml.safe_load(f)
-            except yaml.YAMLError as ex:
-                self.logger.error(ex)
-                raise BadfishException
+        definitions = await self.read_yaml(_interfaces_path)
 
         host_model = self.host.split(".")[0].split("-")[-1]
         host_blade = self.host.split(".")[0].split("-")[-2]
@@ -946,9 +939,7 @@ class Badfish:
     async def boot_to_type(self, host_type, _interfaces_path):
         host_types = await self.get_host_types_from_yaml(_interfaces_path)
         if host_type.lower() not in host_types:
-            self.logger.error(
-                f'Expected values for -t argument are: {host_types}'
-            )
+            self.logger.error(f"Expected values for -t argument are: {host_types}")
             raise BadfishException
 
         if _interfaces_path:
@@ -956,7 +947,7 @@ class Badfish:
                 self.logger.error("No such file or directory: %s." % _interfaces_path)
                 raise BadfishException
 
-        device = self.get_host_type_boot_device(host_type, _interfaces_path)
+        device = await self.get_host_type_boot_device(host_type, _interfaces_path)
 
         await self.boot_to(device)
 
@@ -1106,15 +1097,9 @@ class Badfish:
 
             self.logger.info("*" * 48)
 
-    def get_host_type_boot_device(self, host_type, _interfaces_path):
+    async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
-            with open(_interfaces_path, "r") as f:
-                try:
-                    definitions = yaml.safe_load(f)
-                except yaml.YAMLError as ex:
-                    self.logger.error("Couldn't read file: %s" % _interfaces_path)
-                    self.logger.debug(ex)
-                    raise BadfishException
+            definitions = await self.read_yaml(_interfaces_path)
 
             host_model = self.host.split(".")[0].split("-")[-1]
             host_blade = self.host.split(".")[0].split("-")[-2]
