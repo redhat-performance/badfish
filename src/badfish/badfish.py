@@ -185,10 +185,10 @@ class Badfish:
         definitions = await self.read_yaml(_interfaces_path)
 
         host_name_split = self.host.split(".")[0].split("-")
-        rack = host_name_split[0]
-        uloc = host_name_split[1]
-        host_blade = host_name_split[2]
-        host_model = host_name_split[3]
+        host_model = host_name_split[-1]
+        host_blade = host_name_split[-2]
+        uloc = host_name_split[-3]
+        rack = host_name_split[-4]
 
         prefix = [host_type, rack, uloc]
 
