@@ -306,12 +306,12 @@ class Badfish:
 
     async def get_host_types_from_yaml(self, _interfaces_path):
         definitions = await self.read_yaml(_interfaces_path)
-        host_types = []
+        host_types = set()
         for line in definitions:
             _split = line.split("_")
-            host_types.append(_split[0])
+            host_types.add(_split[0])
 
-        ordered_types = set(sorted(host_types))
+        ordered_types = sorted(list(host_types))
         return ordered_types
 
     async def get_host_type(self, _interfaces_path):

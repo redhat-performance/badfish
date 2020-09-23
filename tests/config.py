@@ -104,7 +104,7 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
 RESPONSE_CHANGE_BAD_TYPE = (
-    '- ERROR    - Expected values for -t argument are: {\'foreman\', \'director\'}\n'
+    '- ERROR    - Expected values for -t argument are: [\'director\', \'foreman\']\n'
     "- ERROR    - There was something wrong executing Badfish.\n"
 )
 RESPONSE_CHANGE_TO_SAME = (
