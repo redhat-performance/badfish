@@ -184,15 +184,20 @@ class Badfish:
     async def get_interfaces_by_type(self, host_type, _interfaces_path):
         definitions = await self.read_yaml(_interfaces_path)
 
-        host_model = self.host.split(".")[0].split("-")[-1]
-        host_blade = self.host.split(".")[0].split("-")[-2]
-        uloc = self.host.split(".")[0].split("-")[-3]
-        rack = self.host.split(".")[0].split("-")[-4]
+        host_name_split = self.host.split(".")[0].split("-")
+        rack = host_name_split[0]
+        uloc = host_name_split[1]
+        host_blade = host_name_split[2]
+        host_model = host_name_split[3]
+
         prefix = [host_type, rack, uloc]
+
         b_pattern = re.compile("b0[0-9]")
         if b_pattern.match(host_blade):
             host_model = "%s_%s" % (host_model, host_blade)
-        for _ in prefix:
+
+        len_prefix = len(prefix)
+        for _ in range(len_prefix):
             prefix_string = "_".join(prefix)
             key = "%s_%s_interfaces" % (prefix_string, host_model)
             interfaces_string = definitions.get(key)
@@ -567,7 +572,7 @@ class Badfish:
         _type = await self.get_host_type(interfaces_path)
         if (_type and _type.lower() != host_type.lower()) or not _type:
             await self.clear_job_queue()
-            await self.change_boot_order(interfaces_path, host_type)
+            await self.change_boot_order(host_type, interfaces_path)
 
             if pxe:
                 await self.set_next_boot_pxe()
@@ -582,7 +587,7 @@ class Badfish:
             )
         return True
 
-    async def change_boot_order(self, _interfaces_path, _host_type):
+    async def change_boot_order(self, _host_type, _interfaces_path):
         interfaces = await self.get_interfaces_by_type(_host_type, _interfaces_path)
 
         boot_devices = await self.get_boot_devices()
@@ -943,15 +948,19 @@ class Badfish:
         return True
 
     async def boot_to_type(self, host_type, _interfaces_path):
-        host_types = await self.get_host_types_from_yaml(_interfaces_path)
-        if host_type.lower() not in host_types:
-            self.logger.error(f"Expected values for -t argument are: {host_types}")
-            raise BadfishException
-
         if _interfaces_path:
             if not os.path.exists(_interfaces_path):
                 self.logger.error("No such file or directory: %s." % _interfaces_path)
                 raise BadfishException
+        else:
+            self.logger.error(
+                "You must provide a path to the interfaces yaml via `-i` optional argument."
+            )
+            raise BadfishException
+        host_types = await self.get_host_types_from_yaml(_interfaces_path)
+        if host_type.lower() not in host_types:
+            self.logger.error(f"Expected values for -t argument are: {host_types}")
+            raise BadfishException
 
         device = await self.get_host_type_boot_device(host_type, _interfaces_path)
 
@@ -1105,14 +1114,14 @@ class Badfish:
 
     async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
-            try:
-                devices = await self.get_interfaces_by_type(host_type, _interfaces_path)
-            except BadfishException:
-                return None
+            interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+        else:
+            self.logger.error(
+                "You must provide a path to the interfaces yaml via `-i` optional argument."
+            )
+            raise BadfishException
 
-            return devices.split(",")[0]
-
-        return None
+        return interfaces.split(",")[0]
 
     async def get_virtual_media(self):
         _url = "%s%s" % (self.host_uri, self.manager_resource)
