@@ -38,6 +38,7 @@
          * [Log to File](#log-to-file)
       * [iDRAC and Data Format](#idrac-and-data-format)
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
+         * [Host type overrides](#host-type-overrides)
       * [Contributing](#contributing)
       * [Contact](#contact)
 
@@ -288,6 +289,36 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
 | Dell r640    |  NIC.Integrated.1-1-1  |
+
+### Host type overrides
+Every other method that requires passing the `-i` argument, is going to parse the key strings from this and look for the most adequate candidate for the given FQDN.
+We format the key strings with the following criteria:
+```
+{host_type}_[{rack}_[{ULocation}_[{blade}_]]]{model}_interfaces
+```
+With rack, ULocation and blade being optional in a hierarchical fashion otherwise mandatory, ergo you can't define blade without ULocation and so forth. host_type and model values are always mandatory.
+
+#### Example for director type overrides:
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f21-h17-000-r620.domain.com | NO             |
+| director_f21_r620_interfaces     | mgmt-f21-h17-000-r620.domain.com | NO             |
+| director_f21_h17_r620_interfaces | mgmt-f21-h17-000-r620.domain.com | YES            |
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f21-h18-000-r620.domain.com | NO             |
+| director_f21_r620_interfaces     | mgmt-f21-h18-000-r620.domain.com | YES            |
+| director_f21_h17_r620_interfaces | mgmt-f21-h18-000-r620.domain.com | NO             |
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f22-h17-000-r620.domain.com | YES            |
+| director_f21_r620_interfaces     | mgmt-f22-h17-000-r620.domain.com | NO             |
+| director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             | 
+
+
 
 ## Contributing
 We love pull requests and welcome contributions from everyone!  Please use the `development` branch to send pull requests.  Here are the general steps you'd want to follow.
