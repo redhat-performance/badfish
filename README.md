@@ -16,6 +16,7 @@
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
+         * [Enforcing a Custom interface order](#enforcing-a-custom-interface-order)
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
          * [Forcing a one time boot to a specific mac address](#forcing-a-one-time-boot-to-a-specific-mac-address)
          * [Forcing a one time boot to a specific type](#forcing-a-one-time-boot-to-a-specific-type)
@@ -139,6 +140,41 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
 ```
+
+### Enforcing a Custom interface order
+Badfish allows you to supply your own interface order type in addition to `director` and `foreman` modes as defined in `idrac_interfaces.yml`
+
+* Supply your own distinct string in the first part of the key value (split by `_`)
+* Refer to it via the string name
+* Consequently [host type overrides](#host-type-overrides) can also be leveraged
+
+We will use the custom interface order called **ocp5beta** as an example.
+
+_Example_ any system you want to boot with a certain custom interface order.
+
+```
+ocp5beta_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+_Example_ a rack of systems you want to boot with a certain custom interface order.
+
+
+```
+ocp5beta_f21_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+_Example_ a specific system you want to boot with a certain custom interface order
+
+```
+ocp5beta_f21_h23_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+Now you can run Badfish against the custom interface order type you have defined, refer to the [custom overrides](#host-type-overrides) on further usage examples.
+
+```
+src/badfish/badfish.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
+```
+
 
 ### Forcing a one time boot to a specific device
 To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
@@ -316,7 +352,7 @@ With rack, ULocation and blade being optional in a hierarchical fashion otherwis
 | :------------------------------ |:----:| --------------:|
 | director_r620_interfaces         | mgmt-f22-h17-000-r620.domain.com | YES            |
 | director_f21_r620_interfaces     | mgmt-f22-h17-000-r620.domain.com | NO             |
-| director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             | 
+| director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             |
 
 
 
