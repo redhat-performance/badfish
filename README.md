@@ -16,6 +16,7 @@
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
+         * [Enforcing a Custom interface order](#enforcing-a-custom-interface-order)
          * [Forcing a one time boot to a specific device](#forcing-a-one-time-boot-to-a-specific-device)
          * [Forcing a one time boot to a specific mac address](#forcing-a-one-time-boot-to-a-specific-mac-address)
          * [Forcing a one time boot to a specific type](#forcing-a-one-time-boot-to-a-specific-type)
@@ -38,6 +39,7 @@
          * [Log to File](#log-to-file)
       * [iDRAC and Data Format](#idrac-and-data-format)
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
+         * [Host type overrides](#host-type-overrides)
       * [Contributing](#contributing)
       * [Contact](#contact)
 
@@ -138,6 +140,41 @@ Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed syste
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
 ```
+
+### Enforcing a Custom interface order
+Badfish allows you to supply your own interface order type in addition to `director` and `foreman` modes as defined in `idrac_interfaces.yml`
+
+* Supply your own distinct string in the first part of the key value (split by `_`)
+* Refer to it via the string name
+* Consequently [host type overrides](#host-type-overrides) can also be leveraged
+
+We will use the custom interface order called **ocp5beta** as an example.
+
+_Example_ any system you want to boot with a certain custom interface order.
+
+```
+ocp5beta_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+_Example_ a rack of systems you want to boot with a certain custom interface order.
+
+
+```
+ocp5beta_f21_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+_Example_ a specific system you want to boot with a certain custom interface order
+
+```
+ocp5beta_f21_h23_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Slot.2-3
+```
+
+Now you can run Badfish against the custom interface order type you have defined, refer to the [custom overrides](#host-type-overrides) on further usage examples.
+
+```
+src/badfish/badfish.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
+```
+
 
 ### Forcing a one time boot to a specific device
 To force systems to perform a one-time boot to a specific device you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
@@ -288,6 +325,36 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
 | Dell r640    |  NIC.Integrated.1-1-1  |
+
+### Host type overrides
+Every other method that requires passing the `-i` argument, is going to parse the key strings from this and look for the most adequate candidate for the given FQDN.
+We format the key strings with the following criteria:
+```
+{host_type}_[{rack}_[{ULocation}_[{blade}_]]]{model}_interfaces
+```
+With rack, ULocation and blade being optional in a hierarchical fashion otherwise mandatory, ergo you can't define blade without ULocation and so forth. host_type and model values are always mandatory.
+
+#### Example for director type overrides:
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f21-h17-000-r620.domain.com | NO             |
+| director_f21_r620_interfaces     | mgmt-f21-h17-000-r620.domain.com | NO             |
+| director_f21_h17_r620_interfaces | mgmt-f21-h17-000-r620.domain.com | YES            |
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f21-h18-000-r620.domain.com | NO             |
+| director_f21_r620_interfaces     | mgmt-f21-h18-000-r620.domain.com | YES            |
+| director_f21_h17_r620_interfaces | mgmt-f21-h18-000-r620.domain.com | NO             |
+
+| Keys defined on interfaces yaml | FQDN | Use boot order |
+| :------------------------------ |:----:| --------------:|
+| director_r620_interfaces         | mgmt-f22-h17-000-r620.domain.com | YES            |
+| director_f21_r620_interfaces     | mgmt-f22-h17-000-r620.domain.com | NO             |
+| director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             |
+
+
 
 ## Contributing
 We love pull requests and welcome contributions from everyone!  Please use the `development` branch to send pull requests.  Here are the general steps you'd want to follow.
