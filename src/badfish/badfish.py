@@ -258,7 +258,6 @@ class Badfish:
                     "Boot order modification is not supported by this host."
                 )
                 raise BadfishException
-        return self.boot_devices
 
     async def get_job_queue(self):
         self.logger.debug("Getting job queue.")
@@ -343,7 +342,7 @@ class Badfish:
         return ordered_types
 
     async def get_host_type(self, _interfaces_path):
-        boot_devices = await self.get_boot_devices()
+        await self.get_boot_devices()
 
         if _interfaces_path:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
@@ -352,7 +351,7 @@ class Badfish:
                 interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
 
                 for device in sorted(
-                    boot_devices[: len(interfaces)], key=lambda x: x["Index"]
+                    self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
                 ):
                     if device["Name"] == interfaces[device["Index"]]:
                         continue
@@ -513,7 +512,7 @@ class Badfish:
             self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
 
-        if not data["PowerState"]:
+        if not data.get("PowerState"):
             self.logger.debug("Power state not found. Try to racreset.")
             raise BadfishException
         else:
@@ -541,7 +540,7 @@ class Badfish:
             self.logger.debug("Couldn't get power state.")
             raise BadfishException
 
-        if not data["PowerState"]:
+        if not data.get("PowerState"):
             self.logger.debug("Power state not found. Try to racreset.")
             raise BadfishException
         else:
@@ -577,7 +576,9 @@ class Badfish:
             if pxe:
                 await self.set_next_boot_pxe()
 
-            await self.create_bios_config_job(self.bios_uri)
+            job_id = await self.create_bios_config_job(self.bios_uri)
+            if job_id:
+                await self.get_job_status(job_id)
 
             await self.reboot_server(graceful=False)
 
@@ -590,8 +591,8 @@ class Badfish:
     async def change_boot_order(self, _host_type, _interfaces_path):
         interfaces = await self.get_interfaces_by_type(_host_type, _interfaces_path)
 
-        boot_devices = await self.get_boot_devices()
-        devices = [device["Name"] for device in boot_devices]
+        await self.get_boot_devices()
+        devices = [device["Name"] for device in self.boot_devices]
         valid_devices = [device for device in interfaces if device in devices]
         if len(valid_devices) < len(interfaces):
             diff = [device for device in interfaces if device not in valid_devices]
@@ -600,8 +601,9 @@ class Badfish:
                 % ", ".join(diff)
             )
         change = False
+        ordered_devices = self.boot_devices.copy()
         for i, interface in enumerate(valid_devices):
-            for device in boot_devices:
+            for device in ordered_devices:
                 if interface == device["Name"]:
                     if device["Index"] != i:
                         device["Index"] = i
@@ -609,18 +611,17 @@ class Badfish:
                     break
 
         if change:
-            await self.patch_boot_seq(boot_devices)
-
+            await self.patch_boot_seq(ordered_devices)
         else:
             self.logger.warning(
                 "No changes were made since the boot order already matches the requested."
             )
 
-    async def patch_boot_seq(self, boot_devices):
+    async def patch_boot_seq(self, ordered_devices):
         _boot_seq = await self.get_boot_seq()
         boot_sources_uri = "%s/BootSources/Settings" % self.system_resource
         url = "%s%s" % (self.host_uri, boot_sources_uri)
-        payload = {"Attributes": {_boot_seq: boot_devices}}
+        payload = {"Attributes": {_boot_seq: ordered_devices}}
         headers = {"content-type": "application/json"}
         response = None
         _status_code = 400
@@ -676,43 +677,6 @@ class Badfish:
             return False
 
         return True
-
-    async def get_virtual_media_config_uri(self):
-        _url = "%s%s" % (self.host_uri, self.manager_resource)
-        _response = await self.get_request(_url)
-
-        try:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        except ValueError:
-            self.logger.error("Not able to access Firmware inventory.")
-            raise BadfishException
-
-        vm_endpoint = data.get("VirtualMedia")
-        if vm_endpoint:
-            virtual_media = vm_endpoint.get("@odata.id")
-            if virtual_media:
-                vm_url = "%s%s" % (self.host_uri, virtual_media)
-                vm_response = await self.get_request(vm_url)
-                try:
-                    raw = await vm_response.text("utf-8", "ignore")
-                    vm_data = json.loads(raw.strip())
-
-                    oem = vm_data.get("Oem")
-                    if oem:
-                        sm = oem.get("Supermicro")
-                        if sm:
-                            vmc = sm.get("VirtualMediaConfig")
-                            if vmc:
-                                return vmc.get("@odata.id")
-
-                except ValueError:
-                    self.logger.error(
-                        "Not able to check for supported virtual media unmount"
-                    )
-                    raise BadfishException
-
-        return None
 
     async def delete_job_queue_dell(self, force):
         _url = (
@@ -1021,29 +985,29 @@ class Badfish:
             if _host_type:
                 self.logger.warning("Current boot order is set to: %s." % _host_type)
             else:
-                boot_devices = await self.get_boot_devices()
+                await self.get_boot_devices()
 
                 self.logger.warning(
                     "Current boot order does not match any of the given."
                 )
                 self.logger.info("Current boot order:")
-                for device in sorted(boot_devices, key=lambda x: x["Index"]):
+                for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
                     self.logger.info(
                         "%s: %s" % (int(device["Index"]) + 1, device["Name"])
                     )
 
         else:
-            boot_devices = await self.get_boot_devices()
+            await self.get_boot_devices()
             self.logger.info("Current boot order:")
-            for device in sorted(boot_devices, key=lambda x: x["Index"]):
+            for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
                 self.logger.info("%s: %s" % (int(device["Index"]) + 1, device["Name"]))
         return True
 
     async def check_device(self, device):
         self.logger.debug("Checking device %s." % device)
-        devices = await self.get_boot_devices()
-        self.logger.debug(devices)
-        boot_devices = [_device["Name"].lower() for _device in devices]
+        await self.get_boot_devices()
+        self.logger.debug(self.boot_devices)
+        boot_devices = [_device["Name"].lower() for _device in self.boot_devices]
         if device.lower() in boot_devices:
             return True
         else:
@@ -1121,7 +1085,44 @@ class Badfish:
             )
             raise BadfishException
 
-        return interfaces.split(",")[0]
+        return interfaces[0]
+
+    async def get_virtual_media_config_uri(self):
+        _url = "%s%s" % (self.host_uri, self.manager_resource)
+        _response = await self.get_request(_url)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            self.logger.error("Not able to access Firmware inventory.")
+            raise BadfishException
+
+        vm_endpoint = data.get("VirtualMedia")
+        if vm_endpoint:
+            virtual_media = vm_endpoint.get("@odata.id")
+            if virtual_media:
+                vm_url = "%s%s" % (self.host_uri, virtual_media)
+                vm_response = await self.get_request(vm_url)
+                try:
+                    raw = await vm_response.text("utf-8", "ignore")
+                    vm_data = json.loads(raw.strip())
+
+                    oem = vm_data.get("Oem")
+                    if oem:
+                        sm = oem.get("Supermicro")
+                        if sm:
+                            vmc = sm.get("VirtualMediaConfig")
+                            if vmc:
+                                return vmc.get("@odata.id")
+
+                except ValueError:
+                    self.logger.error(
+                        "Not able to check for supported virtual media unmount"
+                    )
+                    raise BadfishException
+
+        return None
 
     async def get_virtual_media(self):
         _url = "%s%s" % (self.host_uri, self.manager_resource)
