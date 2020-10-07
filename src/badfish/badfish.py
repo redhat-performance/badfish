@@ -303,9 +303,16 @@ class Badfish:
         self.logger.error("Not able to successfully schedule the job.")
         raise BadfishException
 
-    async def get_reset_types(self):
+    async def get_reset_types(self, manager=False):
+        if manager:
+            resource = self.manager_resource
+            endpoint = "#Manager.Reset"
+        else:
+            resource = self.system_resource
+            endpoint = "#ComputerSystem.Reset"
+
         self.logger.debug("Getting allowable reset types.")
-        _url = "%s%s" % (self.host_uri, self.manager_resource)
+        _url = "%s%s" % (self.host_uri, resource)
         _response = await self.get_request(_url)
         reset_types = []
         if _response:
@@ -314,9 +321,9 @@ class Badfish:
             if "Actions" not in data:
                 self.logger.warning("Actions resource not found")
             else:
-                manager_reset = data["Actions"].get("#Manager.Reset")
-                if manager_reset:
-                    reset_types = manager_reset.get("ResetType@Redfish.AllowableValues")
+                reset = data["Actions"].get(endpoint)
+                if reset:
+                    reset_types = reset.get("ResetType@Redfish.AllowableValues")
                     if not reset_types:
                         self.logger.warning("Could not get allowable reset types")
         return reset_types
@@ -815,11 +822,18 @@ class Badfish:
             await self.error_handler(_response)
 
     async def reboot_server(self, graceful=True):
+        _reset_types = await self.get_reset_types()
+        reset_type = "GracefulRestart"
+        if reset_type not in _reset_types:
+            for rt in _reset_types:
+                if "restart" in rt.lower():
+                    reset_type = rt
+
         self.logger.debug("Rebooting server: %s." % self.host)
         power_state = await self.get_power_state()
         if power_state.lower() == "on":
             if graceful:
-                await self.send_reset("GracefulRestart")
+                await self.send_reset(reset_type)
 
                 host_down = await self.polling_host_state("Off")
 
@@ -842,7 +856,7 @@ class Badfish:
 
     async def reset_idrac(self):
         self.logger.debug("Running reset iDRAC.")
-        _reset_types = await self.get_reset_types()
+        _reset_types = await self.get_reset_types(manager=True)
         reset_type = "ForceRestart"
         if reset_type not in _reset_types:
             for rt in _reset_types:
