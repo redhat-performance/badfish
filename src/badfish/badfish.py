@@ -206,7 +206,9 @@ class Badfish:
             else:
                 prefix.pop()
 
-        self.logger.error(f"Couldn't find a valid key defined on the interfaces yaml: {key}")
+        self.logger.error(
+            f"Couldn't find a valid key defined on the interfaces yaml: {key}"
+        )
         raise BadfishException
 
     async def get_boot_seq(self):
@@ -355,7 +357,9 @@ class Badfish:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for host_type in host_types:
                 match = True
-                interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                interfaces = await self.get_interfaces_by_type(
+                    host_type, _interfaces_path
+                )
 
                 for device in sorted(
                     self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
@@ -1006,15 +1010,28 @@ class Badfish:
                 )
                 self.logger.info("Current boot order:")
                 for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                    self.logger.info(
-                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                    )
+                    if device["Enabled"]:
+                        self.logger.info(
+                            "%s: %s" % (int(device["Index"]) + 1, device["Name"])
+                        )
+                    else:
+                        self.logger.info(
+                            "%s: %s (DISABLED)"
+                            % (int(device["Index"]) + 1, device["Name"])
+                        )
 
         else:
             await self.get_boot_devices()
             self.logger.info("Current boot order:")
             for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                self.logger.info("%s: %s" % (int(device["Index"]) + 1, device["Name"]))
+                if device["Enabled"]:
+                    self.logger.info(
+                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
+                    )
+                else:
+                    self.logger.info(
+                        "%s: %s (DISABLED)" % (int(device["Index"]) + 1, device["Name"])
+                    )
         return True
 
     async def check_device(self, device):

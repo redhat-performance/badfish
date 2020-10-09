@@ -5,13 +5,14 @@ import pytest
 from asynctest import CoroutineMock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
+from asynctest import patch
 
 from badfish.badfish import main, BadfishException
 from tests import config
 
 
 class TestBase(AioHTTPTestCase):
-    time.sleep = lambda x: None
+    patch("asyncio.sleep").start()
 
     async def get_application(self):
         return web.Application()

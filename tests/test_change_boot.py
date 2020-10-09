@@ -12,7 +12,7 @@ from tests.config import (
     BOOT_SEQ_RESPONSE_FOREMAN,
     RESPONSE_CHANGE_TO_SAME,
     RESPONSE_CHANGE_BAD_TYPE,
-    RESPONSE_CHANGE_NO_INT,
+    RESPONSE_CHANGE_NO_INT, RESET_TYPE_RESP,
 )
 from tests.test_base import TestBase
 
@@ -30,6 +30,7 @@ class TestChangeBoot(TestBase):
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
             BOOT_MODE_RESP,
+            RESET_TYPE_RESP,
             STATE_ON_RESP,
             STATE_ON_RESP,
         ]
@@ -51,6 +52,7 @@ class TestChangeBoot(TestBase):
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
             BOOT_MODE_RESP,
+            RESET_TYPE_RESP,
             STATE_ON_RESP,
             STATE_ON_RESP,
         ]
