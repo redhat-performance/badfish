@@ -689,6 +689,14 @@ class Badfish:
 
         return True
 
+    async def check_supported_network_interfaces(self, endpoint):
+        _url = "%s%s/%s" % (self.host_uri, self.system_resource, endpoint)
+        _response = await self.get_request(_url)
+        if _response.status != 200:
+            return False
+
+        return True
+
     async def delete_job_queue_dell(self, force):
         _url = (
             "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
@@ -1246,6 +1254,137 @@ class Badfish:
 
         return True
 
+    async def get_network_adapters(self):
+        _url = "%s%s/NetworkAdapters" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            root_nics = []
+            if data.get("Members"):
+                for member in data["Members"]:
+                    root_nics.append(member["@odata.id"])
+
+            data = {}
+            for nic in root_nics:
+                net_ports_url = "%s%s/NetworkPorts" % (self.host_uri, nic)
+                rn_response = await self.get_request(net_ports_url)
+                rn_raw = await rn_response.text("utf-8", "ignore")
+                rn_data = json.loads(rn_raw.strip())
+
+                nic_ports = []
+                if rn_data.get("Members"):
+                    for member in rn_data["Members"]:
+                        nic_ports.append(member["@odata.id"])
+
+                for nic_port in nic_ports:
+                    np_url = "%s%s" % (self.host_uri, nic_port)
+                    np_response = await self.get_request(np_url)
+                    np_raw = await np_response.text("utf-8", "ignore")
+                    np_data = json.loads(np_raw.strip())
+
+                    interface = nic_port.split("/")[-1]
+                    fields = [
+                        "AssociatedNetworkAddresses",
+                        "LinkStatus",
+                        "SupportedLinkCapabilities",
+                    ]
+                    values = {}
+                    for field in fields:
+                        value = np_data.get(field)
+                        if value:
+                            values[field] = value
+
+                    data.update({interface: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error(
+                "There was something wrong getting network interfaces"
+            )
+            raise BadfishException
+
+        return data
+
+    async def get_ethernet_interfaces(self):
+        _url = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        if _response.status == 404:
+            self.logger.error("Server does not support this functionality")
+            raise BadfishException
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            interfaces = []
+            if data.get("Members"):
+                for member in data["Members"]:
+                    interfaces.append(member["@odata.id"])
+
+            data = {}
+            for interface in interfaces:
+                interface_url = "%s%s" % (self.host_uri, interface)
+                int_response = await self.get_request(interface_url)
+                int_raw = await int_response.text("utf-8", "ignore")
+                int_data = json.loads(int_raw.strip())
+
+                int_name = int_data.get("Id")
+                fields = [
+                    "Name",
+                    "MACAddress",
+                    "Status",
+                    "LinkStatus",
+                    "SpeedMbps",
+                ]
+
+                values = {}
+                for field in fields:
+                    value = int_data.get(field)
+                    if value:
+                        values[field] = value
+
+                data.update({int_name: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error(
+                "There was something wrong getting network interfaces"
+            )
+            raise BadfishException
+
+        return data
+
+    async def list_interfaces(self):
+
+        if self.check_supported_network_interfaces("EthernetInterfaces"):
+            self.logger.debug("Getting Ethernet interfaces")
+            data = await self.get_ethernet_interfaces()
+        elif self.check_supported_network_interfaces("NetworkAdapters"):
+            self.logger.debug("Getting Network Adapters")
+            data = await self.get_network_adapters()
+        else:
+            self.logger.error("Server does not support this functionality")
+            return False
+
+        for interface, properties in data.items():
+            self.logger.info(f"{interface}:")
+            for key, value in properties.items():
+                if key == "SupportedLinkCapabilities":
+                    speed_key = "LinkSpeedMbps"
+                    speed = value[0].get(speed_key)
+                    if speed:
+                        self.logger.info(f"    {speed_key}: {speed}")
+                elif key == "Status":
+                    health_key = "Health"
+                    health = value.get(health_key)
+                    if health:
+                        self.logger.info(f"    {health_key}: {health}")
+                else:
+                    self.logger.info(f"    {key}: {value}")
+
+        return True
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1268,6 +1407,7 @@ async def execute_badfish(_host, _args, logger):
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
     list_jobs = _args["ls_jobs"]
+    list_interfaces = _args["ls_interfaces"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
     retries = int(_args["retries"])
@@ -1317,6 +1457,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
             await badfish.reboot_server()
+        elif list_interfaces:
+            await badfish.list_interfaces()
         elif check_virtual_media:
             await badfish.check_virtual_media()
         elif unmount_virtual_media:
@@ -1327,7 +1469,7 @@ async def execute_badfish(_host, _args, logger):
 
     except BadfishException as ex:
         logger.debug(ex)
-        logger.error("There was something wrong executing Badfish.")
+        logger.error("There was something wrong executing Badfish")
         result = False
 
     if _args["host_list"]:
@@ -1357,7 +1499,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--host-list",
-        help="Path to a plain text file with a list of hosts.",
+        help="Path to a plain text file with a list of hosts",
         default=None,
     )
     parser.add_argument(
@@ -1412,6 +1554,9 @@ def main(argv=None):
     )
     parser.add_argument(
         "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
+    )
+    parser.add_argument(
+        "--ls-interfaces", help="List Network interfaces", action="store_true",
     )
     parser.add_argument(
         "--check-virtual-media",
@@ -1484,10 +1629,10 @@ def main(argv=None):
                 asyncio.gather(*[task() for task in tasks], return_exceptions=True)
             )
         except KeyboardInterrupt:
-            _logger.warning("\nBadfish terminated.")
+            _logger.warning("\nBadfish terminated")
             result = False
         except (asyncio.CancelledError, BadfishException) as ex:
-            _logger.warning("There was something wrong executing Badfish.")
+            _logger.warning("There was something wrong executing Badfish")
             _logger.debug(ex)
             result = False
         if results:
@@ -1509,9 +1654,9 @@ def main(argv=None):
                 execute_badfish(host, _args, _logger)
             )
         except KeyboardInterrupt:
-            _logger.warning("Badfish terminated.")
+            _logger.warning("Badfish terminated")
         except BadfishException as ex:
-            _logger.warning("There was something wrong executing Badfish.")
+            _logger.warning("There was something wrong executing Badfish")
             _logger.debug(ex)
             result = False
     _queue_listener.stop()

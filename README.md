@@ -32,6 +32,7 @@
          * [Firmware inventory](#firmware-inventory)
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
+         * [List Network Interfaces](#list-network-interfaces)
          * [Check Virtual Media](#check-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
@@ -276,6 +277,12 @@ You can also force the clearing of Dell iDRAC job queues by passing the `--force
 If you would like to list all active jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--ls-jobs``` option which query for all active jobs in the iDRAC queue and will return a list with all active items.
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-jobs
+```
+
+### List Network Interfaces
+For getting a list of network interfaces with individual metadata for each you can run ```badfish``` with the ```--ls-interfaces``` option.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-interfaces
 ```
 
 ### Check Virtual Media
