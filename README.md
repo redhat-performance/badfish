@@ -33,6 +33,8 @@
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
          * [List Network Interfaces](#list-network-interfaces)
+         * [List Memory](#list-memory)
+         * [List Processors](#list-processors)
          * [Check Virtual Media](#check-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
@@ -283,6 +285,18 @@ If you would like to list all active jobs that are queued on the remote iDRAC yo
 For getting a list of network interfaces with individual metadata for each you can run ```badfish``` with the ```--ls-interfaces``` option.
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-interfaces
+```
+
+### List Memory
+For getting a detailed list of memory devices you can run ```badfish``` with the ```--ls-memory``` option.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-memory
+```
+
+### List Processors
+For getting a detailed list of processors you can run ```badfish``` with the ```--ls-processors``` option.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-processors
 ```
 
 ### Check Virtual Media
