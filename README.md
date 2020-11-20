@@ -72,6 +72,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Firmware version ```2.60.60.60``` or higher
 * iDRAC administrative account
 * Python >= ```3.6``` or podman/docker
+* python3-devel >= ```3.6``` (If using standalone below).
 
 ## Setup
 ### Badfish Standalone CLI
@@ -83,6 +84,7 @@ python setup.py install --prefix ~/.local
 NOTE:
 
 * This will allow Badfish to be called from the terminal via the `badfish` command
+* This requires `python3-devel` if you see errors about missing `Python.h`.
 * This is **ideal** for a non-root user, otherwise you'll get badfish in `/root/.local/bin/badfish` for example.
 * If you have problems running as root you will need to add whatever you set in `--prefix=` to your `$PATH` by adding something like the following to the end of your `~/.bashrc` file.
 
