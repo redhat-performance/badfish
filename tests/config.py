@@ -54,13 +54,9 @@ WARN_NO_MATCH = (
     "- WARNING  - Current boot order does not match any of the given.\n%s"
     % RESPONSE_NO_MATCH
 )
-RESPONSE_DIRECTOR = (
-    "- WARNING  - Current boot order is set to: director.\n"
-)
+RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
-RESPONSE_FOREMAN = (
-    "- WARNING  - Current boot order is set to: foreman.\n"
-)
+RESPONSE_FOREMAN = "- WARNING  - Current boot order is set to: foreman.\n"
 INTERFACES_PATH = os.path.join(
     os.path.dirname(__file__), "../config/idrac_interfaces.yml"
 )
@@ -69,7 +65,7 @@ INTERFACES_PATH = os.path.join(
 BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
 ERROR_DEV_NO_MATCH = (
     "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
-    "- ERROR    - There was something wrong executing Badfish.\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
     % (BAD_DEVICE_NAME, MOCK_HOST)
 )
 JOB_ID = "JID_498218641680"
@@ -104,15 +100,13 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
 RESPONSE_CHANGE_BAD_TYPE = (
-    '- ERROR    - Expected values for -t argument are: [\'director\', \'foreman\']\n'
-    "- ERROR    - There was something wrong executing Badfish.\n"
+    "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
 )
-RESPONSE_CHANGE_TO_SAME = (
-    "- WARNING  - No changes were made since the boot order already matches the requested.\n"
-)
+RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = (
     "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-    "- ERROR    - There was something wrong executing Badfish.\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
 )
 
 ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'

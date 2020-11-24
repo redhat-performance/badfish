@@ -206,7 +206,9 @@ class Badfish:
             else:
                 prefix.pop()
 
-        self.logger.error(f"Couldn't find a valid key defined on the interfaces yaml: {key}")
+        self.logger.error(
+            f"Couldn't find a valid key defined on the interfaces yaml: {key}"
+        )
         raise BadfishException
 
     async def get_boot_seq(self):
@@ -303,9 +305,16 @@ class Badfish:
         self.logger.error("Not able to successfully schedule the job.")
         raise BadfishException
 
-    async def get_reset_types(self):
+    async def get_reset_types(self, manager=False):
+        if manager:
+            resource = self.manager_resource
+            endpoint = "#Manager.Reset"
+        else:
+            resource = self.system_resource
+            endpoint = "#ComputerSystem.Reset"
+
         self.logger.debug("Getting allowable reset types.")
-        _url = "%s%s" % (self.host_uri, self.manager_resource)
+        _url = "%s%s" % (self.host_uri, resource)
         _response = await self.get_request(_url)
         reset_types = []
         if _response:
@@ -314,9 +323,9 @@ class Badfish:
             if "Actions" not in data:
                 self.logger.warning("Actions resource not found")
             else:
-                manager_reset = data["Actions"].get("#Manager.Reset")
-                if manager_reset:
-                    reset_types = manager_reset.get("ResetType@Redfish.AllowableValues")
+                reset = data["Actions"].get(endpoint)
+                if reset:
+                    reset_types = reset.get("ResetType@Redfish.AllowableValues")
                     if not reset_types:
                         self.logger.warning("Could not get allowable reset types")
         return reset_types
@@ -348,7 +357,9 @@ class Badfish:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for host_type in host_types:
                 match = True
-                interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                interfaces = await self.get_interfaces_by_type(
+                    host_type, _interfaces_path
+                )
 
                 for device in sorted(
                     self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
@@ -678,6 +689,14 @@ class Badfish:
 
         return True
 
+    async def check_supported_network_interfaces(self, endpoint):
+        _url = "%s%s/%s" % (self.host_uri, self.system_resource, endpoint)
+        _response = await self.get_request(_url)
+        if _response.status != 200:
+            return False
+
+        return True
+
     async def delete_job_queue_dell(self, force):
         _url = (
             "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
@@ -815,11 +834,18 @@ class Badfish:
             await self.error_handler(_response)
 
     async def reboot_server(self, graceful=True):
+        _reset_types = await self.get_reset_types()
+        reset_type = "GracefulRestart"
+        if reset_type not in _reset_types:
+            for rt in _reset_types:
+                if "restart" in rt.lower():
+                    reset_type = rt
+
         self.logger.debug("Rebooting server: %s." % self.host)
         power_state = await self.get_power_state()
         if power_state.lower() == "on":
             if graceful:
-                await self.send_reset("GracefulRestart")
+                await self.send_reset(reset_type)
 
                 host_down = await self.polling_host_state("Off")
 
@@ -842,7 +868,7 @@ class Badfish:
 
     async def reset_idrac(self):
         self.logger.debug("Running reset iDRAC.")
-        _reset_types = await self.get_reset_types()
+        _reset_types = await self.get_reset_types(manager=True)
         reset_type = "ForceRestart"
         if reset_type not in _reset_types:
             for rt in _reset_types:
@@ -992,15 +1018,28 @@ class Badfish:
                 )
                 self.logger.info("Current boot order:")
                 for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                    self.logger.info(
-                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                    )
+                    if device["Enabled"]:
+                        self.logger.info(
+                            "%s: %s" % (int(device["Index"]) + 1, device["Name"])
+                        )
+                    else:
+                        self.logger.info(
+                            "%s: %s (DISABLED)"
+                            % (int(device["Index"]) + 1, device["Name"])
+                        )
 
         else:
             await self.get_boot_devices()
             self.logger.info("Current boot order:")
             for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                self.logger.info("%s: %s" % (int(device["Index"]) + 1, device["Name"]))
+                if device["Enabled"]:
+                    self.logger.info(
+                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
+                    )
+                else:
+                    self.logger.info(
+                        "%s: %s (DISABLED)" % (int(device["Index"]) + 1, device["Name"])
+                    )
         return True
 
     async def check_device(self, device):
@@ -1215,6 +1254,359 @@ class Badfish:
 
         return True
 
+    async def get_network_adapters(self):
+        _url = "%s%s/NetworkAdapters" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            na_data = json.loads(raw.strip())
+
+            root_nics = []
+            if na_data.get("Members"):
+                for member in na_data["Members"]:
+                    root_nics.append(member["@odata.id"])
+
+            data = {}
+            for nic in root_nics:
+                net_ports_url = "%s%s/NetworkPorts" % (self.host_uri, nic)
+                rn_response = await self.get_request(net_ports_url)
+                rn_raw = await rn_response.text("utf-8", "ignore")
+                rn_data = json.loads(rn_raw.strip())
+
+                nic_ports = []
+                if rn_data.get("Members"):
+                    for member in rn_data["Members"]:
+                        nic_ports.append(member["@odata.id"])
+
+                net_df_url = "%s%s/NetworkDeviceFunctions" % (self.host_uri, nic)
+                ndf_response = await self.get_request(net_df_url)
+                ndf_raw = await ndf_response.text("utf-8", "ignore")
+                ndf_data = json.loads(ndf_raw.strip())
+
+                ndf_members = []
+                if ndf_data.get("Members"):
+                    for member in ndf_data["Members"]:
+                        ndf_members.append(member["@odata.id"])
+
+                for i, nic_port in enumerate(nic_ports):
+                    np_url = "%s%s" % (self.host_uri, nic_port)
+                    np_response = await self.get_request(np_url)
+                    np_raw = await np_response.text("utf-8", "ignore")
+                    np_data = json.loads(np_raw.strip())
+
+                    interface = nic_port.split("/")[-1]
+
+                    fields = [
+                        "Id",
+                        "LinkStatus",
+                        "SupportedLinkCapabilities",
+                    ]
+                    values = {}
+                    for field in fields:
+                        value = np_data.get(field)
+                        if value:
+                            values[field] = value
+
+                    ndf_url = "%s%s" % (self.host_uri, ndf_members[i])
+                    ndf_response = await self.get_request(ndf_url)
+                    ndf_raw = await ndf_response.text("utf-8", "ignore")
+                    ndf_data = json.loads(ndf_raw.strip())
+                    oem = ndf_data.get("Oem")
+                    ethernet = ndf_data.get("Ethernet")
+                    if ethernet:
+                        mac_address = ethernet.get("MACAddress")
+                        if mac_address:
+                            values["MACAddress"] = mac_address
+                    if oem:
+                        dell = oem.get("Dell")
+                        if dell:
+                            dell_nic = dell.get("DellNIC")
+                            vendor = dell_nic.get("VendorName")
+                            if dell_nic.get("VendorName"):
+                                values["Vendor"] = vendor
+
+                    data.update({interface: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return data
+
+    async def get_ethernet_interfaces(self):
+        _url = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        if _response.status == 404:
+            self.logger.error("Server does not support this functionality")
+            raise BadfishException
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            ei_data = json.loads(raw.strip())
+
+            interfaces = []
+            if ei_data.get("Members"):
+                for member in ei_data["Members"]:
+                    interfaces.append(member["@odata.id"])
+
+            data = {}
+            for interface in interfaces:
+                interface_url = "%s%s" % (self.host_uri, interface)
+                int_response = await self.get_request(interface_url)
+                int_raw = await int_response.text("utf-8", "ignore")
+                int_data = json.loads(int_raw.strip())
+
+                int_name = int_data.get("Id")
+                fields = [
+                    "Name",
+                    "MACAddress",
+                    "Status",
+                    "LinkStatus",
+                    "SpeedMbps",
+                ]
+
+                values = {}
+                for field in fields:
+                    value = int_data.get(field)
+                    if value:
+                        values[field] = value
+
+                data.update({int_name: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return data
+
+    async def list_interfaces(self):
+        na_supported = await self.check_supported_network_interfaces("NetworkAdapters")
+        ei_supported = await self.check_supported_network_interfaces(
+            "EthernetInterfaces"
+        )
+        if na_supported:
+            self.logger.debug("Getting Network Adapters")
+            data = await self.get_network_adapters()
+        elif ei_supported:
+            self.logger.debug("Getting Ethernet interfaces")
+            data = await self.get_ethernet_interfaces()
+        else:
+            self.logger.error("Server does not support this functionality")
+            return False
+
+        for interface, properties in data.items():
+            self.logger.info(f"{interface}:")
+            for key, value in properties.items():
+                if key == "SupportedLinkCapabilities":
+                    speed_key = "LinkSpeedMbps"
+                    speed = value[0].get(speed_key)
+                    if speed:
+                        self.logger.info(f"    {speed_key}: {speed}")
+                elif key == "Status":
+                    health_key = "Health"
+                    health = value.get(health_key)
+                    if health:
+                        self.logger.info(f"    {health_key}: {health}")
+                else:
+                    self.logger.info(f"    {key}: {value}")
+
+        return True
+
+    async def get_processor_summary(self):
+        _url = "%s%s" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            proc_data = data.get("ProcessorSummary")
+
+            if not proc_data:
+                self.logger.error("Server does not support this functionality")
+                raise BadfishException
+
+            fields = [
+                "Count",
+                "LogicalProcessorCount",
+                "Model",
+            ]
+
+            values = {}
+            for field in fields:
+                value = proc_data.get(field)
+                if value:
+                    values[field] = value
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return values
+
+    async def get_processor_details(self):
+
+        _url = "%s%s/Processors" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        if _response.status == 404:
+            self.logger.error("Server does not support this functionality")
+            raise BadfishException
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            processors = []
+            if data.get("Members"):
+                for member in data["Members"]:
+                    processors.append(member["@odata.id"])
+
+            proc_details = {}
+            for processor in processors:
+                processor_url = "%s%s" % (self.host_uri, processor)
+                proc_response = await self.get_request(processor_url)
+                proc_raw = await proc_response.text("utf-8", "ignore")
+                proc_data = json.loads(proc_raw.strip())
+
+                proc_name = proc_data.get("Id")
+                fields = [
+                    "Name",
+                    "InstructionSet",
+                    "Manufacturer",
+                    "MemoryDeviceType",
+                    "MaxSpeedMHz",
+                    "Model",
+                    "TotalCores",
+                    "TotalThreads",
+                ]
+
+                values = {}
+                for field in fields:
+                    value = proc_data.get(field)
+                    if value:
+                        values[field] = value
+
+                proc_details.update({proc_name: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return proc_details
+
+    async def get_memory_summary(self):
+        _url = "%s%s" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            proc_data = data.get("MemorySummary")
+
+            if not proc_data:
+                self.logger.error("Server does not support this functionality")
+                raise BadfishException
+
+            fields = [
+                "MemoryMirroring",
+                "TotalSystemMemoryGiB",
+            ]
+
+            values = {}
+            for field in fields:
+                value = proc_data.get(field)
+                if value:
+                    values[field] = value
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return values
+
+    async def get_memory_details(self):
+
+        _url = "%s%s/Memory" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        if _response.status == 404:
+            self.logger.error("Server does not support this functionality")
+            raise BadfishException
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            memories = []
+            if data.get("Members"):
+                for member in data["Members"]:
+                    memories.append(member["@odata.id"])
+
+            mem_details = {}
+            for memory in memories:
+                memory_url = "%s%s" % (self.host_uri, memory)
+                mem_response = await self.get_request(memory_url)
+                mem_raw = await mem_response.text("utf-8", "ignore")
+                mem_data = json.loads(mem_raw.strip())
+
+                mem_name = mem_data.get("Name")
+                fields = [
+                    "CapacityMiB",
+                    "Description",
+                    "Manufacturer",
+                    "MemoryDeviceType",
+                    "OperatingSpeedMhz",
+                ]
+
+                values = {}
+                for field in fields:
+                    value = mem_data.get(field)
+                    if value:
+                        values[field] = value
+
+                mem_details.update({mem_name: values})
+
+        except (ValueError, AttributeError):
+            self.logger.error("There was something wrong getting network interfaces")
+            raise BadfishException
+
+        return mem_details
+
+    async def list_processors(self):
+        data = await self.get_processor_summary()
+
+        self.logger.info("Processor Summary:")
+        for _key, _value in data.items():
+            self.logger.info(f"    {_key}: {_value}")
+
+        processor_data = await self.get_processor_details()
+
+        for _processor, _properties in processor_data.items():
+            self.logger.info(f"{_processor}:")
+            for _key, _value in _properties.items():
+                self.logger.info(f"    {_key}: {_value}")
+
+        return True
+
+    async def list_memory(self):
+        data = await self.get_memory_summary()
+
+        self.logger.info("Memory Summary:")
+        for _key, _value in data.items():
+            self.logger.info(f"    {_key}: {_value}")
+
+        memory_data = await self.get_memory_details()
+
+        for _memory, _properties in memory_data.items():
+            self.logger.info(f"{_memory}:")
+            for _key, _value in _properties.items():
+                self.logger.info(f"    {_key}: {_value}")
+
+        return True
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1237,6 +1629,9 @@ async def execute_badfish(_host, _args, logger):
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
     list_jobs = _args["ls_jobs"]
+    list_interfaces = _args["ls_interfaces"]
+    list_processors = _args["ls_processors"]
+    list_memory = _args["ls_memory"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
     retries = int(_args["retries"])
@@ -1286,6 +1681,12 @@ async def execute_badfish(_host, _args, logger):
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
             await badfish.reboot_server()
+        elif list_interfaces:
+            await badfish.list_interfaces()
+        elif list_processors:
+            await badfish.list_processors()
+        elif list_memory:
+            await badfish.list_memory()
         elif check_virtual_media:
             await badfish.check_virtual_media()
         elif unmount_virtual_media:
@@ -1296,7 +1697,7 @@ async def execute_badfish(_host, _args, logger):
 
     except BadfishException as ex:
         logger.debug(ex)
-        logger.error("There was something wrong executing Badfish.")
+        logger.error("There was something wrong executing Badfish")
         result = False
 
     if _args["host_list"]:
@@ -1326,7 +1727,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--host-list",
-        help="Path to a plain text file with a list of hosts.",
+        help="Path to a plain text file with a list of hosts",
         default=None,
     )
     parser.add_argument(
@@ -1381,6 +1782,15 @@ def main(argv=None):
     )
     parser.add_argument(
         "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
+    )
+    parser.add_argument(
+        "--ls-interfaces", help="List Network interfaces", action="store_true",
+    )
+    parser.add_argument(
+        "--ls-processors", help="List Processor Summary", action="store_true",
+    )
+    parser.add_argument(
+        "--ls-memory", help="List Memory Summary", action="store_true",
     )
     parser.add_argument(
         "--check-virtual-media",
@@ -1453,10 +1863,10 @@ def main(argv=None):
                 asyncio.gather(*[task() for task in tasks], return_exceptions=True)
             )
         except KeyboardInterrupt:
-            _logger.warning("\nBadfish terminated.")
+            _logger.warning("\nBadfish terminated")
             result = False
         except (asyncio.CancelledError, BadfishException) as ex:
-            _logger.warning("There was something wrong executing Badfish.")
+            _logger.warning("There was something wrong executing Badfish")
             _logger.debug(ex)
             result = False
         if results:
@@ -1478,9 +1888,9 @@ def main(argv=None):
                 execute_badfish(host, _args, _logger)
             )
         except KeyboardInterrupt:
-            _logger.warning("Badfish terminated.")
+            _logger.warning("Badfish terminated")
         except BadfishException as ex:
-            _logger.warning("There was something wrong executing Badfish.")
+            _logger.warning("There was something wrong executing Badfish")
             _logger.debug(ex)
             result = False
     _queue_listener.stop()
