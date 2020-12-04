@@ -12,7 +12,7 @@
          * [Badfish Standalone Script](#badfish-standalone-script)
          * [Badfish Standalone within a virtualenv](#badfish-standalone-within-a-virtualenv)
       * [Usage](#usage)
-      * [Usage via Docker](#usage-via-docker)
+      * [Usage via Podman](#usage-via-podman)
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
@@ -49,32 +49,35 @@
 # Badfish
 Badfish is a Redfish-based API tool for managing bare-metal systems via the [Redfish API](https://www.dmtf.org/standards/redfish)
 
-We will be adding support for a plethora of SuperMicro systems also in the near future.
-
 You can read more [about badfish](https://quads.dev/about-badfish/) at the [QUADS](https://quads.dev/) website.
 
 ## Scope
 Right now Badfish is focused on managing Dell systems, but can potentially work with any system that supports the Redfish API.
 
-We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).  Badfish can be useful as a general standalone, unified vendor IPMI/OOB tool however as support for more vendors is added.
+SuperMicro systems are also supported for some functionality here, as well as other hardware OEM vendors.
+
+We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) and [OpenShift](https://www.openshift.com/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).  Badfish can be useful as a general standalone, unified vendor IPMI/OOB tool however as support for more vendors is added.
 
 ## Features
 * Toggle and save a persistent interface/device boot order on remote systems
-* Optionally one-time boot to a specific interface or to first device listed for PXE booting
+* Perform one-time boot to a specific interface, mac address or device listed for PXE booting
+* Enforce a custom interface boot order
 * Check current boot order
 * Reboot host
 * Reset iDRAC
 * Clear iDRAC job queue
 * Get firmware inventory of installed devices supported by iDRAC
+* Check/ummount virtual media en-masse across a set of systems
+* Obtain limited hardware information (CPU, Memory, Interfaces)
 * Bulk actions via plain text file with list of hosts
 * Logging to a specific path
 * Containerized Badfish image
 
 ## Requirements
-* iDRAC7,8 or newer
-* Firmware version ```2.60.60.60``` or higher
+* (Dell) iDRAC7,8,9 or newer
+* (Dell) Firmware version ```2.60.60.60``` or higher
 * iDRAC administrative account
-* Python >= ```3.6``` or podman/docker
+* Python >= ```3.6``` or [podman](https://podman.io/getting-started/installation) as a container.
 * python3-devel >= ```3.6``` (If using standalone below).
 
 ## Setup
@@ -118,18 +121,18 @@ NOTE:
 ## Usage
 Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
-## Usage via Docker
-Badfish can now be run via a docker-image. For this you need to first pull the Badfish image via:
+## Usage via Podman
+Badfish happily runs in a container image using podman, for this you need to first pull the Badfish image via:
 ```
-docker pull quads/badfish
+podman pull quads/badfish
 ```
 You can then run badfish from inside the container:
 ```
-docker run -it --rm --dns $DNS_IP quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
+podman run -it --rm --dns $DNS_IP quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
 ```
 NOTE:
-* If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with --dns
-* If you would like to use a different file for config/idrac_interfaces.yml you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
+* If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with `--dns`
+* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
 
 ## Common Operations
 
@@ -376,8 +379,6 @@ With rack, ULocation and blade being optional in a hierarchical fashion otherwis
 | director_r620_interfaces         | mgmt-f22-h17-000-r620.domain.com | YES            |
 | director_f21_r620_interfaces     | mgmt-f22-h17-000-r620.domain.com | NO             |
 | director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             |
-
-
 
 ## Contributing
 We love pull requests and welcome contributions from everyone!  Please use the `development` branch to send pull requests.  Here are the general steps you'd want to follow.
