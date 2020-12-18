@@ -1,7 +1,7 @@
 ![badfish](/image/badfish-original-licensed.small.png)
 
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
-[![Build Status](https://img.shields.io/docker/cloud/build/quads/badfish.svg)](https://cloud.docker.com/repository/registry-1.docker.io/quads/badfish/builds)
+[![Docker Repository on Quay](https://quay.io/repository/quads/badfish/status "Docker Repository on Quay")](https://quay.io/repository/quads/badfish)
 
    * [About Badfish](#badfish)
       * [Scope](#scope)
@@ -124,11 +124,11 @@ Badfish operates against a YAML configuration file to toggle between key:value p
 ## Usage via Podman
 Badfish happily runs in a container image using podman, for this you need to first pull the Badfish image via:
 ```
-podman pull quads/badfish
+podman pull quay.io/quads/badfish
 ```
 You can then run badfish from inside the container:
 ```
-podman run -it --rm --dns $DNS_IP quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
+podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
 ```
 NOTE:
 * If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with `--dns`
