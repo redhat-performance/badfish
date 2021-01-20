@@ -325,7 +325,7 @@ class Badfish:
             else:
                 reset = data["Actions"].get(endpoint)
                 if reset:
-                    reset_types = reset.get("ResetType@Redfish.AllowableValues")
+                    reset_types = reset.get("ResetType@Redfish.AllowableValues", [])
                     if not reset_types:
                         self.logger.warning("Could not get allowable reset types")
         return reset_types
