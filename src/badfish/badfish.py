@@ -220,6 +220,23 @@ class Badfish:
 
     async def get_bios_boot_mode(self):
         self.logger.debug("Getting bios boot mode.")
+        attribute = "BootMode"
+        bios_boot_mode = await self.get_bios_attribute(attribute)
+        if bios_boot_mode:
+            return bios_boot_mode
+        else:
+            self.logger.warning("Assuming boot mode is Bios.")
+            return "Bios"
+
+    async def get_sriov_mode(self):
+        self.logger.debug("Getting global SRIOV mode.")
+        attribute = "SriovGlobalEnable"
+        sriov_mode = await self.get_bios_attribute(attribute)
+        if sriov_mode:
+            self.logger.info(sriov_mode)
+
+    async def get_bios_attribute(self, attribute):
+        self.logger.debug("Getting BIOS attribute.")
         _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_uri)
 
@@ -227,15 +244,15 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Could not retrieve Bios Boot mode.")
+            self.logger.error("Could not retrieve Bios Attributes.")
             raise BadfishException
 
         try:
-            bios_boot_mode = data["Attributes"]["BootMode"]
-            return bios_boot_mode
+            bios_attribute = data["Attributes"][attribute]
+            return bios_attribute
         except KeyError:
-            self.logger.warning("Could not retrieve Bios Attributes. Assuming Bios.")
-            return "Bios"
+            self.logger.warning("Could not retrieve Bios Attributes.")
+            return None
 
     async def get_boot_devices(self):
         if not self.boot_devices:
@@ -973,17 +990,30 @@ class Badfish:
             raise BadfishException
 
     async def send_one_time_boot(self, device):
-        _url = "%s%s" % (self.root_uri, self.bios_uri)
         _payload = {
             "Attributes": {
                 "OneTimeBootMode": "OneTimeBootSeq",
                 "OneTimeBootSeqDev": device,
             }
         }
+        await self.patch_bios(_payload)
+
+    async def send_sriov_mode(self, enable):
+        value = "Enabled" if enable else "Disabled"
+        _payload = {
+            "Attributes": {
+                "SriovGlobalEnable": value,
+            }
+        }
+        await self.patch_bios(_payload)
+        await self.create_bios_config_job(self.bios_uri)
+
+    async def patch_bios(self, payload):
+        _url = "%s%s" % (self.root_uri, self.bios_uri)
         _headers = {"content-type": "application/json"}
         _first_reset = False
         for i in range(self.retries):
-            _response = await self.patch_request(_url, _payload, _headers)
+            _response = await self.patch_request(_url, payload, _headers)
             status_code = _response.status
             if status_code == 200:
                 self.logger.info("Command passed to set BIOS attribute pending values.")
@@ -1634,6 +1664,9 @@ async def execute_badfish(_host, _args, logger):
     list_memory = _args["ls_memory"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
+    get_sriov_mode = _args["get_sriov_mode"]
+    enable_sriov = _args["enable_sriov"]
+    disable_sriov = _args["disable_sriov"]
     retries = int(_args["retries"])
 
     result = True
@@ -1691,6 +1724,12 @@ async def execute_badfish(_host, _args, logger):
             await badfish.check_virtual_media()
         elif unmount_virtual_media:
             await badfish.unmount_virtual_media()
+        elif get_sriov_mode:
+            await badfish.get_sriov_mode()
+        elif enable_sriov:
+            await badfish.send_sriov_mode(True)
+        elif disable_sriov:
+            await badfish.send_sriov_mode(False)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -1800,6 +1839,21 @@ def main(argv=None):
     parser.add_argument(
         "--unmount-virtual-media",
         help="Unmount any mounted iso images",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--get-sriov-mode",
+        help="Gets global SRIOV mode state",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--enable-sriov",
+        help="Enables global SRIOV mode",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--disable-sriov",
+        help="Disables global SRIOV mode",
         action="store_true",
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")

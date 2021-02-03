@@ -37,6 +37,8 @@
          * [List Processors](#list-processors)
          * [Check Virtual Media](#check-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
+         * [Get SRIOV mode](#get-sriov-mode)
+         * [Set SRIOV mode](#set-sriov-mode)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -312,6 +314,23 @@ If you would like to unmount all active virtual media you can run ```badfish``` 
 ```
 NOTE:
 * This functionality is only available for SuperMicro devices.
+
+### Get SRIOV mode
+For checking if the global SRIOV mode is enabled you can use ```--get-sriov-mode``` 
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-sriov-mode
+```
+
+### Set SRIOV mode
+For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments. 
+In case the setting is in disabled mode, you can enable it by passing ```--enable-sriov``` 
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --enable-sriov
+```
+On the contrary, if you would like to disable the SRIOV mode, you can now pass ```--disable-sriov```
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
+```
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
