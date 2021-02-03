@@ -321,10 +321,12 @@ NOTE:
 * This functionality is only available for SuperMicro devices.
 
 ### Get SRIOV mode
-For checking if the global SRIOV mode is enabled you can use ```--get-sriov-mode``` 
+For checking if the global SRIOV mode is enabled you can use ```--get-sriov``` 
 ```bash
-./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-sriov-mode
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
 ```
+NOTE: 
+  * This is only supported on DELL devices.
 
 ### Set SRIOV mode
 For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments. 
@@ -336,6 +338,8 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 ```bash
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 ```
+NOTE: 
+  * This is only supported on DELL devices.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
