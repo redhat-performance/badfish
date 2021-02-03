@@ -232,13 +232,16 @@ class Badfish:
         self.logger.debug("Getting global SRIOV mode.")
         attribute = "SriovGlobalEnable"
         sriov_mode = await self.get_bios_attribute(attribute)
-        if sriov_mode:
-            self.logger.info(sriov_mode)
+        return sriov_mode
 
     async def get_bios_attribute(self, attribute):
         self.logger.debug("Getting BIOS attribute.")
         _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_uri)
+
+        if _response.status == 404:
+            self.logger.error("Operation not supported by vendor.")
+            sys.exit(1)
 
         try:
             raw = await _response.text("utf-8", "ignore")
@@ -1005,6 +1008,12 @@ class Badfish:
                 "SriovGlobalEnable": value,
             }
         }
+
+        sriov_mode = await self.get_sriov_mode()
+        if (sriov_mode.lower() == "enabled" and enable) or (sriov_mode.lower() == "disabled" and not enable):
+            self.logger.warning("SRIOV mode is already in that state. IGNORING.")
+            return
+
         await self.patch_bios(_payload)
         await self.create_bios_config_job(self.bios_uri)
 
@@ -1664,7 +1673,7 @@ async def execute_badfish(_host, _args, logger):
     list_memory = _args["ls_memory"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
-    get_sriov_mode = _args["get_sriov_mode"]
+    get_sriov = _args["get_sriov"]
     enable_sriov = _args["enable_sriov"]
     disable_sriov = _args["disable_sriov"]
     retries = int(_args["retries"])
@@ -1724,8 +1733,10 @@ async def execute_badfish(_host, _args, logger):
             await badfish.check_virtual_media()
         elif unmount_virtual_media:
             await badfish.unmount_virtual_media()
-        elif get_sriov_mode:
-            await badfish.get_sriov_mode()
+        elif get_sriov:
+            sriov_mode = await badfish.get_sriov_mode()
+            if sriov_mode:
+                logger.info(sriov_mode)
         elif enable_sriov:
             await badfish.send_sriov_mode(True)
         elif disable_sriov:
@@ -1842,7 +1853,7 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
-        "--get-sriov-mode",
+        "--get-sriov",
         help="Gets global SRIOV mode state",
         action="store_true",
     )
