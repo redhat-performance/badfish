@@ -1760,7 +1760,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Tool for managing server hardware via the Redfish API."
     )
-    parser.add_argument("-H", help="iDRAC host address")
+    parser.add_argument("-H", "--host", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username", required=True)
     parser.add_argument("-p", help="iDRAC password", required=True)
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
@@ -1879,7 +1879,7 @@ def main(argv=None):
     log_level = DEBUG if _args["verbose"] else INFO
 
     host_list = _args["host_list"]
-    host = _args["H"]
+    host = _args["host"]
     result = True
 
     if host_list:
