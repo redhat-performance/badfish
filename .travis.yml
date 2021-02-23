@@ -1,5 +1,5 @@
-# Disable sudo to speed up the build
-sudo: false
+dist: xenial
+os: linux
 
 # Set the build language to Pythonlanguage: python
 language: python
