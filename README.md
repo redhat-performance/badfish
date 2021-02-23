@@ -1,7 +1,7 @@
 ![badfish](/image/badfish-original-licensed.small.png)
 
 [![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
-[![codecov](https://codecov.io/gh/grafuls/badfish/branch/master/graph/badge.svg?token=M4RE7SMGQJ)](https://codecov.io/gh/grafuls/badfish)
+[![codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Docker Repository on Quay](https://quay.io/repository/quads/badfish/status "Docker Repository on Quay")](https://quay.io/repository/quads/badfish)
 
    * [About Badfish](#badfish)
