@@ -14,8 +14,6 @@ setuptools.setup(
         "pyyaml>=4.2b1",
         "aiohttp==3.6.2",
         "async-lru==1.0.2",
-        "pytest~=4.3.0",
-        "asynctest~=0.13.0",
         "setuptools~=46.1.3",
     ],
     package_dir={"": "src"},
