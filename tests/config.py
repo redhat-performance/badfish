@@ -51,8 +51,8 @@ RESPONSE_NO_MATCH = (
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 WARN_NO_MATCH = (
-    "- WARNING  - Current boot order does not match any of the given.\n%s"
-    % RESPONSE_NO_MATCH
+        "- WARNING  - Current boot order does not match any of the given.\n%s"
+        % RESPONSE_NO_MATCH
 )
 RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
@@ -64,15 +64,19 @@ INTERFACES_PATH = os.path.join(
 # test_boot_to constants
 BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
 ERROR_DEV_NO_MATCH = (
-    "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
-    % (BAD_DEVICE_NAME, MOCK_HOST)
+        "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
+        "- ERROR    - There was something wrong executing Badfish\n"
+        % (BAD_DEVICE_NAME, MOCK_HOST)
 )
 JOB_ID = "JID_498218641680"
 RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
     "- INFO     - POST command passed to create target config job.\n"
+)
+RESPONSE_BOOT_TO_BAD_TYPE = (
+    "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
 )
 
 # test_reboot_only
@@ -123,6 +127,17 @@ STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
+
+ETHERNET_INTERFACES_RESP = (
+    '{"Members":['
+    '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Slot.1-1-1"},'
+    '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
+    ']}'
+)
+MAC_ADDRESS = "40:A6:B7:0C:01:A0"
+INTERFACES_RESP = (
+    f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
+)
 
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'
