@@ -69,7 +69,7 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
+            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
         )
 
     @staticmethod
