@@ -12,4 +12,3 @@ aiohttp==3.6.2
 async-lru==1.0.2
 attrs==19.1.0
 pytest-cov==2.11.1
-codecov==2.1.11
