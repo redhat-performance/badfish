@@ -78,6 +78,10 @@ RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
     "- ERROR    - There was something wrong executing Badfish\n"
 )
+RESPONSE_BOOT_TO_BAD_MAC = (
+    "- ERROR    - MAC Address does not match any of the existing\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
+)
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = (
