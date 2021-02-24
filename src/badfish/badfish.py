@@ -1421,18 +1421,19 @@ class Badfish:
 
     async def list_interfaces(self):
         na_supported = await self.check_supported_network_interfaces("NetworkAdapters")
-        ei_supported = await self.check_supported_network_interfaces(
-            "EthernetInterfaces"
-        )
         if na_supported:
             self.logger.debug("Getting Network Adapters")
             data = await self.get_network_adapters()
-        elif ei_supported:
-            self.logger.debug("Getting Ethernet interfaces")
-            data = await self.get_ethernet_interfaces()
         else:
-            self.logger.error("Server does not support this functionality")
-            return False
+            ei_supported = await self.check_supported_network_interfaces(
+                "EthernetInterfaces"
+            )
+            if ei_supported:
+                self.logger.debug("Getting Ethernet interfaces")
+                data = await self.get_ethernet_interfaces()
+            else:
+                self.logger.error("Server does not support this functionality")
+                return False
 
         for interface, properties in data.items():
             self.logger.info(f"{interface}:")
