@@ -1912,6 +1912,9 @@ def main(argv=None):
         try:
             with open(host_list, "r") as _file:
                 for _host in _file.readlines():
+                    if _host.isspace():
+                        continue
+
                     logger = getLogger(_host.strip().split(".")[0])
                     logger.addHandler(_queue_handler)
                     logger.setLevel(log_level)
