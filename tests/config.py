@@ -15,12 +15,18 @@ def render_device_dict(index, device):
     return device_dict
 
 
-DEVICE_HDD_1 = {"name": "HardDisk.List.1-1", "hash": "c9203080df84781e2ca3d512883dee6f"}
+DEVICE_HDD_1 = {
+    "name": "HardDisk.List.1-1",
+    "hash": "c9203080df84781e2ca3d512883dee6f"
+}
 DEVICE_NIC_1 = {
     "name": "NIC.Integrated.1-2-1",
     "hash": "bfa8fe2210d216298c7c53aedfc7e21b",
 }
-DEVICE_NIC_2 = {"name": "NIC.Slot.2-1-1", "hash": "135ac45c488549c04a21f1c199c2044a"}
+DEVICE_NIC_2 = {
+    "name": "NIC.Slot.2-1-1",
+    "hash": "135ac45c488549c04a21f1c199c2044a"
+}
 
 BOOT_SEQ_RESPONSE_DIRECTOR = [
     render_device_dict(0, DEVICE_NIC_1),
@@ -138,6 +144,47 @@ ETHERNET_INTERFACES_RESP = (
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
     ']}'
 )
+DEVICE_NIC_I = "NIC.Integrated.1"
+DEVICE_NIC_S = "NIC.Slot.1"
+
+NETWORK_ADAPTERS_RESP = (
+    '{"Members": ['
+    f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
+    f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_S}"}}'
+    ']}'
+)
+NETWORK_PORTS_ROOT_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkPorts/%s-1"} '
+    ']}'
+)
+NETWORK_DEV_FUNC_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkDeviceFunctions/%s-1"}'
+    ']}'
+)
+NETWORK_DEV_FUNC_DET_RESP = (
+    '{"Ethernet": {"MACAddress": "B0:26:28:D8:68:C0"},'
+    '"Oem": {"Dell": {"DellNIC": {"VendorName": "Intel"}}}}'
+)
+NETWORK_PORTS_RESP = (
+    '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
+)
+RESPONSE_LS_INTERFACES = (
+    "- INFO     - NIC.Integrated.1-1:\n"
+    "- INFO     -     Id: NIC.Integrated.1-1\n"
+    "- INFO     -     LinkStatus: Down\n"
+    "- INFO     -     LinkSpeedMbps: 1000\n"
+    "- INFO     -     MACAddress: B0:26:28:D8:68:C0\n"
+    "- INFO     -     Vendor: Intel\n"
+    "- INFO     - NIC.Slot.1-1:\n"
+    "- INFO     -     Id: NIC.Slot.1-1\n"
+    "- INFO     -     LinkStatus: Down\n"
+    "- INFO     -     LinkSpeedMbps: 1000\n"
+    "- INFO     -     MACAddress: B0:26:28:D8:68:C0\n"
+    "- INFO     -     Vendor: Intel\n"
+)
+
 MAC_ADDRESS = "40:A6:B7:0C:01:A0"
 INTERFACES_RESP = (
     f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
