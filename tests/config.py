@@ -91,6 +91,10 @@ RESPONSE_BOOT_TO_BAD_FILE = (
     "- ERROR    - No such file or directory: bad/bad/file.\n"
     "- ERROR    - There was something wrong executing Badfish\n"
 )
+RESPONSE_BOOT_TO_NO_FILE = (
+    "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
+)
 RESPONSE_BOOT_TO_BAD_MAC = (
     "- ERROR    - MAC Address does not match any of the existing\n"
     "- ERROR    - There was something wrong executing Badfish\n"
@@ -202,6 +206,142 @@ RESPONSE_LS_JOBS = (
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
+
+FIRMWARE_INVENTORY_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Installed-0-16.25.40.62"},'
+    '{"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Installed-0-19.5.12"}'
+    ']} '
+)
+FIRMWARE_INVENTORY_1_RESP = (
+    '{'
+    '"Id": "Installed-0-16.25.40.62",'
+    '"Name": "Mellanox ConnectX-5",'
+    '"ReleaseDate": "00:00:00Z",'
+    '"SoftwareId": "0",'
+    '"Status": {"Health": "OK","State": "Enabled"},'
+    '"Updateable": "True",'
+    '"Version": "16.25.40.62"}'
+)
+FIRMWARE_INVENTORY_2_RESP = (
+    '{'
+    '"Id": "Installed-0-19.5.12",'
+    '"Name": "Intel(R) Ethernet Network Adapter",'
+    '"ReleaseDate": "00:00:00Z",'
+    '"SoftwareId": "0",'
+    '"Status": {"Health": "OK","State": "Enabled"},'
+    '"Updateable": "True",'
+    '"Version": "19.5.12"}'
+)
+RESPONSE_FIRMWARE_INVENTORY = (
+    "- INFO     - Id: Installed-0-16.25.40.62\n"
+    "- INFO     - Name: Mellanox ConnectX-5\n"
+    "- INFO     - ReleaseDate: 00:00:00Z\n"
+    "- INFO     - SoftwareId: 0\n"
+    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     - Updateable: True\n"
+    "- INFO     - Version: 16.25.40.62\n"
+    "- INFO     - ************************************************\n"
+    "- INFO     - Id: Installed-0-19.5.12\n"
+    "- INFO     - Name: Intel(R) Ethernet Network Adapter\n"
+    "- INFO     - ReleaseDate: 00:00:00Z\n"
+    "- INFO     - SoftwareId: 0\n"
+    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     - Updateable: True\n"
+    "- INFO     - Version: 19.5.12\n"
+    "- INFO     - ************************************************\n"
+)
+
+MEMORY_MEMBERS_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A5"},'
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B2"}]}'
+)
+MEMORY_SUMMARY_RESP = (
+    '{"MemorySummary": {'
+    '"MemoryMirroring": "System",'
+    '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"},'
+    '"TotalSystemMemoryGiB": 384}}'
+)
+MEMORY_A5_RESP = (
+    '{"CapacityMiB": 32768,'
+    '"Description": "DIMM A5",'
+    '"Manufacturer": "Hynix Semiconductor",'
+    '"MemoryDeviceType": "DDR4",'
+    '"Name": "DIMM A5",'
+    '"OperatingSpeedMhz": 2933}'
+)
+MEMORY_B2_RESP = (
+    '{"CapacityMiB": 32768,'
+    '"Description": "DIMM B2",'
+    '"Manufacturer": "Hynix Semiconductor",'
+    '"MemoryDeviceType": "DDR4",'
+    '"Name": "DIMM B2",'
+    '"OperatingSpeedMhz": 2933}'
+)
+RESPONSE_LS_MEMORY = (
+    "- INFO     - Memory Summary:\n"
+    "- INFO     -     MemoryMirroring: System\n"
+    "- INFO     -     TotalSystemMemoryGiB: 384\n"
+    "- INFO     - DIMM A5:\n"
+    "- INFO     -     CapacityMiB: 32768\n"
+    "- INFO     -     Description: DIMM A5\n"
+    "- INFO     -     Manufacturer: Hynix Semiconductor\n"
+    "- INFO     -     MemoryDeviceType: DDR4\n"
+    "- INFO     -     OperatingSpeedMhz: 2933\n"
+    "- INFO     - DIMM B2:\n"
+    "- INFO     -     CapacityMiB: 32768\n"
+    "- INFO     -     Description: DIMM B2\n"
+    "- INFO     -     Manufacturer: Hynix Semiconductor\n"
+    "- INFO     -     MemoryDeviceType: DDR4\n"
+    "- INFO     -     OperatingSpeedMhz: 2933\n"
+)
+
+PROCESSOR_SUMMARY_RESP = (
+    '{"ProcessorSummary": {'
+    '"Count": 2,'
+    '"LogicalProcessorCount": 80,'
+    '"Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",'
+    '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"}}}'
+)
+PROCESSOR_MEMBERS_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.1"},'
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.2"}]}'
+)
+PROCESSOR_CPU_RESP = (
+    '{"InstructionSet": "x86-64",'
+    '"Id": "CPU.Socket.%s",'
+    '"Manufacturer": "Intel",'
+    '"MaxSpeedMHz": 4000,'
+    '"Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",'
+    '"Name": "CPU %s",'
+    '"TotalCores": 20,'
+    '"TotalThreads": 40}'
+)
+RESPONSE_LS_PROCESSORS = (
+    "- INFO     - Processor Summary:\n"
+    "- INFO     -     Count: 2\n"
+    "- INFO     -     LogicalProcessorCount: 80\n"
+    "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     - CPU.Socket.1:\n"
+    "- INFO     -     Name: CPU 1\n"
+    "- INFO     -     InstructionSet: x86-64\n"
+    "- INFO     -     Manufacturer: Intel\n"
+    "- INFO     -     MaxSpeedMHz: 4000\n"
+    "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -     TotalCores: 20\n"
+    "- INFO     -     TotalThreads: 40\n"
+    "- INFO     - CPU.Socket.2:\n"
+    "- INFO     -     Name: CPU 2\n"
+    "- INFO     -     InstructionSet: x86-64\n"
+    "- INFO     -     Manufacturer: Intel\n"
+    "- INFO     -     MaxSpeedMHz: 4000\n"
+    "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -     TotalCores: 20\n"
+    "- INFO     -     TotalThreads: 40\n"
+)
+
 
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'

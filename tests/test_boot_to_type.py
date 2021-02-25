@@ -12,6 +12,7 @@ from tests.config import (
     STATE_ON_RESP,
     RESPONSE_BOOT_TO_BAD_TYPE,
     RESPONSE_BOOT_TO_BAD_FILE,
+    RESPONSE_BOOT_TO_NO_FILE,
 )
 from tests.test_base import TestBase
 
@@ -84,3 +85,10 @@ class TestBootTo(TestBase):
         self.args = ["-i", "bad/bad/file", self.option_arg, "bad_type"]
         _, err = self.badfish_call()
         assert err == RESPONSE_BOOT_TO_BAD_FILE
+
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_to_no_file(self, mock_get):
+        self.args = [self.option_arg, "bad_type"]
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_BOOT_TO_NO_FILE
