@@ -38,8 +38,16 @@ class TestBase(AioHTTPTestCase):
         sys.stdout.close = lambda *args: None
         yield
 
-    def badfish_call(self):
-        argv = ["-H", config.MOCK_HOST, "-u", config.MOCK_USER, "-p", config.MOCK_PASS]
+    def badfish_call(self, mock_host=config.MOCK_HOST, mock_user=config.MOCK_USER, mock_pass=config.MOCK_PASS):
+        argv = []
+
+        if mock_host is not None:
+            argv.extend(("-H", mock_host))
+        if mock_user is not None:
+            argv.extend(("-u", mock_user))
+        if mock_pass is not None:
+            argv.extend(("-p", mock_pass))
+
         argv.extend(self.args)
         try:
             main(argv)
