@@ -12,7 +12,8 @@ from tests.config import (
     BOOT_SEQ_RESPONSE_FOREMAN,
     RESPONSE_CHANGE_TO_SAME,
     RESPONSE_CHANGE_BAD_TYPE,
-    RESPONSE_CHANGE_NO_INT, RESET_TYPE_RESP,
+    RESPONSE_CHANGE_NO_INT,
+    RESET_TYPE_RESP,
 )
 from tests.test_base import TestBase
 

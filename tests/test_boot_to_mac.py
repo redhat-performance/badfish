@@ -10,7 +10,8 @@ from tests.config import (
     INTERFACES_PATH,
     ETHERNET_INTERFACES_RESP,
     INTERFACES_RESP,
-    MAC_ADDRESS, RESPONSE_BOOT_TO_BAD_MAC,
+    MAC_ADDRESS,
+    RESPONSE_BOOT_TO_BAD_MAC,
 )
 from tests.test_base import TestBase
 

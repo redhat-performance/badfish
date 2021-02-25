@@ -3,6 +3,11 @@ import os
 MOCK_HOST = "f01-h01-000-r630.host.io"
 MOCK_USER = "mock_user"
 MOCK_PASS = "mock_pass"
+JOB_ID = "JID_498218641680"
+BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
+DEVICE_NIC_I = "NIC.Integrated.1"
+DEVICE_NIC_S = "NIC.Slot.1"
+MAC_ADDRESS = "40:A6:B7:0C:01:A0"
 
 
 def render_device_dict(index, device):
@@ -68,13 +73,11 @@ INTERFACES_PATH = os.path.join(
 )
 
 # test_boot_to constants
-BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
 ERROR_DEV_NO_MATCH = (
         "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
         "- ERROR    - There was something wrong executing Badfish\n"
         % (BAD_DEVICE_NAME, MOCK_HOST)
 )
-JOB_ID = "JID_498218641680"
 RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
@@ -82,6 +85,10 @@ RESPONSE_BOOT_TO = (
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
+)
+RESPONSE_BOOT_TO_BAD_FILE = (
+    "- ERROR    - No such file or directory: bad/bad/file.\n"
     "- ERROR    - There was something wrong executing Badfish\n"
 )
 RESPONSE_BOOT_TO_BAD_MAC = (
@@ -97,10 +104,10 @@ RESPONSE_REBOOT_ONLY_SUCCESS = (
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
 
-# test_reset_idrac
+# test_reset_%s
 RESPONSE_RESET = (
-    "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n"
-    "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
+    "- INFO     - Status code 204 returned for POST command to reset %s.\n"
+    "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
 
 # test_change_boot
@@ -144,8 +151,7 @@ ETHERNET_INTERFACES_RESP = (
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
     ']}'
 )
-DEVICE_NIC_I = "NIC.Integrated.1"
-DEVICE_NIC_S = "NIC.Slot.1"
+
 
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
@@ -185,11 +191,19 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     Vendor: Intel\n"
 )
 
-MAC_ADDRESS = "40:A6:B7:0C:01:A0"
 INTERFACES_RESP = (
     f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
+)
+
+RESPONSE_LS_JOBS = (
+    "- INFO     - Found active jobs:\n"
+    f"- INFO     - {JOB_ID}\n"
+)
+RESPONSE_CLEAR_JOBS = (
+    f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
 
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
+

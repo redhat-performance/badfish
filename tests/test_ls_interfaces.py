@@ -1,14 +1,14 @@
 from asynctest import patch
 from tests.config import (
     INIT_RESP,
-    RESPONSE_WITHOUT,
     NETWORK_ADAPTERS_RESP,
     NETWORK_PORTS_RESP,
     NETWORK_DEV_FUNC_RESP,
     NETWORK_DEV_FUNC_DET_RESP,
     NETWORK_PORTS_ROOT_RESP,
     DEVICE_NIC_I,
-    DEVICE_NIC_S, RESPONSE_LS_INTERFACES,
+    DEVICE_NIC_S,
+    RESPONSE_LS_INTERFACES,
 )
 from tests.test_base import TestBase
 
