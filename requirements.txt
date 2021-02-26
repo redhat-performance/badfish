@@ -4,7 +4,7 @@
 ##
 
 pyyaml>=4.2b1
-aiohttp==3.6.2
+aiohttp==3.7.4
 async-lru==1.0.2
 pytest~=4.3.0
 asynctest~=0.13.0
