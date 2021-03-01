@@ -1149,7 +1149,10 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             for info in data.items():
-                if "odata" not in info[0] and "Description" not in info[0]:
+                if (
+                    "odata" not in info[0] and
+                    "Description" not in info[0] and
+                    "Oem" not in info[0]):
                     self.logger.info("%s: %s" % (info[0], info[1]))
 
             self.logger.info("*" * 48)

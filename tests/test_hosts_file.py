@@ -1,4 +1,3 @@
-import asyncio
 import os
 from asynctest import patch, CoroutineMock
 from tests import config
@@ -9,9 +8,9 @@ class TestHostsFile(TestBase):
     option_arg = "--host-list"
 
     tests_dir = os.path.dirname(__file__)
-    mock_hosts_good_path = os.path.join(tests_dir, "mocks/hosts_good.txt")
-    mock_hosts_garbled_path = os.path.join(tests_dir, "mocks/hosts_garbled.txt")
-    mock_hosts_empty_path = os.path.join(tests_dir, "mocks/hosts_empty.txt")
+    mock_hosts_good_path = os.path.join(tests_dir, "fixtures/hosts_good.txt")
+    mock_hosts_garbled_path = os.path.join(tests_dir, "fixtures/hosts_garbled.txt")
+    mock_hosts_empty_path = os.path.join(tests_dir, "fixtures/hosts_empty.txt")
 
     def test_hosts_good(self):
         self.args = [self.option_arg, self.mock_hosts_good_path]
