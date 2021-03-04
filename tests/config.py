@@ -20,18 +20,12 @@ def render_device_dict(index, device):
     return device_dict
 
 
-DEVICE_HDD_1 = {
-    "name": "HardDisk.List.1-1",
-    "hash": "c9203080df84781e2ca3d512883dee6f"
-}
+DEVICE_HDD_1 = {"name": "HardDisk.List.1-1", "hash": "c9203080df84781e2ca3d512883dee6f"}
 DEVICE_NIC_1 = {
     "name": "NIC.Integrated.1-2-1",
     "hash": "bfa8fe2210d216298c7c53aedfc7e21b",
 }
-DEVICE_NIC_2 = {
-    "name": "NIC.Slot.2-1-1",
-    "hash": "135ac45c488549c04a21f1c199c2044a"
-}
+DEVICE_NIC_2 = {"name": "NIC.Slot.2-1-1", "hash": "135ac45c488549c04a21f1c199c2044a"}
 
 BOOT_SEQ_RESPONSE_DIRECTOR = [
     render_device_dict(0, DEVICE_NIC_1),
@@ -62,8 +56,8 @@ RESPONSE_NO_MATCH = (
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 WARN_NO_MATCH = (
-        "- WARNING  - Current boot order does not match any of the given.\n%s"
-        % RESPONSE_NO_MATCH
+    "- WARNING  - Current boot order does not match any of the given.\n%s"
+    % RESPONSE_NO_MATCH
 )
 RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
@@ -74,9 +68,9 @@ INTERFACES_PATH = os.path.join(
 
 # test_boot_to constants
 ERROR_DEV_NO_MATCH = (
-        "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
-        "- ERROR    - There was something wrong executing Badfish\n"
-        % (BAD_DEVICE_NAME, MOCK_HOST)
+    "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
+    "- ERROR    - There was something wrong executing Badfish\n"
+    % (BAD_DEVICE_NAME, MOCK_HOST)
 )
 RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
@@ -153,7 +147,7 @@ ETHERNET_INTERFACES_RESP = (
     '{"Members":['
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Slot.1-1-1"},'
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
-    ']}'
+    "]}"
 )
 
 
@@ -161,25 +155,23 @@ NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_S}"}}'
-    ']}'
+    "]}"
 )
 NETWORK_PORTS_ROOT_RESP = (
     '{"Members": ['
     '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkPorts/%s-1"} '
-    ']}'
+    "]}"
 )
 NETWORK_DEV_FUNC_RESP = (
     '{"Members": ['
     '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkDeviceFunctions/%s-1"}'
-    ']}'
+    "]}"
 )
 NETWORK_DEV_FUNC_DET_RESP = (
     '{"Ethernet": {"MACAddress": "B0:26:28:D8:68:C0"},'
     '"Oem": {"Dell": {"DellNIC": {"VendorName": "Intel"}}}}'
 )
-NETWORK_PORTS_RESP = (
-    '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
-)
+NETWORK_PORTS_RESP = '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
 RESPONSE_LS_INTERFACES = (
     "- INFO     - NIC.Integrated.1-1:\n"
     "- INFO     -     Id: NIC.Integrated.1-1\n"
@@ -195,14 +187,9 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     Vendor: Intel\n"
 )
 
-INTERFACES_RESP = (
-    f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
-)
+INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = (
-    "- INFO     - Found active jobs:\n"
-    f"- INFO     - {JOB_ID}\n"
-)
+RESPONSE_LS_JOBS = "- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
@@ -211,10 +198,10 @@ FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
     '{"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Installed-0-16.25.40.62"},'
     '{"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Installed-0-19.5.12"}'
-    ']} '
+    "]} "
 )
 FIRMWARE_INVENTORY_1_RESP = (
-    '{'
+    "{"
     '"Id": "Installed-0-16.25.40.62",'
     '"Name": "Mellanox ConnectX-5",'
     '"ReleaseDate": "00:00:00Z",'
@@ -224,7 +211,7 @@ FIRMWARE_INVENTORY_1_RESP = (
     '"Version": "16.25.40.62"}'
 )
 FIRMWARE_INVENTORY_2_RESP = (
-    '{'
+    "{"
     '"Id": "Installed-0-19.5.12",'
     '"Name": "Intel(R) Ethernet Network Adapter",'
     '"ReleaseDate": "00:00:00Z",'
@@ -388,4 +375,6 @@ VMEDIA_GET_CONF_RESP = """
 }
 """
 VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
-VMEDIA_UNMOUNT_UNSUPPORTED = "- WARNING  - OOB management does not support Virtual Media unmount\n"
+VMEDIA_UNMOUNT_UNSUPPORTED = (
+    "- WARNING  - OOB management does not support Virtual Media unmount\n"
+)
