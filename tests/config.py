@@ -347,3 +347,45 @@ BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 
+VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
+VMEDIA_GET_MEMBERS_RESP = """
+{"Members": [
+    {"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk"},
+    {"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD"}
+  ]
+}
+"""
+VMEDIA_MEMBER_RM_DISK_RESP = """
+{
+  "Id":"RemovableDisk",
+  "ImageName":null,
+  "Inserted":false,
+  "Name":"Virtual Removable Disk"
+}
+"""
+VMEDIA_MEMBER_CD_RESP = """
+{
+  "Id":"CD",
+  "ImageName":"TestImage",
+  "Inserted":true,
+  "Name":"Virtual CD"
+}
+"""
+VMEDIA_CHECK_GOOD = """\
+- INFO     - ID: RemovableDisk - Name: Virtual Removable Disk - ImageName: None - Inserted: False
+- INFO     - ID: CD - Name: Virtual CD - ImageName: TestImage - Inserted: True\n\
+"""
+VMEDIA_CHECK_EMPTY = """\
+- WARNING  - No active VirtualMedia found\n\
+"""
+VMEDIA_GET_CONF_RESP = """
+{"Oem":{
+    "Supermicro":{
+      "@odata.type": "#SmcVirtualMediaExtensions.v1_0_0.VirtualMediaCollection",
+      "VirtualMediaConfig": {"@odata.id": "/redfish/v1/Managers/1/VM1/CfgCD"}
+    }
+  }
+}
+"""
+VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
+VMEDIA_UNMOUNT_UNSUPPORTED = "- WARNING  - OOB management does not support Virtual Media unmount\n"
