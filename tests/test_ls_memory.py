@@ -26,4 +26,3 @@ class TestLsMemory(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_LS_MEMORY
-

@@ -190,8 +190,16 @@ RESPONSE_LS_INTERFACES = (
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
 RESPONSE_LS_JOBS = "- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
+RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
+)
+DELLJOBSERVICE_UNSUPPORTED = "- WARNING  - iDRAC version installed does not support DellJobService\n"
+RESPONSE_CLEAR_JOBS_UNSUPPORTED = (
+    f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
+)
+RESPONSE_CLEAR_JOBS_LIST = (
+    f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
 )
 
 FIRMWARE_INVENTORY_RESP = (

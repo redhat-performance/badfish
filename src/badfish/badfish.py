@@ -109,10 +109,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                        uri,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
-                        timeout=60,
+                            uri,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
+                            timeout=60,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError) as ex:
@@ -129,11 +129,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
                     ) as _response:
                         if _response.status != 204:
                             await _response.read()
@@ -149,11 +149,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.patch(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
                     ) as _response:
                         await _response.read()
         except Exception as ex:
@@ -170,10 +170,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.delete(
-                        uri,
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
+                            uri,
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError):
@@ -382,7 +382,7 @@ class Badfish:
                 )
 
                 for device in sorted(
-                    self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
+                        self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
                 ):
                     if device["Name"] == interfaces[device["Index"]]:
                         continue
@@ -481,13 +481,13 @@ class Badfish:
                     try:
                         msg = (
                             data.get("error")
-                            .get("@Message.ExtendedInfo")[0]
-                            .get("Message")
+                                .get("@Message.ExtendedInfo")[0]
+                                .get("Message")
                         )
                         resolution = (
                             data.get("error")
-                            .get("@Message.ExtendedInfo")[0]
-                            .get("Resolution")
+                                .get("@Message.ExtendedInfo")[0]
+                                .get("Resolution")
                         )
                         self.logger.error(msg)
                         self.logger.info(resolution)
@@ -747,6 +747,8 @@ class Badfish:
         url = "%s/JID_CLEARALL_FORCE" % _url
         try:
             _response = await self.delete_request(url, _headers)
+            if _response.status in [200, 204]:
+                self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         except BadfishException:
             self.logger.warning("There was something wrong clearing the job queue.")
             raise
@@ -1149,10 +1151,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             for info in data.items():
-                if (
-                    "odata" not in info[0] and
-                    "Description" not in info[0] and
-                    "Oem" not in info[0]):
+                if "odata" not in info[0] and "Description" not in info[0] and "Oem" not in info[0]:
                     self.logger.info("%s: %s" % (info[0], info[1]))
 
             self.logger.info("*" * 48)
