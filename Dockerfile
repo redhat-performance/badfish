@@ -7,7 +7,7 @@ RUN git clone https://github.com/redhat-performance/badfish
 WORKDIR badfish
 
 RUN apk add build-base
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 RUN python setup.py build
 RUN python setup.py install
 
