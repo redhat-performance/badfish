@@ -109,10 +109,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                        uri,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
-                        timeout=60,
+                            uri,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
+                            timeout=60,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError) as ex:
@@ -129,11 +129,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
                     ) as _response:
                         if _response.status != 204:
                             await _response.read()
@@ -149,11 +149,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.patch(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        verify_ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            verify_ssl=False,
                     ) as _response:
                         await _response.read()
         except Exception as ex:
@@ -170,10 +170,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.delete(
-                        uri,
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
+                            uri,
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError):
@@ -291,40 +291,6 @@ class Badfish:
         jobs = [job.strip("}").strip('"').strip("'") for job in job_queue]
         return jobs
 
-    async def get_job_status(self, _job_id):
-        self.logger.debug("Getting job status.")
-        _uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, _job_id)
-
-        for _ in range(self.retries):
-            _response = await self.get_request(_uri, _continue=True)
-            if not _response:
-                continue
-
-            status_code = _response.status
-            if status_code == 200:
-                self.logger.info(f"Command passed to check job status {_job_id}")
-                await asyncio.sleep(10)
-            else:
-                self.logger.error(
-                    f"Command failed to check job status {_job_id}, return code is %s."
-                    % status_code
-                )
-
-                await self.error_handler(_response)
-
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-            if data["Message"] == "Task successfully scheduled.":
-                self.logger.info("Job id %s successfully scheduled." % _job_id)
-                return
-            else:
-                self.logger.warning(
-                    "JobStatus not scheduled, current status is: %s." % data["Message"]
-                )
-
-        self.logger.error("Not able to successfully schedule the job.")
-        raise BadfishException
-
     async def get_reset_types(self, manager=False):
         if manager:
             resource = self.manager_resource
@@ -382,7 +348,7 @@ class Badfish:
                 )
 
                 for device in sorted(
-                    self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
+                        self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
                 ):
                     if device["Name"] == interfaces[device["Index"]]:
                         continue
@@ -481,13 +447,13 @@ class Badfish:
                     try:
                         msg = (
                             data.get("error")
-                            .get("@Message.ExtendedInfo")[0]
-                            .get("Message")
+                                .get("@Message.ExtendedInfo")[0]
+                                .get("Message")
                         )
                         resolution = (
                             data.get("error")
-                            .get("@Message.ExtendedInfo")[0]
-                            .get("Resolution")
+                                .get("@Message.ExtendedInfo")[0]
+                                .get("Resolution")
                         )
                         self.logger.error(msg)
                         self.logger.info(resolution)
@@ -607,9 +573,7 @@ class Badfish:
             if pxe:
                 await self.set_next_boot_pxe()
 
-            job_id = await self.create_bios_config_job(self.bios_uri)
-            if job_id:
-                await self.get_job_status(job_id)
+            await self.create_bios_config_job(self.bios_uri)
 
             await self.reboot_server(graceful=False)
 
@@ -747,6 +711,8 @@ class Badfish:
         url = "%s/JID_CLEARALL_FORCE" % _url
         try:
             _response = await self.delete_request(url, _headers)
+            if _response.status in [200, 204]:
+                self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         except BadfishException:
             self.logger.warning("There was something wrong clearing the job queue.")
             raise
@@ -1149,10 +1115,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             for info in data.items():
-                if (
-                    "odata" not in info[0] and
-                    "Description" not in info[0] and
-                    "Oem" not in info[0]):
+                if "odata" not in info[0] and "Description" not in info[0] and "Oem" not in info[0]:
                     self.logger.info("%s: %s" % (info[0], info[1]))
 
             self.logger.info("*" * 48)
