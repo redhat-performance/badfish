@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-from asynctest import CoroutineMock
+from asynctest import CoroutineMock, PropertyMock, MagicMock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 from asynctest import patch
@@ -18,15 +18,17 @@ class TestBase(AioHTTPTestCase):
 
     @staticmethod
     def set_mock_response(mock, status, responses):
-        mock.return_value.__aenter__.return_value.status = status
+        if type(status) == list:
+            status_mock = MagicMock()
+            type(status_mock).status = PropertyMock(side_effect=status)
+            mock.return_value.__aenter__.return_value = status_mock
+        else:
+            mock.return_value.__aenter__.return_value.status = status
         mock.return_value.__aenter__.return_value.read = CoroutineMock()
         if type(responses) == list:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock()
-            mock.return_value.__aenter__.return_value.text.side_effect = responses
+            mock.return_value.__aenter__.return_value.text = CoroutineMock(side_effect=responses)
         else:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock(
-                return_value=responses
-            )
+            mock.return_value.__aenter__.return_value.text = CoroutineMock(return_value=responses)
 
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
