@@ -55,9 +55,7 @@ Badfish is a Redfish-based API tool for managing bare-metal systems via the [Red
 You can read more [about badfish](https://quads.dev/about-badfish/) at the [QUADS](https://quads.dev/) website.
 
 ## Scope
-Right now Badfish is focused on managing Dell systems, but can potentially work with any system that supports the Redfish API.
-
-SuperMicro systems are also supported for some functionality here, as well as other hardware OEM vendors.
+Right now Badfish is focused on managing Dell, SuperMicro and HPE systems, but can potentially work with any system that supports the Redfish API.  Functionality may vary depending on the vendor Redfish implementation.
 
 We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) and [OpenShift](https://www.openshift.com/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).  Badfish can be useful as a general standalone, unified vendor IPMI/OOB tool however as support for more vendors is added.
 
@@ -69,10 +67,12 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Reboot host
 * Reset iDRAC
 * Clear iDRAC job queue
+* Revert to factory settings
+* Check/set SRIOV
 * Get firmware inventory of installed devices supported by iDRAC
 * Check/ummount virtual media en-masse across a set of systems
 * Obtain limited hardware information (CPU, Memory, Interfaces)
-* Bulk actions via plain text file with list of hosts
+* Bulk actions via plain text file with list of hosts for parallel execution
 * Logging to a specific path
 * Containerized Badfish image
 
@@ -322,16 +322,16 @@ NOTE:
 * This functionality is only available for SuperMicro devices.
 
 ### Get SRIOV mode
-For checking if the global SRIOV mode is enabled you can use ```--get-sriov``` 
+For checking if the global SRIOV mode is enabled you can use ```--get-sriov```
 ```bash
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
 ```
-NOTE: 
+NOTE:
   * This is only supported on DELL devices.
 
 ### Set SRIOV mode
-For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments. 
-In case the setting is in disabled mode, you can enable it by passing ```--enable-sriov``` 
+For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments.
+In case the setting is in disabled mode, you can enable it by passing ```--enable-sriov```
 ```bash
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --enable-sriov
 ```
@@ -339,7 +339,7 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 ```bash
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 ```
-NOTE: 
+NOTE:
   * This is only supported on DELL devices.
 
 ### Bulk actions via text file with list of hosts
@@ -418,5 +418,5 @@ We love pull requests and welcome contributions from everyone!  Please use the `
 
 ## Contact
 
-* You can find us on IRC in `#quads` on `irc.freenode.net` if you have questions or need help.  [Click here](https://webchat.freenode.net/?channels=quads) to join in your browser.
+* You can find us on IRC in `#badfish` (or `#quads`) on `irc.libera.chat` if you have questions or need help.  [Click here](https://https://web.libera.chat/?channels=#quads) to join in your browser.
 
