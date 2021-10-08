@@ -109,10 +109,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                            uri,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            verify_ssl=False,
-                            timeout=60,
+                        uri,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
+                        timeout=60,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError) as ex:
@@ -129,11 +129,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
-                            uri,
-                            data=json.dumps(payload),
-                            headers=headers,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            verify_ssl=False,
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
                     ) as _response:
                         if _response.status != 204:
                             await _response.read()
@@ -149,11 +149,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.patch(
-                            uri,
-                            data=json.dumps(payload),
-                            headers=headers,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            verify_ssl=False,
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
                     ) as _response:
                         await _response.read()
         except Exception as ex:
