@@ -36,7 +36,6 @@
          * [Check Job Status](#check-job-status)
          * [Set Bios Password](#set-bios-password)
          * [Remove Bios Password](#remove-bios-password)
-         * [Remove Bios Password](#check-job-status)
          * [List Network Interfaces](#list-network-interfaces)
          * [List Memory](#list-memory)
          * [List Processors](#list-processors)
