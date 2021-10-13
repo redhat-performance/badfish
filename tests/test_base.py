@@ -18,6 +18,7 @@ class TestBase(AioHTTPTestCase):
 
     @staticmethod
     def set_mock_response(mock, status, responses):
+        mock.return_value.__aenter__.return_value.name = responses
         if type(status) == list:
             status_mock = MagicMock()
             type(status_mock).status = PropertyMock(side_effect=status)

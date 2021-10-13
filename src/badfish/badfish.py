@@ -69,11 +69,11 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
+                "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
         )
 
     @staticmethod
-    def progress_bar(value, end_value, state, bar_length=20):
+    def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
         ratio = float(value) / end_value
         arrow = "-" * int(round(ratio * bar_length) - 1) + ">"
         spaces = " " * (bar_length - len(arrow))
@@ -83,9 +83,7 @@ class Badfish:
             state = "On  "
         ret = "\r" if percent != 100 else "\n"
         sys.stdout.write(
-            "\r- POLLING: [{0}] {1}% - Host state: {2}{3}".format(
-                arrow + spaces, percent, state, ret
-            )
+            f"\r- POLLING: [{arrow + spaces}] {percent}% - {prompt}: {state}{ret}"
         )
         sys.stdout.flush()
 
@@ -109,10 +107,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                        uri,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
-                        timeout=60,
+                            uri,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
+                            timeout=60,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError) as ex:
@@ -129,11 +127,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
                     ) as _response:
                         if _response.status != 204:
                             await _response.read()
@@ -149,11 +147,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.patch(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
+                            uri,
+                            data=json.dumps(payload),
+                            headers=headers,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
                     ) as _response:
                         await _response.read()
         except Exception as ex:
@@ -197,6 +195,7 @@ class Badfish:
             host_model = "%s_%s" % (host_model, host_blade)
 
         len_prefix = len(prefix)
+        key = "None"
         for _ in range(len_prefix):
             prefix_string = "_".join(prefix)
             key = "%s_%s_interfaces" % (prefix_string, host_model)
@@ -241,7 +240,7 @@ class Badfish:
 
         if _response.status == 404:
             self.logger.error("Operation not supported by vendor.")
-            sys.exit(1)
+            return False
 
         try:
             raw = await _response.text("utf-8", "ignore")
@@ -683,8 +682,8 @@ class Badfish:
 
     async def delete_job_queue_dell(self, force):
         _url = (
-            "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
-            % self.root_uri
+                "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
+                % self.root_uri
         )
         job_id = "JID_CLEARALL"
         if force:
@@ -773,7 +772,6 @@ class Badfish:
         _response = await self.post_request(_url, _payload, _headers)
 
         status_code = _response.status
-
         if status_code in expected:
             self.logger.info("POST command passed to create target config job.")
         else:
@@ -784,11 +782,70 @@ class Badfish:
 
             await self.error_handler(_response)
 
+        raw = str(_response.__dict__)
+        result = re.search("JID_.+?,", raw).group()
+        job_id = re.sub("[,']", "", result)
+        if job_id:
+            self.logger.debug("%s job ID successfully created" % job_id)
+        return job_id
+
     async def create_bios_config_job(self, uri):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _payload = {"TargetSettingsURI": "%s%s" % (self.redfish_uri, uri)}
         _headers = {"content-type": "application/json"}
-        await self.create_job(_url, _payload, _headers)
+        return await self.create_job(_url, _payload, _headers)
+
+    async def check_schedule_job_status(self, job_id):
+        _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+        _response = await self.get_request(_url)
+
+        if _response:
+            status_code = _response.status
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+            if status_code == 200:
+                await asyncio.sleep(10)
+            else:
+                self.logger.error(f"Command failed to check job status, return code is {status_code}")
+                self.logger.debug(f"Extended Info Message: {data}")
+                return False
+
+            self.logger.info(f"JobID = {data[u'Id']}")
+            self.logger.info(f" Name = {data[u'Name']}")
+            self.logger.info(f" Message = {data[u'Message']}")
+            self.logger.info(f" PercentComplete = {str(data[u'PercentComplete'])}")
+        else:
+            self.logger.error(f"Command failed to check job status")
+            return False
+
+    async def check_job_status(self, job_id):
+        for count in range(self.retries):
+            _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+            self.get_request.cache_clear()
+            _response = await self.get_request(_url)
+
+            status_code = _response.status
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            if status_code == 200:
+                pass
+            else:
+                self.logger.error(f"Command failed to check job status, return code is {status_code}")
+                self.logger.debug(f"Extended Info Message: {data}")
+                return False
+            if "Fail" in data[u'Message'] or "fail" in data[u'Message']:
+                self.logger.debug(f"\n{job_id} job failed.")
+                return False
+            elif data[u'Message'] == "Job completed successfully.":
+                self.logger.info(f"JobID = {data[u'Id']}")
+                self.logger.info(f" Name = {data[u'Name']}")
+                self.logger.info(f" Message = {data[u'Message']}")
+                self.logger.info(f" PercentComplete = {str(data[u'PercentComplete'])}")
+                break
+            else:
+                self.progress_bar(count, self.retries, data[u'Message'], prompt="Status")
+                await asyncio.sleep(30)
 
     async def send_reset(self, reset_type):
         _url = "%s%s/Actions/ComputerSystem.Reset" % (
@@ -806,6 +863,7 @@ class Badfish:
                 % (reset_type, status_code)
             )
             await asyncio.sleep(10)
+            return True
         elif status_code == 409:
             self.logger.warning(
                 "Command failed to %s server, host appears to be already in that state."
@@ -818,6 +876,7 @@ class Badfish:
             )
 
             await self.error_handler(_response)
+        return False
 
     async def reboot_server(self, graceful=True):
         _reset_types = await self.get_reset_types()
@@ -831,15 +890,16 @@ class Badfish:
         power_state = await self.get_power_state()
         if power_state.lower() == "on":
             if graceful:
-                await self.send_reset(reset_type)
+                response = await self.send_reset(reset_type)
 
-                host_down = await self.polling_host_state("Off")
+                if not response:
+                    host_down = await self.polling_host_state("Off")
 
-                if not host_down:
-                    self.logger.warning(
-                        "Unable to graceful shutdown the server, will perform forced shutdown now."
-                    )
-                    await self.send_reset("ForceOff")
+                    if not host_down:
+                        self.logger.warning(
+                            "Unable to graceful shutdown the server, will perform forced shutdown now."
+                        )
+                        await self.send_reset("ForceOff")
             else:
                 await self.send_reset("ForceOff")
 
@@ -1613,6 +1673,52 @@ class Badfish:
 
         return True
 
+    async def change_bios_password(self, old_password, new_password):
+        _url = (
+                "%s/Systems/System.Embedded.1/Bios/Actions/Bios.ChangePassword"
+                % self.root_uri
+        )
+        _payload = {
+            "PasswordName": "SetupPassword",
+            "OldPassword": old_password,
+            "NewPassword": new_password,
+        }
+        _headers = {"content-type": "application/json"}
+        _response = await self.post_request(_url, _payload, _headers)
+
+        status_code = _response.status
+
+        if status_code in [200, 204]:
+            self.logger.info(
+                "Command passed to set BIOS password."
+            )
+        else:
+            self.logger.warning(
+                "Command failed to set BIOS password"
+            )
+
+            await self.error_handler(_response)
+
+        job_id = await self.create_bios_config_job(self.bios_uri)
+        self.logger.warning("Host will now be rebooted for changes to take place.")
+        await asyncio.sleep(5)
+        await self.reboot_server()
+        await asyncio.sleep(5)
+        await self.check_job_status(job_id)
+
+    async def set_bios_password(self, old_password, new_password):
+        if new_password == '':
+            self.logger.error("Missing argument: `--new-password`")
+            return False
+
+        await self.change_bios_password(old_password, new_password)
+
+    async def remove_bios_password(self, old_password):
+        if old_password == '':
+            self.logger.error("Missing argument: `--old-password`")
+            return False
+        await self.change_bios_password(old_password, "")
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1634,6 +1740,7 @@ async def execute_badfish(_host, _args, logger):
     check_boot = _args["check_boot"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
+    check_job = _args["check_job"]
     list_jobs = _args["ls_jobs"]
     list_interfaces = _args["ls_interfaces"]
     list_processors = _args["ls_processors"]
@@ -1643,6 +1750,10 @@ async def execute_badfish(_host, _args, logger):
     get_sriov = _args["get_sriov"]
     enable_sriov = _args["enable_sriov"]
     disable_sriov = _args["disable_sriov"]
+    set_bios_password = _args["set_bios_password"]
+    remove_bios_password = _args["remove_bios_password"]
+    new_password = _args["new_password"]
+    old_password = _args["old_password"]
     retries = int(_args["retries"])
 
     result = True
@@ -1671,6 +1782,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.get_firmware_inventory()
         elif clear_jobs:
             await badfish.clear_job_queue(force)
+        elif check_job:
+            await badfish.check_schedule_job_status(check_job)
         elif list_jobs:
             await badfish.list_job_queue()
         elif host_type:
@@ -1708,6 +1821,10 @@ async def execute_badfish(_host, _args, logger):
             await badfish.send_sriov_mode(True)
         elif disable_sriov:
             await badfish.send_sriov_mode(False)
+        elif set_bios_password:
+            await badfish.set_bios_password(old_password, new_password)
+        elif remove_bios_password:
+            await badfish.remove_bios_password(old_password)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -1798,6 +1915,10 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
+        "--check-job",
+        help="Check a job status and details",
+    )
+    parser.add_argument(
         "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
     )
     parser.add_argument(
@@ -1833,6 +1954,26 @@ def main(argv=None):
         "--disable-sriov",
         help="Disables global SRIOV mode",
         action="store_true",
+    )
+    parser.add_argument(
+        "--set-bios-password",
+        help="Set the BIOS password",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--remove-bios-password",
+        help="Removes BIOS password",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--new-password",
+        help="Removes BIOS password",
+        default="",
+    )
+    parser.add_argument(
+        "--old-password",
+        help="Removes BIOS password",
+        default="",
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(

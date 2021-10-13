@@ -33,6 +33,10 @@
          * [Firmware inventory](#firmware-inventory)
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
+         * [Check Job Status](#check-job-status)
+         * [Set Bios Password](#set-bios-password)
+         * [Remove Bios Password](#remove-bios-password)
+         * [Remove Bios Password](#check-job-status)
          * [List Network Interfaces](#list-network-interfaces)
          * [List Memory](#list-memory)
          * [List Processors](#list-processors)
@@ -287,6 +291,24 @@ You can also force the clearing of Dell iDRAC job queues by passing the `--force
 If you would like to list all active jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--ls-jobs``` option which query for all active jobs in the iDRAC queue and will return a list with all active items.
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --ls-jobs
+```
+
+### Check Job Status
+If you would like to the status of an existing LifeCycle controller job you can run ```badfish``` with the ```--check-job``` option and passing the job id which can be obtained via ```--ls-jobs```. This will return a detail of the specific job with status and percentage of completion.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --check-job JID_340568202796
+```
+
+### Set Bios Password
+If you would like to set the bios password you can run ```badfish``` with the ```--set-bios-password``` option and passing the new password with ```--new-password```. If a password is already set you must pass this with ```--old-password``` otherwise optional.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --set-bios-password --new-password new_pass --old-password old_pass
+```
+
+### Remove Bios Password
+If you would like to remove the bios password you can run ```badfish``` with the ```--remove-bios-password``` option and passing the existing password with ```--old-password```.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --remove-bios-password --old-password old_pass
 ```
 
 ### List Network Interfaces
