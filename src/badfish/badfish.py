@@ -1674,10 +1674,7 @@ class Badfish:
         return True
 
     async def change_bios_password(self, old_password, new_password):
-        _url = (
-                "%s/Systems/System.Embedded.1/Bios/Actions/Bios.ChangePassword"
-                % self.root_uri
-        )
+        _url = "%s%s/Bios/Actions/Bios.ChangePassword" % (self.host_uri, self.system_resource)
         _payload = {
             "PasswordName": "SetupPassword",
             "OldPassword": old_password,
@@ -1692,6 +1689,11 @@ class Badfish:
             self.logger.info(
                 "Command passed to set BIOS password."
             )
+        elif status_code == 404:
+            self.logger.error(
+                "BIOS password change not supported on this system."
+            )
+            return False
         else:
             self.logger.warning(
                 "Command failed to set BIOS password"
