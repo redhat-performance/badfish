@@ -97,7 +97,6 @@ RESPONSE_BOOT_TO_BAD_MAC = (
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = (
     "- INFO     - Command passed to GracefulRestart server, code return is 204.\n"
-    "- INFO     - Polling for host state: Off\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
@@ -386,3 +385,23 @@ VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
 VMEDIA_UNMOUNT_UNSUPPORTED = (
     "- WARNING  - OOB management does not support Virtual Media unmount\n"
 )
+BIOS_PASS_SET_GOOD = """\
+- INFO     - Command passed to set BIOS password.
+- INFO     - POST command passed to create target config job.
+- WARNING  - Host will now be rebooted for changes to take place.
+- WARNING  - Actions resource not found
+- ERROR    - There was something wrong executing Badfish
+"""
+BIOS_PASS_SET_MISS_ARG = """\
+- ERROR    - Missing argument: `--new-password`
+"""
+BIOS_PASS_RM_GOOD = """\
+- INFO     - Command passed to set BIOS password.
+- INFO     - POST command passed to create target config job.
+- WARNING  - Host will now be rebooted for changes to take place.
+- WARNING  - Actions resource not found
+- ERROR    - There was something wrong executing Badfish
+"""
+BIOS_PASS_RM_MISS_ARG = """\
+- ERROR    - Missing argument: `--old-password`
+"""
