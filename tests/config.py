@@ -69,7 +69,6 @@ INTERFACES_PATH = os.path.join(
 # test_boot_to constants
 ERROR_DEV_NO_MATCH = (
     "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
     % (BAD_DEVICE_NAME, MOCK_HOST)
 )
 RESPONSE_BOOT_TO = (
@@ -79,19 +78,15 @@ RESPONSE_BOOT_TO = (
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 RESPONSE_BOOT_TO_BAD_FILE = (
     "- ERROR    - No such file or directory: bad/bad/file.\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 RESPONSE_BOOT_TO_NO_FILE = (
     "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 RESPONSE_BOOT_TO_BAD_MAC = (
     "- ERROR    - MAC Address does not match any of the existing\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 
 # test_reboot_only
@@ -119,12 +114,10 @@ RESPONSE_CHANGE_BOOT = (
 )
 RESPONSE_CHANGE_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = (
     "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-    "- ERROR    - There was something wrong executing Badfish\n"
 )
 
 ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'
@@ -338,7 +331,7 @@ RESPONSE_LS_PROCESSORS = (
 
 
 BLANK_RESP = '"OK"'
-TASK_OK_RESP = '{"Message": "Task successfully scheduled."}'
+TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
@@ -385,12 +378,15 @@ VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
 VMEDIA_UNMOUNT_UNSUPPORTED = (
     "- WARNING  - OOB management does not support Virtual Media unmount\n"
 )
-BIOS_PASS_SET_GOOD = """\
+BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
 - INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
-- WARNING  - Actions resource not found
-- ERROR    - There was something wrong executing Badfish
+- INFO     - Command passed to On server, code return is 200.
+- INFO     - JobID = {JOB_ID}
+- INFO     -  Name = Task
+- INFO     -  Message = Job completed successfully.
+- INFO     -  PercentComplete = 100
 """
 BIOS_PASS_SET_MISS_ARG = """\
 - ERROR    - Missing argument: `--new-password`
@@ -399,8 +395,11 @@ BIOS_PASS_RM_GOOD = """\
 - INFO     - Command passed to set BIOS password.
 - INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
-- WARNING  - Actions resource not found
-- ERROR    - There was something wrong executing Badfish
+- INFO     - Command passed to On server, code return is 200.
+- INFO     - JobID = JID_498218641680
+- INFO     -  Name = Task
+- INFO     -  Message = Job completed successfully.
+- INFO     -  PercentComplete = 100
 """
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`

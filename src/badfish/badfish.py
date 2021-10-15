@@ -69,7 +69,7 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-                "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
+            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
         )
 
     @staticmethod
@@ -92,8 +92,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Error reading response from host.")
-            raise BadfishException
+            raise BadfishException("Error reading response from host.")
 
         if "error" in data:
             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
@@ -118,8 +117,7 @@ class Badfish:
                 return
             else:
                 self.logger.debug(ex)
-                self.logger.error("Failed to communicate with server.")
-                raise BadfishException
+                raise BadfishException("Failed to communicate with server.")
         return _response
 
     async def post_request(self, uri, payload, headers):
@@ -138,8 +136,7 @@ class Badfish:
                         else:
                             return _response
         except (Exception, TimeoutError):
-            self.logger.exception("Failed to communicate with server.")
-            raise BadfishException
+            raise BadfishException("Failed to communicate with server.")
         return _response
 
     async def patch_request(self, uri, payload, headers, _continue=False):
@@ -159,8 +156,7 @@ class Badfish:
                 return
             else:
                 self.logger.debug(ex)
-                self.logger.error("Failed to communicate with server.")
-                raise BadfishException
+                raise BadfishException("Failed to communicate with server.")
         return _response
 
     async def delete_request(self, uri, headers):
@@ -175,8 +171,7 @@ class Badfish:
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError):
-            self.logger.exception("Failed to communicate with server.")
-            raise BadfishException
+            raise BadfishException("Failed to communicate with server.")
         return _response
 
     async def get_interfaces_by_type(self, host_type, _interfaces_path):
@@ -205,10 +200,9 @@ class Badfish:
             else:
                 prefix.pop()
 
-        self.logger.error(
+        raise BadfishException(
             f"Couldn't find a valid key defined on the interfaces yaml: {key}"
         )
-        raise BadfishException
 
     async def get_boot_seq(self):
         bios_boot_mode = await self.get_bios_boot_mode()
@@ -221,11 +215,11 @@ class Badfish:
         self.logger.debug("Getting bios boot mode.")
         attribute = "BootMode"
         bios_boot_mode = await self.get_bios_attribute(attribute)
-        if bios_boot_mode:
-            return bios_boot_mode
-        else:
+        if not bios_boot_mode:
             self.logger.warning("Assuming boot mode is Bios.")
-            return "Bios"
+            bios_boot_mode = "Bios"
+        self.logger.debug("Current boot mode: %s" % bios_boot_mode)
+        return bios_boot_mode
 
     async def get_sriov_mode(self):
         self.logger.debug("Getting global SRIOV mode.")
@@ -246,8 +240,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Could not retrieve Bios Attributes.")
-            raise BadfishException
+            raise BadfishException("Could not retrieve Bios Attributes.")
 
         try:
             bios_attribute = data["Attributes"][attribute]
@@ -264,21 +257,25 @@ class Badfish:
 
             if _response.status == 404:
                 self.logger.debug(_response.text)
-                self.logger.error(
+                raise BadfishException(
                     "Boot order modification is not supported by this host."
                 )
-                raise BadfishException
 
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "Attributes" in data:
-                self.boot_devices = data["Attributes"][_boot_seq]
+                try:
+                    self.boot_devices = data["Attributes"][_boot_seq]
+                except KeyError:
+                    for key in data["Attributes"].keys():
+                        if "bootseq" in key.lower():
+                            self.logger.debug("Boot sequence found: %s" % key)
+                    raise BadfishException("The boot mode does not match the boot sequence. Try again in a few minutes.")
             else:
                 self.logger.debug(data)
-                self.logger.error(
+                raise BadfishException(
                     "Boot order modification is not supported by this host."
                 )
-                raise BadfishException
 
     async def get_job_queue(self):
         self.logger.debug("Getting job queue.")
@@ -320,9 +317,8 @@ class Badfish:
             try:
                 definitions = yaml.safe_load(f)
             except yaml.YAMLError as ex:
-                self.logger.error("Couldn't read file: %s" % _yaml_file)
                 self.logger.debug(ex)
-                raise BadfishException
+                raise BadfishException("Couldn't read file: %s" % _yaml_file)
         return definitions
 
     async def get_host_types_from_yaml(self, _interfaces_path):
@@ -363,14 +359,12 @@ class Badfish:
         response = await self.get_request(self.root_uri + "/Systems")
 
         if response.status == 401:
-            self.logger.error(
+            raise BadfishException(
                 f"Failed to authenticate. Verify your credentials for {self.host}"
             )
-            raise BadfishException
 
         if response.status not in [200, 201]:
-            self.logger.error(f"Failed to communicate with {self.host}")
-            raise BadfishException
+            raise BadfishException(f"Failed to communicate with {self.host}")
 
     async def get_interfaces_endpoints(self):
         _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
@@ -381,20 +375,18 @@ class Badfish:
 
         if _response.status == 404:
             self.logger.debug(raw)
-            self.logger.error(
+            raise BadfishException(
                 "EthernetInterfaces entry point not supported by this host."
             )
-            raise BadfishException
 
         endpoints = []
         if data.get("Members"):
             for member in data["Members"]:
                 endpoints.append(member["@odata.id"])
         else:
-            self.logger.error(
+            raise BadfishException(
                 "EthernetInterfaces's Members array is either empty or missing"
             )
-            raise BadfishException
 
         return endpoints
 
@@ -406,10 +398,9 @@ class Badfish:
 
         if _response.status == 404:
             self.logger.debug(raw)
-            self.logger.error(
+            raise BadfishException(
                 "EthernetInterface entry point not supported by this host."
             )
-            raise BadfishException
 
         data = json.loads(raw.strip())
 
@@ -420,20 +411,17 @@ class Badfish:
         if response:
 
             if response.status == 401:
-                self.logger.error("Failed to authenticate. Verify your credentials.")
-                raise BadfishException
+                raise BadfishException("Failed to authenticate. Verify your credentials.")
 
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "Systems" not in data:
-                self.logger.error("Systems resource not found")
-                raise BadfishException
+                raise BadfishException("Systems resource not found")
             else:
                 systems = data["Systems"]["@odata.id"]
                 _response = await self.get_request(self.host_uri + systems)
                 if _response.status == 401:
-                    self.logger.error("Authorization Error: verify credentials.")
-                    raise BadfishException
+                    raise BadfishException("Authorization Error: verify credentials.")
 
                 raw = await _response.text("utf-8", "ignore")
                 data = json.loads(raw.strip())
@@ -464,8 +452,7 @@ class Badfish:
                         )
                     raise BadfishException
         else:
-            self.logger.error("Failed to communicate with server.")
-            raise BadfishException
+            raise BadfishException("Failed to communicate with server.")
 
     async def find_managers_resource(self):
         response = await self.get_request(self.root_uri)
@@ -473,8 +460,7 @@ class Badfish:
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "Managers" not in data:
-                self.logger.error("Managers resource not found")
-                raise BadfishException
+                raise BadfishException("Managers resource not found")
             else:
                 managers = data["Managers"]["@odata.id"]
                 response = await self.get_request(self.host_uri + managers)
@@ -489,10 +475,9 @@ class Badfish:
                             )
                             return managers_service
                     else:
-                        self.logger.error(
+                        raise BadfishException(
                             "Manager's Members array is either empty or missing"
                         )
-                        raise BadfishException
 
     async def get_power_state(self):
         _uri = "%s%s" % (self.host_uri, self.system_resource)
@@ -509,8 +494,7 @@ class Badfish:
             return "Down"
 
         if not data.get("PowerState"):
-            self.logger.debug("Power state not found. Try to racreset.")
-            raise BadfishException
+            raise BadfishException("Power state not found. Try to racreset.")
         else:
             self.logger.debug("Current server power state is: %s." % data["PowerState"])
 
@@ -518,8 +502,7 @@ class Badfish:
 
     async def set_power_state(self, state):
         if state.lower() not in ["on", "off"]:
-            self.logger.error("Power state not valid. 'on' or 'off' only accepted.")
-            raise BadfishException
+            raise BadfishException("Power state not valid. 'on' or 'off' only accepted.")
 
         _uri = "%s%s" % (self.host_uri, self.system_resource)
         self.logger.debug("url: %s" % _uri)
@@ -533,12 +516,10 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         else:
-            self.logger.debug("Couldn't get power state.")
-            raise BadfishException
+            raise BadfishException("Couldn't get power state.")
 
         if not data.get("PowerState"):
-            self.logger.debug("Power state not found. Try to racreset.")
-            raise BadfishException
+            raise BadfishException("Power state not found. Try to racreset.")
         else:
             self.logger.debug("Current server power state is: %s." % data["PowerState"])
 
@@ -553,16 +534,13 @@ class Badfish:
         if interfaces_path:
             host_types = await self.get_host_types_from_yaml(interfaces_path)
             if host_type.lower() not in host_types:
-                self.logger.error(f"Expected values for -t argument are: {host_types}")
-                raise BadfishException
+                raise BadfishException(f"Expected values for -t argument are: {host_types}")
             if not os.path.exists(interfaces_path):
-                self.logger.error("No such file or directory: %s." % interfaces_path)
-                raise BadfishException
+                raise BadfishException("No such file or directory: %s." % interfaces_path)
         else:
-            self.logger.error(
+            raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
             )
-            raise BadfishException
 
         _type = await self.get_host_type(interfaces_path)
         if (_type and _type.lower() != host_type.lower()) or not _type:
@@ -682,8 +660,8 @@ class Badfish:
 
     async def delete_job_queue_dell(self, force):
         _url = (
-                "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
-                % self.root_uri
+            "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
+            % self.root_uri
         )
         job_id = "JID_CLEARALL"
         if force:
@@ -699,10 +677,9 @@ class Badfish:
             if data.get("error"):
                 if data["error"].get("@Message.ExtendedInfo"):
                     self.logger.debug(data["error"].get("@Message.ExtendedInfo"))
-            self.logger.error(
+            raise BadfishException(
                 "Job queue not cleared, there was something wrong with your request."
             )
-            raise BadfishException
 
     async def delete_job_queue_force(self):
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
@@ -712,9 +689,9 @@ class Badfish:
             _response = await self.delete_request(url, _headers)
             if _response.status in [200, 204]:
                 self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
-        except BadfishException:
-            self.logger.warning("There was something wrong clearing the job queue.")
-            raise
+        except BadfishException as ex:
+            self.logger.debug(ex)
+            raise BadfishException("There was something wrong clearing the job queue.")
         return _response
 
     async def clear_job_list(self, _job_queue):
@@ -732,10 +709,9 @@ class Badfish:
         if not failed:
             self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
-            self.logger.error(
+            raise BadfishException(
                 "Job queue not cleared, there was something wrong with your request."
             )
-            raise BadfishException
 
     async def clear_job_queue(self, force=False):
         _job_queue = await self.get_job_queue()
@@ -816,7 +792,7 @@ class Badfish:
             self.logger.info(f" Message = {data[u'Message']}")
             self.logger.info(f" PercentComplete = {str(data[u'PercentComplete'])}")
         else:
-            self.logger.error(f"Command failed to check job status")
+            self.logger.error("Command failed to check job status")
             return False
 
     async def check_job_status(self, job_id):
@@ -935,10 +911,9 @@ class Badfish:
             )
         else:
             data = await _response.text("utf-8", "ignore")
-            self.logger.error(
+            raise BadfishException(
                 "Status code %s returned, error is: \n%s." % (status_code, data)
             )
-            raise BadfishException
 
         self.logger.info(
             "iDRAC will now reset and be back online within a few minutes."
@@ -965,10 +940,9 @@ class Badfish:
             )
         else:
             data = await _response.text("utf-8", "ignore")
-            self.logger.error(
+            raise BadfishException(
                 "Status code %s returned, error is: \n%s." % (status_code, data)
             )
-            raise BadfishException
 
         self.logger.info("BIOS will now reset and be back online within a few minutes.")
         return True
@@ -980,23 +954,20 @@ class Badfish:
             await self.send_one_time_boot(device)
             await self.create_bios_config_job(self.bios_uri)
         else:
-            raise BadfishException
+            return False
         return True
 
     async def boot_to_type(self, host_type, _interfaces_path):
         if _interfaces_path:
             if not os.path.exists(_interfaces_path):
-                self.logger.error("No such file or directory: %s." % _interfaces_path)
-                raise BadfishException
+                raise BadfishException("No such file or directory: %s." % _interfaces_path)
         else:
-            self.logger.error(
+            raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
             )
-            raise BadfishException
         host_types = await self.get_host_types_from_yaml(_interfaces_path)
         if host_type.lower() not in host_types:
-            self.logger.error(f"Expected values for -t argument are: {host_types}")
-            raise BadfishException
+            raise BadfishException(f"Expected values for -t argument are: {host_types}")
 
         device = await self.get_host_type_boot_device(host_type, _interfaces_path)
 
@@ -1015,8 +986,7 @@ class Badfish:
         if device:
             await self.boot_to(device)
         else:
-            self.logger.error("MAC Address does not match any of the existing")
-            raise BadfishException
+            raise BadfishException("MAC Address does not match any of the existing")
 
     async def send_one_time_boot(self, device):
         _payload = {
@@ -1151,13 +1121,11 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Not able to access Firmware inventory.")
-            raise BadfishException
+            raise BadfishException("Not able to access Firmware inventory.")
         installed_devices = []
         if "error" in data:
             self.logger.debug(data["error"])
-            self.logger.error("Not able to access Firmware inventory.")
-            raise BadfishException
+            raise BadfishException("Not able to access Firmware inventory.")
         for device in data["Members"]:
             a = device["@odata.id"]
             a = a.replace("/redfish/v1/UpdateService/FirmwareInventory/", "")
@@ -1184,10 +1152,9 @@ class Badfish:
         if _interfaces_path:
             interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
         else:
-            self.logger.error(
+            raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
             )
-            raise BadfishException
 
         return interfaces[0]
 
@@ -1199,8 +1166,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Not able to access Firmware inventory.")
-            raise BadfishException
+            raise BadfishException("Not able to access Firmware inventory.")
 
         vm_endpoint = data.get("VirtualMedia")
         if vm_endpoint:
@@ -1221,10 +1187,9 @@ class Badfish:
                                 return vmc.get("@odata.id")
 
                 except ValueError:
-                    self.logger.error(
+                    raise BadfishException(
                         "Not able to check for supported virtual media unmount"
                     )
-                    raise BadfishException
 
         return None
 
@@ -1236,8 +1201,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            self.logger.error("Not able to access Firmware inventory.")
-            raise BadfishException
+            raise BadfishException("Not able to access Firmware inventory.")
 
         vm_endpoint = data.get("VirtualMedia")
         vms = []
@@ -1258,14 +1222,11 @@ class Badfish:
                         return vms
 
                 except ValueError:
-                    self.logger.error("Not able to access Firmware inventory.")
-                    raise BadfishException
+                    raise BadfishException("Not able to access Firmware inventory.")
             else:
-                self.logger.error("No VirtualMedia endpoint found")
-                raise BadfishException
+                raise BadfishException("No VirtualMedia endpoint found")
         else:
-            self.logger.error("No VirtualMedia endpoint found")
-            raise BadfishException
+            raise BadfishException("No VirtualMedia endpoint found")
 
         return vms
 
@@ -1285,10 +1246,9 @@ class Badfish:
                     f"ID: {_id} - Name: {name} - ImageName: {image_name} - Inserted: {inserted}"
                 )
             except ValueError:
-                self.logger.error(
+                raise BadfishException(
                     "There was something wrong getting values for VirtualMedia"
                 )
-                raise BadfishException
 
         return True
 
@@ -1307,15 +1267,13 @@ class Badfish:
             if disc_response.status == 200:
                 self.logger.info("Successfully unmounted all VirtualMedia")
             else:
-                self.logger.error(
+                raise BadfishException(
                     "There was something wrong unmounting the VirtualMedia"
                 )
-                raise BadfishException
         except ValueError:
-            self.logger.error(
+            raise BadfishException(
                 "There was something wrong getting values for VirtualMedia"
             )
-            raise BadfishException
 
         return True
 
@@ -1393,8 +1351,7 @@ class Badfish:
                     data.update({interface: values})
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return data
 
@@ -1403,8 +1360,7 @@ class Badfish:
         _response = await self.get_request(_url)
 
         if _response.status == 404:
-            self.logger.error("Server does not support this functionality")
-            raise BadfishException
+            raise BadfishException("Server does not support this functionality")
 
         try:
             raw = await _response.text("utf-8", "ignore")
@@ -1440,8 +1396,7 @@ class Badfish:
                 data.update({int_name: values})
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return data
 
@@ -1490,8 +1445,7 @@ class Badfish:
             proc_data = data.get("ProcessorSummary")
 
             if not proc_data:
-                self.logger.error("Server does not support this functionality")
-                raise BadfishException
+                raise BadfishException("Server does not support this functionality")
 
             fields = [
                 "Count",
@@ -1506,8 +1460,7 @@ class Badfish:
                     values[field] = value
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return values
 
@@ -1517,8 +1470,7 @@ class Badfish:
         _response = await self.get_request(_url)
 
         if _response.status == 404:
-            self.logger.error("Server does not support this functionality")
-            raise BadfishException
+            raise BadfishException("Server does not support this functionality")
 
         try:
             raw = await _response.text("utf-8", "ignore")
@@ -1557,8 +1509,7 @@ class Badfish:
                 proc_details.update({proc_name: values})
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return proc_details
 
@@ -1573,8 +1524,7 @@ class Badfish:
             proc_data = data.get("MemorySummary")
 
             if not proc_data:
-                self.logger.error("Server does not support this functionality")
-                raise BadfishException
+                raise BadfishException("Server does not support this functionality")
 
             fields = [
                 "MemoryMirroring",
@@ -1588,8 +1538,7 @@ class Badfish:
                     values[field] = value
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return values
 
@@ -1599,8 +1548,7 @@ class Badfish:
         _response = await self.get_request(_url)
 
         if _response.status == 404:
-            self.logger.error("Server does not support this functionality")
-            raise BadfishException
+            raise BadfishException("Server does not support this functionality")
 
         try:
             raw = await _response.text("utf-8", "ignore")
@@ -1636,8 +1584,7 @@ class Badfish:
                 mem_details.update({mem_name: values})
 
         except (ValueError, AttributeError):
-            self.logger.error("There was something wrong getting network interfaces")
-            raise BadfishException
+            raise BadfishException("There was something wrong getting network interfaces")
 
         return mem_details
 
@@ -1832,8 +1779,7 @@ async def execute_badfish(_host, _args, logger):
             await badfish.set_next_boot_pxe()
 
     except BadfishException as ex:
-        logger.debug(ex)
-        logger.error("There was something wrong executing Badfish")
+        logger.error(ex)
         result = False
 
     if _args["host_list"]:
