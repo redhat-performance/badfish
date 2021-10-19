@@ -1,7 +1,6 @@
 
 # We will store Dell racadm interface descriptions to server mappings here.
-# This is specific to our infrastructure so your needs will most undoubtedly
-# vary.
+# This is specific to our infrastructure so your needs will most undoubtedly vary.
 #
 # Also see /opt/quads/quads/config.py SUPPORTED list if adding system types.
 #
