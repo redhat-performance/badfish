@@ -3,12 +3,13 @@ from tests.config import (
     INIT_RESP,
     BLANK_RESP,
     JOB_OK_RESP,
+    TASK_OK_RESP,
     RESET_TYPE_RESP,
-    STATE_ON_RESP,
     BIOS_PASS_SET_GOOD,
     BIOS_PASS_RM_GOOD,
     BIOS_PASS_RM_MISS_ARG,
     BIOS_PASS_SET_MISS_ARG,
+    STATE_OFF_RESP,
 )
 from tests.test_base import TestBase
 
@@ -20,9 +21,9 @@ class TestSetBiosPass(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_set_bios_pass_ok(self, mock_get, mock_post):
         responses_get = [
-            BLANK_RESP,
             RESET_TYPE_RESP,
-            STATE_ON_RESP,
+            STATE_OFF_RESP,
+            TASK_OK_RESP,
         ]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
@@ -50,9 +51,9 @@ class TestRemoveBiosPass(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_rm_bios_pass_ok(self, mock_get, mock_post):
         responses_get = [
-            BLANK_RESP,
             RESET_TYPE_RESP,
-            STATE_ON_RESP,
+            STATE_OFF_RESP,
+            TASK_OK_RESP,
         ]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
