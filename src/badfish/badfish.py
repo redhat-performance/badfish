@@ -609,7 +609,7 @@ class Badfish:
                 break
 
         if _status_code == 200:
-            self.logger.info("PATCH command passed to update boot order.")
+            self.logger.debug("PATCH command passed to update boot order.")
         else:
             self.logger.error("There was something wrong with your request.")
 
@@ -749,7 +749,7 @@ class Badfish:
 
         status_code = _response.status
         if status_code in expected:
-            self.logger.info("POST command passed to create target config job.")
+            self.logger.debug("POST command passed to create target config job.")
         else:
             self.logger.error(
                 "POST command failed to create BIOS config job, status code is %s."
@@ -1039,42 +1039,26 @@ class Badfish:
                 await self.error_handler(_response)
 
     async def check_boot(self, _interfaces_path):
+        if not self.boot_devices:
+            await self.get_boot_devices()
+
         if _interfaces_path:
-
             _host_type = await self.get_host_type(_interfaces_path)
-
             if _host_type:
                 self.logger.warning("Current boot order is set to: %s." % _host_type)
+                return True
             else:
-                await self.get_boot_devices()
-
                 self.logger.warning(
                     "Current boot order does not match any of the given."
                 )
                 self.logger.info("Current boot order:")
-                for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                    if device["Enabled"]:
-                        self.logger.info(
-                            "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                        )
-                    else:
-                        self.logger.info(
-                            "%s: %s (DISABLED)"
-                            % (int(device["Index"]) + 1, device["Name"])
-                        )
-
         else:
-            await self.get_boot_devices()
             self.logger.info("Current boot order:")
-            for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                if device["Enabled"]:
-                    self.logger.info(
-                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                    )
-                else:
-                    self.logger.info(
-                        "%s: %s (DISABLED)" % (int(device["Index"]) + 1, device["Name"])
-                    )
+        for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
+            enabled = "" if device["Enabled"] else " (DISABLED)"
+            self.logger.info(
+                "%s: %s%s" % (int(device["Index"]) + 1, device["Name"], enabled)
+            )
         return True
 
     async def check_device(self, device):
@@ -1157,6 +1141,31 @@ class Badfish:
             )
 
         return interfaces[0]
+
+    async def toggle_boot_device(self, device):
+        if not self.boot_devices:
+            await self.get_boot_devices()
+
+        if device not in [boot_device["Name"] for boot_device in self.boot_devices]:
+            self.logger.warning("Accepted device names:")
+            for device in self.boot_devices:
+                self.logger.warning(f"{device['Name']}")
+            raise BadfishException("Boot device name not found")
+
+        new_boot_seq = self.boot_devices.copy()
+        state = ""
+        for boot_device in new_boot_seq:
+            if boot_device["Name"] == device:
+                boot_device["Enabled"] = not boot_device["Enabled"]
+                state = "enabled" if boot_device["Enabled"] else "disabled"
+
+        await self.patch_boot_seq(new_boot_seq)
+        if state:
+            self.logger.info(f"{device} has now been {state}")
+
+        await self.create_bios_config_job(self.bios_uri)
+        await self.reboot_server(graceful=False)
+        return True
 
     async def get_virtual_media_config_uri(self):
         _url = "%s%s" % (self.host_uri, self.manager_resource)
@@ -1687,6 +1696,7 @@ async def execute_badfish(_host, _args, logger):
     rac_reset = _args["racreset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
+    toggle_boot_device = _args["toggle_boot_device"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
     check_job = _args["check_job"]
@@ -1727,6 +1737,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.boot_to_mac(boot_to_mac)
         elif check_boot:
             await badfish.check_boot(interfaces_path)
+        elif toggle_boot_device:
+            await badfish.toggle_boot_device(toggle_boot_device)
         elif firmware_inventory:
             await badfish.get_firmware_inventory()
         elif clear_jobs:
@@ -1853,6 +1865,11 @@ def main(argv=None):
         "--check-boot",
         help="Flag for checking the host boot order",
         action="store_true",
+    )
+    parser.add_argument(
+        "--toggle-boot-device",
+        help="Change the enabled status of a boot device",
+        default="",
     )
     parser.add_argument(
         "--firmware-inventory", help="Get firmware inventory", action="store_true"
