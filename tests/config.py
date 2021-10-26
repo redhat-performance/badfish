@@ -71,10 +71,23 @@ ERROR_DEV_NO_MATCH = (
     "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
     % (BAD_DEVICE_NAME, MOCK_HOST)
 )
+TOGGLE_DEV_OK = (
+    "- INFO     - %s has now been disabled\n"
+    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+    % DEVICE_NIC_2["name"]
+)
+TOGGLE_DEV_NO_MATCH = (
+    "- WARNING  - Accepted device names:\n"
+    "- WARNING  - NIC.Integrated.1-2-1\n"
+    "- WARNING  - HardDisk.List.1-1\n"
+    "- WARNING  - NIC.Slot.2-1-1\n"
+    "- ERROR    - Boot device name not found\n"
+)
 RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
-    "- INFO     - POST command passed to create target config job.\n"
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
@@ -106,8 +119,6 @@ RESPONSE_RESET = (
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- INFO     - PATCH command passed to update boot order.\n"
-    "- INFO     - POST command passed to create target config job.\n"
     "- INFO     - Command passed to ForceOff server, code return is 200.\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
@@ -380,7 +391,6 @@ VMEDIA_UNMOUNT_UNSUPPORTED = (
 )
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
-- INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID = {JOB_ID}
@@ -393,7 +403,6 @@ BIOS_PASS_SET_MISS_ARG = """\
 """
 BIOS_PASS_RM_GOOD = """\
 - INFO     - Command passed to set BIOS password.
-- INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID = JID_498218641680
