@@ -43,6 +43,9 @@
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Get SRIOV mode](#get-sriov-mode)
          * [Set SRIOV mode](#set-sriov-mode)
+         * [Get BIOS attributes](#get-bios-attributes)
+         * [Get specific BIOS attribute](#get-specific-bios-attribute)
+         * [Set BIOS attribute](#set-bios-attribute)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -367,6 +370,26 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 ```
 NOTE:
   * This is only supported on DELL devices.
+
+### Get BIOS attributes
+To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute
+```
+
+### Get specific BIOS attribute
+In case you would like to get a more detailed view on the parameters for a BIOS attribute you can run ```--get-bios-attribute``` including the specific name of the attribute via ```--attribute```.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute --attribute ProcC1E
+```
+
+### Set BIOS attribute
+To change the value of a bios attribute you can use ```--set-bios-attribute``` passing both ```--attribute``` and ```--value```.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute ProcC1E --value Enabled
+```
+NOTE:
+  * You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.

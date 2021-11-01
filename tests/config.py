@@ -413,3 +413,89 @@ BIOS_PASS_RM_GOOD = """\
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
+ATTRIBUTE_OK = "ProcC1E"
+ATTRIBUTE_BAD = "NotThere"
+ATTR_VALUE_OK = "Enabled"
+ATTR_VALUE_BAD = "NotAllowed"
+ATTR_VALUE_DIS = "Disabled"
+
+BIOS_RESPONSE_OK = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_OK)
+BIOS_RESPONSE_DIS = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_DIS)
+BIOS_REGISTRY_BASE = '{"RegistryEntries": {"Attributes": %s}}'
+BIOS_REGISTRY_1 = {
+            "AttributeName": "SystemModelName",
+            "CurrentValue": "None",
+            "DisplayName": "System Model Name",
+            "DisplayOrder": 200,
+            "HelpText": "Indicates the product name of the system.",
+            "Hidden": "False",
+            "Immutable": "True",
+            "MaxLength": 40,
+            "MenuPath": "./SysInformationRef",
+            "MinLength": 0,
+            "ReadOnly": "True",
+            "ResetRequired": "True",
+            "Type": "String",
+            "ValueExpression": "None",
+            "WriteOnly": "False"
+            }
+BIOS_REGISTRY_2 = {
+    "AttributeName": "ProcC1E",
+    "CurrentValue": "None",
+    "DisplayName": "C1E",
+    "DisplayOrder": 9604,
+    "HelpText": "When set to Enabled, the processor is allowed to switch to minimum performance state when idle.",
+    "Hidden": "False",
+    "Immutable": "False",
+    "MenuPath": "./SysProfileSettingsRef",
+    "ReadOnly": "False",
+    "ResetRequired": "True",
+    "Type": "Enumeration",
+    "Value": [
+        {
+            "ValueDisplayName": "Enabled",
+            "ValueName": "Enabled"
+        }, {
+            "ValueDisplayName": "Disabled",
+            "ValueName": "Disabled"
+        }
+    ],
+    "WarningText": "None",
+    "WriteOnly": "False"
+}
+BIOS_REGISTRY_OK = BIOS_REGISTRY_BASE % str([BIOS_REGISTRY_1, BIOS_REGISTRY_2])
+BIOS_SET_OK = """\
+- INFO     - Command passed to set BIOS attribute pending values.
+- INFO     - Command passed to GracefulRestart server, code return is 200.
+- INFO     - Polling for host state: Not Down
+- INFO     - Command passed to On server, code return is 200.
+"""
+BIOS_SET_BAD_VALUE = """\
+- WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
+- ERROR    - Value not accepted
+""" % ATTRIBUTE_OK
+BIOS_SET_BAD_ATTR = """\
+- WARNING  - Could not retrieve Bios Attributes.
+- ERROR    - Attribute not found. Please check attribute name.
+"""
+BIOS_GET_ALL_OK = f"""- INFO     - {ATTRIBUTE_OK}: {ATTR_VALUE_OK}\n"""
+BIOS_GET_ONE_OK = """\
+- INFO     - AttributeName: ProcC1E
+- INFO     - CurrentValue: Enabled
+- INFO     - DisplayName: C1E
+- INFO     - DisplayOrder: 9604
+- INFO     - HelpText: When set to Enabled, the processor is allowed to switch to minimum performance state when idle.
+- INFO     - Hidden: False
+- INFO     - Immutable: False
+- INFO     - MenuPath: ./SysProfileSettingsRef
+- INFO     - ReadOnly: False
+- INFO     - ResetRequired: True
+- INFO     - Type: Enumeration
+- INFO     - Value: [{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}, {'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}]
+- INFO     - WarningText: None
+- INFO     - WriteOnly: False
+"""
+BIOS_GET_ONE_BAD = """\
+- WARNING  - Could not retrieve Bios Attributes.
+- ERROR    - Unable to locate the Bios attribute: %s
+""" % ATTRIBUTE_BAD
