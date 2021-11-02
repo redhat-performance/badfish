@@ -1,3 +1,4 @@
+import base64
 import os
 
 MOCK_HOST = "f01-h01-000-r630.host.io"
@@ -344,6 +345,9 @@ RESPONSE_LS_PROCESSORS = (
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
+SCREENSHOT_64 = base64.b64encode(bytes('ultimate_screenshot', 'utf-8'))
+SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
+SCREENSHOT_NAME = 'screenshot_now.png'
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -499,3 +503,6 @@ BIOS_GET_ONE_BAD = """\
 - WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - Unable to locate the Bios attribute: %s
 """ % ATTRIBUTE_BAD
+SCREENSHOT_OK = """\
+- INFO     - Image saved: %s
+""" % SCREENSHOT_NAME

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import base64
 import functools
 import aiohttp
 import json
@@ -7,6 +8,7 @@ import argparse
 import os
 import re
 import sys
+import time
 import warnings
 import yaml
 
@@ -97,6 +99,8 @@ class Badfish:
         detail_message = data
         if "error" in data:
             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+            resolution = str(data["error"]["@Message.ExtendedInfo"][0]["Resolution"])
+            self.logger.debug(resolution)
         raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
@@ -1747,6 +1751,36 @@ class Badfish:
             return False
         await self.change_bios_password(old_password, "")
 
+    async def take_screenshot(self):
+        _uri = self.host_uri+self.redfish_uri+'/Dell'+self.manager_resource[11:]
+        _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
+        _headers = {'content-type': 'application/json'}
+        _payload = {'FileType': 'ServerScreenShot'}
+        _response = await self.post_request(_url, _payload, _headers)
+
+        status_code = _response.status
+        if status_code in [200, 202]:
+            self.logger.debug("POST command passed to get server screenshot.")
+        else:
+            self.logger.error(
+                "POST command failed to get the server screenshot."
+            )
+
+            await self.error_handler(_response)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Error reading response from host.")
+
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = "screenshot_%s.png" % timestamp
+        with open(filename, "wb") as fh:
+            fh.write(base64.decodebytes(bytes(data['ServerScreenShotFile'], 'utf-8')))
+        self.logger.info(f"Image saved: {filename}")
+        return True
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1787,6 +1821,7 @@ async def execute_badfish(_host, _args, logger):
     remove_bios_password = _args["remove_bios_password"]
     new_password = _args["new_password"]
     old_password = _args["old_password"]
+    screenshot = _args["screenshot"]
     retries = int(_args["retries"])
 
     result = True
@@ -1869,6 +1904,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.set_bios_password(old_password, new_password)
         elif remove_bios_password:
             await badfish.remove_bios_password(old_password)
+        elif screenshot:
+            await badfish.take_screenshot()
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2044,6 +2081,11 @@ def main(argv=None):
         "--old-password",
         help="The old password value",
         default="",
+    )
+    parser.add_argument(
+        "--screenshot",
+        help="Take a screenshot of the system an store it in jpg format",
+        action="store_true",
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(
