@@ -1,3 +1,4 @@
+import base64
 import os
 
 MOCK_HOST = "f01-h01-000-r630.host.io"
@@ -71,10 +72,23 @@ ERROR_DEV_NO_MATCH = (
     "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
     % (BAD_DEVICE_NAME, MOCK_HOST)
 )
+TOGGLE_DEV_OK = (
+    "- INFO     - %s has now been disabled\n"
+    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+    % DEVICE_NIC_2["name"]
+)
+TOGGLE_DEV_NO_MATCH = (
+    "- WARNING  - Accepted device names:\n"
+    "- WARNING  - NIC.Integrated.1-2-1\n"
+    "- WARNING  - HardDisk.List.1-1\n"
+    "- WARNING  - NIC.Slot.2-1-1\n"
+    "- ERROR    - Boot device name not found\n"
+)
 RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
-    "- INFO     - POST command passed to create target config job.\n"
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
@@ -106,8 +120,6 @@ RESPONSE_RESET = (
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- INFO     - PATCH command passed to update boot order.\n"
-    "- INFO     - POST command passed to create target config job.\n"
     "- INFO     - Command passed to ForceOff server, code return is 200.\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
@@ -333,6 +345,9 @@ RESPONSE_LS_PROCESSORS = (
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
+SCREENSHOT_64 = base64.b64encode(bytes('ultimate_screenshot', 'utf-8'))
+SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
+SCREENSHOT_NAME = 'screenshot_now.png'
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -380,7 +395,6 @@ VMEDIA_UNMOUNT_UNSUPPORTED = (
 )
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
-- INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID = {JOB_ID}
@@ -393,7 +407,6 @@ BIOS_PASS_SET_MISS_ARG = """\
 """
 BIOS_PASS_RM_GOOD = """\
 - INFO     - Command passed to set BIOS password.
-- INFO     - POST command passed to create target config job.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID = JID_498218641680
@@ -404,3 +417,92 @@ BIOS_PASS_RM_GOOD = """\
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
+ATTRIBUTE_OK = "ProcC1E"
+ATTRIBUTE_BAD = "NotThere"
+ATTR_VALUE_OK = "Enabled"
+ATTR_VALUE_BAD = "NotAllowed"
+ATTR_VALUE_DIS = "Disabled"
+
+BIOS_RESPONSE_OK = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_OK)
+BIOS_RESPONSE_DIS = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_DIS)
+BIOS_REGISTRY_BASE = '{"RegistryEntries": {"Attributes": %s}}'
+BIOS_REGISTRY_1 = {
+            "AttributeName": "SystemModelName",
+            "CurrentValue": "None",
+            "DisplayName": "System Model Name",
+            "DisplayOrder": 200,
+            "HelpText": "Indicates the product name of the system.",
+            "Hidden": "False",
+            "Immutable": "True",
+            "MaxLength": 40,
+            "MenuPath": "./SysInformationRef",
+            "MinLength": 0,
+            "ReadOnly": "True",
+            "ResetRequired": "True",
+            "Type": "String",
+            "ValueExpression": "None",
+            "WriteOnly": "False"
+            }
+BIOS_REGISTRY_2 = {
+    "AttributeName": "ProcC1E",
+    "CurrentValue": "None",
+    "DisplayName": "C1E",
+    "DisplayOrder": 9604,
+    "HelpText": "When set to Enabled, the processor is allowed to switch to minimum performance state when idle.",
+    "Hidden": "False",
+    "Immutable": "False",
+    "MenuPath": "./SysProfileSettingsRef",
+    "ReadOnly": "False",
+    "ResetRequired": "True",
+    "Type": "Enumeration",
+    "Value": [
+        {
+            "ValueDisplayName": "Enabled",
+            "ValueName": "Enabled"
+        }, {
+            "ValueDisplayName": "Disabled",
+            "ValueName": "Disabled"
+        }
+    ],
+    "WarningText": "None",
+    "WriteOnly": "False"
+}
+BIOS_REGISTRY_OK = BIOS_REGISTRY_BASE % str([BIOS_REGISTRY_1, BIOS_REGISTRY_2])
+BIOS_SET_OK = """\
+- INFO     - Command passed to set BIOS attribute pending values.
+- INFO     - Command passed to GracefulRestart server, code return is 200.
+- INFO     - Polling for host state: Not Down
+- INFO     - Command passed to On server, code return is 200.
+"""
+BIOS_SET_BAD_VALUE = """\
+- WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
+- ERROR    - Value not accepted
+""" % ATTRIBUTE_OK
+BIOS_SET_BAD_ATTR = """\
+- WARNING  - Could not retrieve Bios Attributes.
+- ERROR    - Attribute not found. Please check attribute name.
+"""
+BIOS_GET_ALL_OK = f"""- INFO     - {ATTRIBUTE_OK}: {ATTR_VALUE_OK}\n"""
+BIOS_GET_ONE_OK = """\
+- INFO     - AttributeName: ProcC1E
+- INFO     - CurrentValue: Enabled
+- INFO     - DisplayName: C1E
+- INFO     - DisplayOrder: 9604
+- INFO     - HelpText: When set to Enabled, the processor is allowed to switch to minimum performance state when idle.
+- INFO     - Hidden: False
+- INFO     - Immutable: False
+- INFO     - MenuPath: ./SysProfileSettingsRef
+- INFO     - ReadOnly: False
+- INFO     - ResetRequired: True
+- INFO     - Type: Enumeration
+- INFO     - Value: [{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}, {'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}]
+- INFO     - WarningText: None
+- INFO     - WriteOnly: False
+"""
+BIOS_GET_ONE_BAD = """\
+- WARNING  - Could not retrieve Bios Attributes.
+- ERROR    - Unable to locate the Bios attribute: %s
+""" % ATTRIBUTE_BAD
+SCREENSHOT_OK = """\
+- INFO     - Image saved: %s
+""" % SCREENSHOT_NAME

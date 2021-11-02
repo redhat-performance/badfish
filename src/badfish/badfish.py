@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import base64
 import functools
 import aiohttp
 import json
@@ -7,6 +8,7 @@ import argparse
 import os
 import re
 import sys
+import time
 import warnings
 import yaml
 
@@ -69,7 +71,7 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
+                "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
         )
 
     @staticmethod
@@ -94,11 +96,12 @@ class Badfish:
         except ValueError:
             raise BadfishException("Error reading response from host.")
 
+        detail_message = data
         if "error" in data:
             detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-            self.logger.warning(detail_message)
-
-        raise BadfishException
+            resolution = str(data["error"]["@Message.ExtendedInfo"][0]["Resolution"])
+            self.logger.debug(resolution)
+        raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
     async def get_request(self, uri, _continue=False):
@@ -227,9 +230,9 @@ class Badfish:
         sriov_mode = await self.get_bios_attribute(attribute)
         return sriov_mode
 
-    async def get_bios_attribute(self, attribute):
-        self.logger.debug("Getting BIOS attribute.")
-        _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
+    async def get_bios_attributes_registry(self):
+        self.logger.debug("Getting BIOS attribute registry.")
+        _uri = "%s%s/Bios/BiosRegistry" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_uri)
 
         if _response.status == 404:
@@ -242,12 +245,80 @@ class Badfish:
         except ValueError:
             raise BadfishException("Could not retrieve Bios Attributes.")
 
+        return data
+
+    async def get_bios_attribute_registry(self, attribute):
+        data = await self.get_bios_attributes_registry()
+        attribute_value = await self.get_bios_attribute(attribute)
+        for entry in data['RegistryEntries']['Attributes']:
+            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+            if attribute.lower() in entries:
+                for values in entry.items():
+                    if values[0] == "CurrentValue":
+                        self.logger.info(f"{values[0]}: {attribute_value}")
+                    else:
+                        self.logger.info(f"{values[0]}: {values[1]}")
+                return True
+        raise BadfishException(f"Unable to locate the Bios attribute: {attribute}")
+
+    async def get_bios_attributes(self):
+        self.logger.debug("Getting BIOS attributes.")
+        _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_uri)
+
+        if _response.status == 404:
+            self.logger.error("Operation not supported by vendor.")
+            return False
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Could not retrieve Bios Attributes.")
+        return data
+
+    async def get_bios_attribute(self, attribute):
+        data = await self.get_bios_attributes()
         try:
             bios_attribute = data["Attributes"][attribute]
             return bios_attribute
         except KeyError:
             self.logger.warning("Could not retrieve Bios Attributes.")
             return None
+
+    async def set_bios_attribute(self, attribute, value):
+        data = await self.get_bios_attributes_registry()
+        accepted = False
+        for entry in data['RegistryEntries']['Attributes']:
+            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+            if attribute.lower() in entries:
+                for values in entry.items():
+                    if values[0] == "Value":
+                        accepted_values = [value["ValueName"] for value in values[1]]
+                        for accepted_value in accepted_values:
+                            if value.lower() == accepted_value.lower():
+                                value = accepted_value
+                                accepted = True
+                        if not accepted:
+                            self.logger.warning(f"List of accepted values for '{attribute}': {accepted_values}")
+                            raise BadfishException("Value not accepted")
+
+        _payload = {
+            "Attributes": {
+                attribute: value,
+            }
+        }
+
+        attribute_value = await self.get_bios_attribute(attribute)
+        if attribute_value:
+            if value.lower() == attribute_value.lower():
+                self.logger.warning("Attribute value is already in that state. IGNORING.")
+                return
+        else:
+            raise BadfishException("Attribute not found. Please check attribute name.")
+
+        await self.patch_bios(_payload, insist=False)
+        await self.reboot_server()
 
     async def get_boot_devices(self):
         if not self.boot_devices:
@@ -270,7 +341,8 @@ class Badfish:
                     for key in data["Attributes"].keys():
                         if "bootseq" in key.lower():
                             self.logger.debug("Boot sequence found: %s" % key)
-                    raise BadfishException("The boot mode does not match the boot sequence. Try again in a few minutes.")
+                    raise BadfishException(
+                        "The boot mode does not match the boot sequence. Try again in a few minutes.")
             else:
                 self.logger.debug(data)
                 raise BadfishException(
@@ -609,7 +681,7 @@ class Badfish:
                 break
 
         if _status_code == 200:
-            self.logger.info("PATCH command passed to update boot order.")
+            self.logger.debug("PATCH command passed to update boot order.")
         else:
             self.logger.error("There was something wrong with your request.")
 
@@ -660,8 +732,8 @@ class Badfish:
 
     async def delete_job_queue_dell(self, force):
         _url = (
-            "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
-            % self.root_uri
+                "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
+                % self.root_uri
         )
         job_id = "JID_CLEARALL"
         if force:
@@ -749,7 +821,7 @@ class Badfish:
 
         status_code = _response.status
         if status_code in expected:
-            self.logger.info("POST command passed to create target config job.")
+            self.logger.debug("POST command passed to create target config job.")
         else:
             self.logger.error(
                 "POST command failed to create BIOS config job, status code is %s."
@@ -1011,16 +1083,18 @@ class Badfish:
             return
 
         await self.patch_bios(_payload)
-        await self.create_bios_config_job(self.bios_uri)
+        await self.reboot_server()
 
-    async def patch_bios(self, payload):
+    async def patch_bios(self, payload, insist=True):
         _url = "%s%s" % (self.root_uri, self.bios_uri)
         _headers = {"content-type": "application/json"}
         _first_reset = False
+        payload_patch = {"@Redfish.SettingsApplyTime": {"ApplyTime": "OnReset"}}
+        payload_patch.update(payload)
         for i in range(self.retries):
-            _response = await self.patch_request(_url, payload, _headers)
+            _response = await self.patch_request(_url, payload_patch, _headers)
             status_code = _response.status
-            if status_code == 200:
+            if status_code in [200, 202]:
                 self.logger.info("Command passed to set BIOS attribute pending values.")
                 break
             else:
@@ -1028,7 +1102,7 @@ class Badfish:
                 if status_code == 503 and i - 1 != self.retries:
                     self.logger.info("Retrying to send one time boot.")
                     continue
-                elif status_code == 400:
+                elif status_code == 400 and insist:
                     await self.clear_job_queue()
                     if not _first_reset:
                         await self.reset_idrac()
@@ -1039,42 +1113,26 @@ class Badfish:
                 await self.error_handler(_response)
 
     async def check_boot(self, _interfaces_path):
+        if not self.boot_devices:
+            await self.get_boot_devices()
+
         if _interfaces_path:
-
             _host_type = await self.get_host_type(_interfaces_path)
-
             if _host_type:
                 self.logger.warning("Current boot order is set to: %s." % _host_type)
+                return True
             else:
-                await self.get_boot_devices()
-
                 self.logger.warning(
                     "Current boot order does not match any of the given."
                 )
                 self.logger.info("Current boot order:")
-                for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                    if device["Enabled"]:
-                        self.logger.info(
-                            "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                        )
-                    else:
-                        self.logger.info(
-                            "%s: %s (DISABLED)"
-                            % (int(device["Index"]) + 1, device["Name"])
-                        )
-
         else:
-            await self.get_boot_devices()
             self.logger.info("Current boot order:")
-            for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-                if device["Enabled"]:
-                    self.logger.info(
-                        "%s: %s" % (int(device["Index"]) + 1, device["Name"])
-                    )
-                else:
-                    self.logger.info(
-                        "%s: %s (DISABLED)" % (int(device["Index"]) + 1, device["Name"])
-                    )
+        for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
+            enabled = "" if device["Enabled"] else " (DISABLED)"
+            self.logger.info(
+                "%s: %s%s" % (int(device["Index"]) + 1, device["Name"], enabled)
+            )
         return True
 
     async def check_device(self, device):
@@ -1157,6 +1215,31 @@ class Badfish:
             )
 
         return interfaces[0]
+
+    async def toggle_boot_device(self, device):
+        if not self.boot_devices:
+            await self.get_boot_devices()
+
+        if device not in [boot_device["Name"] for boot_device in self.boot_devices]:
+            self.logger.warning("Accepted device names:")
+            for device in self.boot_devices:
+                self.logger.warning(f"{device['Name']}")
+            raise BadfishException("Boot device name not found")
+
+        new_boot_seq = self.boot_devices.copy()
+        state = ""
+        for boot_device in new_boot_seq:
+            if boot_device["Name"] == device:
+                boot_device["Enabled"] = not boot_device["Enabled"]
+                state = "enabled" if boot_device["Enabled"] else "disabled"
+
+        await self.patch_boot_seq(new_boot_seq)
+        if state:
+            self.logger.info(f"{device} has now been {state}")
+
+        await self.create_bios_config_job(self.bios_uri)
+        await self.reboot_server(graceful=False)
+        return True
 
     async def get_virtual_media_config_uri(self):
         _url = "%s%s" % (self.host_uri, self.manager_resource)
@@ -1668,6 +1751,36 @@ class Badfish:
             return False
         await self.change_bios_password(old_password, "")
 
+    async def take_screenshot(self):
+        _uri = self.host_uri+self.redfish_uri+'/Dell'+self.manager_resource[11:]
+        _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
+        _headers = {'content-type': 'application/json'}
+        _payload = {'FileType': 'ServerScreenShot'}
+        _response = await self.post_request(_url, _payload, _headers)
+
+        status_code = _response.status
+        if status_code in [200, 202]:
+            self.logger.debug("POST command passed to get server screenshot.")
+        else:
+            self.logger.error(
+                "POST command failed to get the server screenshot."
+            )
+
+            await self.error_handler(_response)
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Error reading response from host.")
+
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = "screenshot_%s.png" % timestamp
+        with open(filename, "wb") as fh:
+            fh.write(base64.decodebytes(bytes(data['ServerScreenShotFile'], 'utf-8')))
+        self.logger.info(f"Image saved: {filename}")
+        return True
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -1687,6 +1800,7 @@ async def execute_badfish(_host, _args, logger):
     rac_reset = _args["racreset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
+    toggle_boot_device = _args["toggle_boot_device"]
     firmware_inventory = _args["firmware_inventory"]
     clear_jobs = _args["clear_jobs"]
     check_job = _args["check_job"]
@@ -1699,10 +1813,15 @@ async def execute_badfish(_host, _args, logger):
     get_sriov = _args["get_sriov"]
     enable_sriov = _args["enable_sriov"]
     disable_sriov = _args["disable_sriov"]
+    set_bios_attribute = _args["set_bios_attribute"]
+    get_bios_attribute = _args["get_bios_attribute"]
+    attribute = _args["attribute"]
+    value = _args["value"]
     set_bios_password = _args["set_bios_password"]
     remove_bios_password = _args["remove_bios_password"]
     new_password = _args["new_password"]
     old_password = _args["old_password"]
+    screenshot = _args["screenshot"]
     retries = int(_args["retries"])
 
     result = True
@@ -1727,6 +1846,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.boot_to_mac(boot_to_mac)
         elif check_boot:
             await badfish.check_boot(interfaces_path)
+        elif toggle_boot_device:
+            await badfish.toggle_boot_device(toggle_boot_device)
         elif firmware_inventory:
             await badfish.get_firmware_inventory()
         elif clear_jobs:
@@ -1770,10 +1891,21 @@ async def execute_badfish(_host, _args, logger):
             await badfish.send_sriov_mode(True)
         elif disable_sriov:
             await badfish.send_sriov_mode(False)
+        elif get_bios_attribute:
+            if attribute:
+                await badfish.get_bios_attribute_registry(attribute)
+            else:
+                data = await badfish.get_bios_attributes()
+                for attribute, value in data["Attributes"].items():
+                    logger.info(f"{attribute}: {value}")
+        elif set_bios_attribute:
+            await badfish.set_bios_attribute(attribute, value)
         elif set_bios_password:
             await badfish.set_bios_password(old_password, new_password)
         elif remove_bios_password:
             await badfish.remove_bios_password(old_password)
+        elif screenshot:
+            await badfish.take_screenshot()
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -1790,7 +1922,9 @@ async def execute_badfish(_host, _args, logger):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Tool for managing server hardware via the Redfish API."
+        prog='badfish',
+        description="Tool for managing server hardware via the Redfish API.",
+        allow_abbrev=False
     )
     parser.add_argument("-H", "--host", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username", required=True)
@@ -1855,6 +1989,11 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
+        "--toggle-boot-device",
+        help="Change the enabled status of a boot device",
+        default="",
+    )
+    parser.add_argument(
         "--firmware-inventory", help="Get firmware inventory", action="store_true"
     )
     parser.add_argument(
@@ -1904,6 +2043,26 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
+        "--get-bios-attribute",
+        help="Get a BIOS attribute value",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--set-bios-attribute",
+        help="Set a BIOS attribute value",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--attribute",
+        help="BIOS attribute name",
+        default="",
+    )
+    parser.add_argument(
+        "--value",
+        help="BIOS attribute value",
+        default="",
+    )
+    parser.add_argument(
         "--set-bios-password",
         help="Set the BIOS password",
         action="store_true",
@@ -1915,13 +2074,18 @@ def main(argv=None):
     )
     parser.add_argument(
         "--new-password",
-        help="Removes BIOS password",
+        help="The new password value",
         default="",
     )
     parser.add_argument(
         "--old-password",
-        help="Removes BIOS password",
+        help="The old password value",
         default="",
+    )
+    parser.add_argument(
+        "--screenshot",
+        help="Take a screenshot of the system an store it in jpg format",
+        action="store_true",
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(

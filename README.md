@@ -43,6 +43,10 @@
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Get SRIOV mode](#get-sriov-mode)
          * [Set SRIOV mode](#set-sriov-mode)
+         * [Get BIOS attributes](#get-bios-attributes)
+         * [Get specific BIOS attribute](#get-specific-bios-attribute)
+         * [Set BIOS attribute](#set-bios-attribute)
+         * [Get server screenshot](#get-server-screenshot)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -262,6 +266,11 @@ To check the current boot order of a specific host you can use the ```--check-bo
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
 ```
 
+### Toggle boot device
+If you would like to enable or disable a boot device you can use ```--toggle-boot-device``` argument which takes the device name as input and will toggle the `Enabled` state from True to False and vice versa.
+```
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --toggle-boot-device NIC.Integrated.1-3-1```
+
 ### Variable number of retries
 At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.
 ```
@@ -362,6 +371,32 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 ```
 NOTE:
   * This is only supported on DELL devices.
+
+### Get BIOS attributes
+To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute
+```
+
+### Get specific BIOS attribute
+In case you would like to get a more detailed view on the parameters for a BIOS attribute you can run ```--get-bios-attribute``` including the specific name of the attribute via ```--attribute```.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute --attribute ProcC1E
+```
+
+### Set BIOS attribute
+To change the value of a bios attribute you can use ```--set-bios-attribute``` passing both ```--attribute``` and ```--value```.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute ProcC1E --value Enabled
+```
+NOTE:
+* You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
+
+### Get server screenshot
+If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
+```bash
+./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --screenshot
+```
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
