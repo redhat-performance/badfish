@@ -14,7 +14,7 @@ from tests.test_base import TestBase
 
 
 class TestPowerOn(TestBase):
-    option_arg = "--power-on"
+    args = ["--power-on"]
 
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
@@ -23,7 +23,6 @@ class TestPowerOn(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 204, ["ok"])
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_ON_OK
 
@@ -34,20 +33,18 @@ class TestPowerOn(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 409, ["ok"])
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_ON_NOT
 
 
 class TestPowerOff(TestBase):
-    option_arg = "--power-off"
+    args = ["--power-off"]
 
     @patch("aiohttp.ClientSession.get")
     def test_power_off_no_state(self, mock_get):
         responses = INIT_RESP
         self.set_mock_response(mock_get, [200, 200, 200, 200, 400], responses)
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_OFF_NO_STATE
 
@@ -58,7 +55,6 @@ class TestPowerOff(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 409, ["ok"])
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_OFF_ALREADY
 
@@ -67,6 +63,5 @@ class TestPowerOff(TestBase):
         responses = INIT_RESP + [JOB_OK_RESP]
         self.set_mock_response(mock_get, 200, responses)
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
-        self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_OFF_MISS_STATE
