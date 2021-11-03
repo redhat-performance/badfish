@@ -110,6 +110,16 @@ RESPONSE_REBOOT_ONLY_SUCCESS = (
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
 
+# test_power
+RESPONSE_POWER_ON_OK = '- INFO     - Command passed to On server, code return is 204.\n'
+RESPONSE_POWER_OFF_OK = '- INFO     - Command passed to ForceOff server, code return is 204.\n'
+RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
+RESPONSE_POWER_OFF_ALREADY = (
+    '- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n'
+)
+RESPONSE_POWER_OFF_MISS_STATE = '- ERROR    - Power state not found. Try to racreset.\n'
+RESPONSE_POWER_ON_NOT = '- WARNING  - Command failed to On server, host appears to be already in that state.\n'
+
 # test_reset_%s
 RESPONSE_RESET = (
     "- INFO     - Status code 204 returned for POST command to reset %s.\n"
