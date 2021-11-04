@@ -17,7 +17,7 @@ class TestJobQueue(TestBase):
         responses_add = [
             FIRMWARE_INVENTORY_RESP,
             FIRMWARE_INVENTORY_1_RESP,
-            FIRMWARE_INVENTORY_2_RESP
+            FIRMWARE_INVENTORY_2_RESP,
         ]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)

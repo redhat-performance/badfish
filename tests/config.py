@@ -93,12 +93,8 @@ RESPONSE_BOOT_TO = (
 RESPONSE_BOOT_TO_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
 )
-RESPONSE_BOOT_TO_BAD_FILE = (
-    "- ERROR    - No such file or directory: bad/bad/file.\n"
-)
-RESPONSE_BOOT_TO_NO_FILE = (
-    "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-)
+RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
+RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 RESPONSE_BOOT_TO_BAD_MAC = (
     "- ERROR    - MAC Address does not match any of the existing\n"
 )
@@ -111,20 +107,21 @@ RESPONSE_REBOOT_ONLY_SUCCESS = (
 )
 
 # test_power
-RESPONSE_POWER_ON_OK = '- INFO     - Command passed to On server, code return is 204.\n'
-RESPONSE_POWER_OFF_OK = '- INFO     - Command passed to ForceOff server, code return is 204.\n'
-RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
-RESPONSE_POWER_OFF_ALREADY = (
-    '- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n'
+RESPONSE_POWER_ON_OK = "- INFO     - Command passed to On server, code return is 204.\n"
+RESPONSE_POWER_OFF_OK = (
+    "- INFO     - Command passed to ForceOff server, code return is 204.\n"
 )
-RESPONSE_POWER_OFF_MISS_STATE = '- ERROR    - Power state not found. Try to racreset.\n'
-RESPONSE_POWER_ON_NOT = '- WARNING  - Command failed to On server, host appears to be already in that state.\n'
+RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
+RESPONSE_POWER_OFF_ALREADY = "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
+RESPONSE_POWER_OFF_MISS_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
+RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears to be already in that state.\n"
 
 # test_reset_%s
 RESPONSE_RESET = (
     "- INFO     - Status code 204 returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
+RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nnot_ok.\n"
 
 # test_change_boot
 RESPONSE_CHANGE_BOOT = (
@@ -138,9 +135,7 @@ RESPONSE_CHANGE_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
 )
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
-RESPONSE_CHANGE_NO_INT = (
-    "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-)
+RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
 ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'
 SYS_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}]}'
@@ -208,13 +203,11 @@ RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
-DELLJOBSERVICE_UNSUPPORTED = "- WARNING  - iDRAC version installed does not support DellJobService\n"
-RESPONSE_CLEAR_JOBS_UNSUPPORTED = (
-    f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
+DELLJOBSERVICE_UNSUPPORTED = (
+    "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
-RESPONSE_CLEAR_JOBS_LIST = (
-    f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
-)
+RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
+RESPONSE_CLEAR_JOBS_LIST = f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
 
 FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
@@ -351,13 +344,15 @@ RESPONSE_LS_PROCESSORS = (
     "- INFO     -     TotalThreads: 40\n"
 )
 
-
 BLANK_RESP = '"OK"'
-TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
+TASK_OK_RESP = (
+    '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}'
+    % JOB_ID
+)
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
-SCREENSHOT_64 = base64.b64encode(bytes('ultimate_screenshot', 'utf-8'))
+SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
-SCREENSHOT_NAME = 'screenshot_now.png'
+SCREENSHOT_NAME = "screenshot_now.png"
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -403,14 +398,15 @@ VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
 VMEDIA_UNMOUNT_UNSUPPORTED = (
     "- WARNING  - OOB management does not support Virtual Media unmount\n"
 )
+
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID = {JOB_ID}
-- INFO     -  Name = Task
-- INFO     -  Message = Job completed successfully.
-- INFO     -  PercentComplete = 100
+- INFO     - Name = Task
+- INFO     - Message = Job completed successfully.
+- INFO     - PercentComplete = 100
 """
 BIOS_PASS_SET_MISS_ARG = """\
 - ERROR    - Missing argument: `--new-password`
@@ -419,14 +415,15 @@ BIOS_PASS_RM_GOOD = """\
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
-- INFO     - JobID = JID_498218641680
-- INFO     -  Name = Task
-- INFO     -  Message = Job completed successfully.
-- INFO     -  PercentComplete = 100
-"""
+- INFO     - JobID = %s
+- INFO     - Name = Task
+- INFO     - Message = Job completed successfully.
+- INFO     - PercentComplete = 100
+""" % JOB_ID
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
+
 ATTRIBUTE_OK = "ProcC1E"
 ATTRIBUTE_BAD = "NotThere"
 ATTR_VALUE_OK = "Enabled"
@@ -436,23 +433,24 @@ ATTR_VALUE_DIS = "Disabled"
 BIOS_RESPONSE_OK = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_OK)
 BIOS_RESPONSE_DIS = '{"Attributes":{"%s": "%s"}}' % (ATTRIBUTE_OK, ATTR_VALUE_DIS)
 BIOS_REGISTRY_BASE = '{"RegistryEntries": {"Attributes": %s}}'
+BIOS_RESPONSE_SRIOV = '{"Attributes":{"SriovGlobalEnable": "%s"}}'
 BIOS_REGISTRY_1 = {
-            "AttributeName": "SystemModelName",
-            "CurrentValue": "None",
-            "DisplayName": "System Model Name",
-            "DisplayOrder": 200,
-            "HelpText": "Indicates the product name of the system.",
-            "Hidden": "False",
-            "Immutable": "True",
-            "MaxLength": 40,
-            "MenuPath": "./SysInformationRef",
-            "MinLength": 0,
-            "ReadOnly": "True",
-            "ResetRequired": "True",
-            "Type": "String",
-            "ValueExpression": "None",
-            "WriteOnly": "False"
-            }
+    "AttributeName": "SystemModelName",
+    "CurrentValue": "None",
+    "DisplayName": "System Model Name",
+    "DisplayOrder": 200,
+    "HelpText": "Indicates the product name of the system.",
+    "Hidden": "False",
+    "Immutable": "True",
+    "MaxLength": 40,
+    "MenuPath": "./SysInformationRef",
+    "MinLength": 0,
+    "ReadOnly": "True",
+    "ResetRequired": "True",
+    "Type": "String",
+    "ValueExpression": "None",
+    "WriteOnly": "False",
+}
 BIOS_REGISTRY_2 = {
     "AttributeName": "ProcC1E",
     "CurrentValue": "None",
@@ -466,16 +464,11 @@ BIOS_REGISTRY_2 = {
     "ResetRequired": "True",
     "Type": "Enumeration",
     "Value": [
-        {
-            "ValueDisplayName": "Enabled",
-            "ValueName": "Enabled"
-        }, {
-            "ValueDisplayName": "Disabled",
-            "ValueName": "Disabled"
-        }
+        {"ValueDisplayName": "Enabled", "ValueName": "Enabled"},
+        {"ValueDisplayName": "Disabled", "ValueName": "Disabled"},
     ],
     "WarningText": "None",
-    "WriteOnly": "False"
+    "WriteOnly": "False",
 }
 BIOS_REGISTRY_OK = BIOS_REGISTRY_BASE % str([BIOS_REGISTRY_1, BIOS_REGISTRY_2])
 BIOS_SET_OK = """\
@@ -484,10 +477,13 @@ BIOS_SET_OK = """\
 - INFO     - Polling for host state: Not Down
 - INFO     - Command passed to On server, code return is 200.
 """
-BIOS_SET_BAD_VALUE = """\
+BIOS_SET_BAD_VALUE = (
+    """\
 - WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
 - ERROR    - Value not accepted
-""" % ATTRIBUTE_OK
+"""
+    % ATTRIBUTE_OK
+)
 BIOS_SET_BAD_ATTR = """\
 - WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - Attribute not found. Please check attribute name.
@@ -509,10 +505,20 @@ BIOS_GET_ONE_OK = """\
 - INFO     - WarningText: None
 - INFO     - WriteOnly: False
 """
-BIOS_GET_ONE_BAD = """\
+BIOS_GET_ONE_BAD = (
+    """\
 - WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - Unable to locate the Bios attribute: %s
-""" % ATTRIBUTE_BAD
-SCREENSHOT_OK = """\
+"""
+    % ATTRIBUTE_BAD
+)
+
+SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
+SRIOV_STATE = "- INFO     - Enabled\n"
+
+SCREENSHOT_OK = (
+    """\
 - INFO     - Image saved: %s
-""" % SCREENSHOT_NAME
+"""
+    % SCREENSHOT_NAME
+)

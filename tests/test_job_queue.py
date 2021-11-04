@@ -17,9 +17,7 @@ class TestJobQueue(TestBase):
 
     @patch("aiohttp.ClientSession.get")
     def test_ls_jobs(self, mock_get):
-        responses_add = [
-            JOB_OK_RESP
-        ]
+        responses_add = [JOB_OK_RESP]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         _, err = self.badfish_call()
@@ -27,9 +25,7 @@ class TestJobQueue(TestBase):
 
     @patch("aiohttp.ClientSession.get")
     def test_ls_jobs_empty(self, mock_get):
-        responses_add = [
-            BLANK_RESP
-        ]
+        responses_add = [BLANK_RESP]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         _, err = self.badfish_call()
@@ -77,7 +73,9 @@ class TestClearJobs(TestBase):
             BLANK_RESP,
         ]
         responses = INIT_RESP + responses_add
-        self.set_mock_response(mock_delete, [400, 400, 200], [BLANK_RESP, BLANK_RESP, BLANK_RESP])
+        self.set_mock_response(
+            mock_delete, [400, 400, 200], [BLANK_RESP, BLANK_RESP, BLANK_RESP]
+        )
         self.set_mock_response(mock_post, 200, BLANK_RESP)
         self.set_mock_response(mock_get, [200, 200, 200, 200, 400, 400, 400], responses)
         _, err = self.badfish_call()

@@ -27,9 +27,13 @@ class TestBase(AioHTTPTestCase):
             mock.return_value.__aenter__.return_value.status = status
         mock.return_value.__aenter__.return_value.read = CoroutineMock()
         if type(responses) == list:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock(side_effect=responses)
+            mock.return_value.__aenter__.return_value.text = CoroutineMock(
+                side_effect=responses
+            )
         else:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock(return_value=responses)
+            mock.return_value.__aenter__.return_value.text = CoroutineMock(
+                return_value=responses
+            )
 
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
@@ -41,7 +45,12 @@ class TestBase(AioHTTPTestCase):
         sys.stdout.close = lambda *args: None
         yield
 
-    def badfish_call(self, mock_host=config.MOCK_HOST, mock_user=config.MOCK_USER, mock_pass=config.MOCK_PASS):
+    def badfish_call(
+        self,
+        mock_host=config.MOCK_HOST,
+        mock_user=config.MOCK_USER,
+        mock_pass=config.MOCK_PASS,
+    ):
         argv = []
 
         if mock_host is not None:

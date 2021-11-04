@@ -18,6 +18,7 @@ class TestScreenshot(TestBase):
     def teardown(self, request):
         def remove_file():
             os.remove(SCREENSHOT_NAME)
+
         request.addfinalizer(remove_file)
 
     @patch("aiohttp.ClientSession.post")

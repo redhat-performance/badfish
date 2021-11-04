@@ -39,7 +39,13 @@ class TestSetBiosAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_patch, 200, ["OK"])
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
-        self.args = [self.option_arg, "--attribute", ATTRIBUTE_OK, "--value", ATTR_VALUE_OK]
+        self.args = [
+            self.option_arg,
+            "--attribute",
+            ATTRIBUTE_OK,
+            "--value",
+            ATTR_VALUE_OK,
+        ]
         _, err = self.badfish_call()
         assert err == BIOS_SET_OK
 
@@ -54,7 +60,13 @@ class TestSetBiosAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_patch, 200, ["OK"])
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
-        self.args = [self.option_arg, "--attribute", ATTRIBUTE_OK, "--value", ATTR_VALUE_BAD]
+        self.args = [
+            self.option_arg,
+            "--attribute",
+            ATTRIBUTE_OK,
+            "--value",
+            ATTR_VALUE_BAD,
+        ]
         _, err = self.badfish_call()
         assert err == BIOS_SET_BAD_VALUE
 
@@ -70,7 +82,13 @@ class TestSetBiosAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_patch, 200, ["OK"])
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
-        self.args = [self.option_arg, "--attribute", ATTRIBUTE_BAD, "--value", ATTR_VALUE_OK]
+        self.args = [
+            self.option_arg,
+            "--attribute",
+            ATTRIBUTE_BAD,
+            "--value",
+            ATTR_VALUE_OK,
+        ]
         _, err = self.badfish_call()
         assert err == BIOS_SET_BAD_ATTR
 
