@@ -530,7 +530,7 @@ class Badfish:
                 else:
                     await self.error_handler(
                         _response,
-                        message="ComputerSystem's Members array is either empty or missing"
+                        message="ComputerSystem's Members array is either empty or missing",
                     )
         else:
             raise BadfishException("Failed to communicate with server.")
