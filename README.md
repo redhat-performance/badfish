@@ -29,6 +29,7 @@
          * [Resetting iDRAC](#resetting-idrac)
          * [BIOS factory reset](#bios-factory-reset)
          * [Check current boot order](#check-current-boot-order)
+         * [Toggle boot device](#toggle-boot-device)
          * [Variable number of retries](#variable-number-of-retries)
          * [Firmware inventory](#firmware-inventory)
          * [Clear Job Queue](#clear-job-queue)
@@ -270,6 +271,7 @@ To check the current boot order of a specific host you can use the ```--check-bo
 If you would like to enable or disable a boot device you can use ```--toggle-boot-device``` argument which takes the device name as input and will toggle the `Enabled` state from True to False and vice versa.
 ```
 ./src/badfish/badfish.py -H mgmt-your-server.example.com -u root -p yourpass --toggle-boot-device NIC.Integrated.1-3-1```
+```
 
 ### Variable number of retries
 At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.

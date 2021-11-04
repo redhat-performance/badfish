@@ -71,7 +71,7 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-                "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
+            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
         )
 
     @staticmethod
@@ -89,7 +89,7 @@ class Badfish:
         )
         sys.stdout.flush()
 
-    async def error_handler(self, _response):
+    async def error_handler(self, _response, message=None):
         try:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
@@ -98,10 +98,21 @@ class Badfish:
 
         detail_message = data
         if "error" in data:
-            detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-            resolution = str(data["error"]["@Message.ExtendedInfo"][0]["Resolution"])
-            self.logger.debug(resolution)
-        raise BadfishException(detail_message)
+            try:
+                detail_message = str(
+                    data["error"]["@Message.ExtendedInfo"][0]["Message"]
+                )
+                resolution = str(
+                    data["error"]["@Message.ExtendedInfo"][0]["Resolution"]
+                )
+                self.logger.debug(resolution)
+            except (KeyError, IndexError) as ex:
+                self.logger.debug(ex)
+        if message:
+            self.logger.debug(detail_message)
+            raise BadfishException(message)
+        else:
+            raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
     async def get_request(self, uri, _continue=False):
@@ -109,10 +120,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                            uri,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            ssl=False,
-                            timeout=60,
+                        uri,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
+                        timeout=60,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError) as ex:
@@ -128,11 +139,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(
-                            uri,
-                            data=json.dumps(payload),
-                            headers=headers,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            ssl=False,
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
                     ) as _response:
                         if _response.status != 204:
                             await _response.read()
@@ -147,11 +158,11 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.patch(
-                            uri,
-                            data=json.dumps(payload),
-                            headers=headers,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            ssl=False,
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
                     ) as _response:
                         await _response.read()
         except Exception as ex:
@@ -167,10 +178,10 @@ class Badfish:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
                     async with session.delete(
-                            uri,
-                            headers=headers,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            ssl=False,
+                        uri,
+                        headers=headers,
+                        auth=aiohttp.BasicAuth(self.username, self.password),
+                        ssl=False,
                     ) as _response:
                         await _response.read()
         except (Exception, TimeoutError):
@@ -250,8 +261,12 @@ class Badfish:
     async def get_bios_attribute_registry(self, attribute):
         data = await self.get_bios_attributes_registry()
         attribute_value = await self.get_bios_attribute(attribute)
-        for entry in data['RegistryEntries']['Attributes']:
-            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+        for entry in data["RegistryEntries"]["Attributes"]:
+            entries = [
+                low_entry.lower()
+                for low_entry in entry.values()
+                if type(low_entry) == str
+            ]
             if attribute.lower() in entries:
                 for values in entry.items():
                     if values[0] == "CurrentValue":
@@ -289,8 +304,12 @@ class Badfish:
     async def set_bios_attribute(self, attribute, value):
         data = await self.get_bios_attributes_registry()
         accepted = False
-        for entry in data['RegistryEntries']['Attributes']:
-            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+        for entry in data["RegistryEntries"]["Attributes"]:
+            entries = [
+                low_entry.lower()
+                for low_entry in entry.values()
+                if type(low_entry) == str
+            ]
             if attribute.lower() in entries:
                 for values in entry.items():
                     if values[0] == "Value":
@@ -300,7 +319,9 @@ class Badfish:
                                 value = accepted_value
                                 accepted = True
                         if not accepted:
-                            self.logger.warning(f"List of accepted values for '{attribute}': {accepted_values}")
+                            self.logger.warning(
+                                f"List of accepted values for '{attribute}': {accepted_values}"
+                            )
                             raise BadfishException("Value not accepted")
 
         _payload = {
@@ -312,7 +333,9 @@ class Badfish:
         attribute_value = await self.get_bios_attribute(attribute)
         if attribute_value:
             if value.lower() == attribute_value.lower():
-                self.logger.warning("Attribute value is already in that state. IGNORING.")
+                self.logger.warning(
+                    "Attribute value is already in that state. IGNORING."
+                )
                 return
         else:
             raise BadfishException("Attribute not found. Please check attribute name.")
@@ -342,7 +365,8 @@ class Badfish:
                         if "bootseq" in key.lower():
                             self.logger.debug("Boot sequence found: %s" % key)
                     raise BadfishException(
-                        "The boot mode does not match the boot sequence. Try again in a few minutes.")
+                        "The boot mode does not match the boot sequence. Try again in a few minutes."
+                    )
             else:
                 self.logger.debug(data)
                 raise BadfishException(
@@ -415,7 +439,7 @@ class Badfish:
                 )
 
                 for device in sorted(
-                        self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
+                    self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]
                 ):
                     if device["Name"] == interfaces[device["Index"]]:
                         continue
@@ -481,9 +505,10 @@ class Badfish:
     async def find_systems_resource(self):
         response = await self.get_request(self.root_uri)
         if response:
-
             if response.status == 401:
-                raise BadfishException("Failed to authenticate. Verify your credentials.")
+                raise BadfishException(
+                    "Failed to authenticate. Verify your credentials."
+                )
 
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
@@ -503,26 +528,10 @@ class Badfish:
                         self.logger.debug("Systems service: %s." % systems_service)
                         return systems_service
                 else:
-                    try:
-                        msg = (
-                            data.get("error")
-                                .get("@Message.ExtendedInfo")[0]
-                                .get("Message")
-                        )
-                        resolution = (
-                            data.get("error")
-                                .get("@Message.ExtendedInfo")[0]
-                                .get("Resolution")
-                        )
-                        self.logger.error(msg)
-                        self.logger.info(resolution)
-                    except (IndexError, TypeError, AttributeError):
-                        pass
-                    else:
-                        self.logger.error(
-                            "ComputerSystem's Members array is either empty or missing"
-                        )
-                    raise BadfishException
+                    await self.error_handler(
+                        _response,
+                        message="ComputerSystem's Members array is either empty or missing"
+                    )
         else:
             raise BadfishException("Failed to communicate with server.")
 
@@ -574,7 +583,9 @@ class Badfish:
 
     async def set_power_state(self, state):
         if state.lower() not in ["on", "off"]:
-            raise BadfishException("Power state not valid. 'on' or 'off' only accepted.")
+            raise BadfishException(
+                "Power state not valid. 'on' or 'off' only accepted."
+            )
 
         _uri = "%s%s" % (self.host_uri, self.system_resource)
         self.logger.debug("url: %s" % _uri)
@@ -606,9 +617,13 @@ class Badfish:
         if interfaces_path:
             host_types = await self.get_host_types_from_yaml(interfaces_path)
             if host_type.lower() not in host_types:
-                raise BadfishException(f"Expected values for -t argument are: {host_types}")
+                raise BadfishException(
+                    f"Expected values for -t argument are: {host_types}"
+                )
             if not os.path.exists(interfaces_path):
-                raise BadfishException("No such file or directory: %s." % interfaces_path)
+                raise BadfishException(
+                    "No such file or directory: %s." % interfaces_path
+                )
         else:
             raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
@@ -732,8 +747,8 @@ class Badfish:
 
     async def delete_job_queue_dell(self, force):
         _url = (
-                "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
-                % self.root_uri
+            "%s/Dell/Managers/iDRAC.Embedded.1/DellJobService/Actions/DellJobService.DeleteJobQueue"
+            % self.root_uri
         )
         job_id = "JID_CLEARALL"
         if force:
@@ -744,13 +759,9 @@ class Badfish:
         if response.status == 200:
             self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
         else:
-            raw = await response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-            if data.get("error"):
-                if data["error"].get("@Message.ExtendedInfo"):
-                    self.logger.debug(data["error"].get("@Message.ExtendedInfo"))
-            raise BadfishException(
-                "Job queue not cleared, there was something wrong with your request."
+            await self.error_handler(
+                response,
+                message="Job queue not cleared, there was something wrong with your request.",
             )
 
     async def delete_job_queue_force(self):
@@ -760,7 +771,9 @@ class Badfish:
         try:
             _response = await self.delete_request(url, _headers)
             if _response.status in [200, 204]:
-                self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+                self.logger.info(
+                    "Job queue for iDRAC %s successfully cleared." % self.host
+                )
         except BadfishException as ex:
             self.logger.debug(ex)
             raise BadfishException("There was something wrong clearing the job queue.")
@@ -770,20 +783,17 @@ class Badfish:
         _url = "%s%s/Jobs" % (self.host_uri, self.manager_resource)
         _headers = {"content-type": "application/json"}
         self.logger.warning("Clearing job queue for job IDs: %s." % _job_queue)
-        failed = False
         for _job in _job_queue:
             job = _job.strip("'")
             url = "/".join([_url, job])
             response = await self.delete_request(url, _headers)
             if response.status != 200:
-                failed = True
+                raise BadfishException(
+                    "Job queue not cleared, there was something wrong with your request."
+                )
 
-        if not failed:
-            self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
-        else:
-            raise BadfishException(
-                "Job queue not cleared, there was something wrong with your request."
-            )
+        self.logger.info("Job queue for iDRAC %s successfully cleared." % self.host)
+        return True
 
     async def clear_job_queue(self, force=False):
         _job_queue = await self.get_job_queue()
@@ -855,14 +865,16 @@ class Badfish:
             if status_code == 200:
                 await asyncio.sleep(10)
             else:
-                self.logger.error(f"Command failed to check job status, return code is {status_code}")
+                self.logger.error(
+                    f"Command failed to check job status, return code is {status_code}"
+                )
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
 
             self.logger.info(f"JobID = {data[u'Id']}")
-            self.logger.info(f" Name = {data[u'Name']}")
-            self.logger.info(f" Message = {data[u'Message']}")
-            self.logger.info(f" PercentComplete = {str(data[u'PercentComplete'])}")
+            self.logger.info(f"Name = {data[u'Name']}")
+            self.logger.info(f"Message = {data[u'Message']}")
+            self.logger.info(f"PercentComplete = {str(data[u'PercentComplete'])}")
         else:
             self.logger.error("Command failed to check job status")
             return False
@@ -879,20 +891,22 @@ class Badfish:
             if status_code == 200:
                 pass
             else:
-                self.logger.error(f"Command failed to check job status, return code is {status_code}")
+                self.logger.error(
+                    f"Command failed to check job status, return code is {status_code}"
+                )
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
-            if "Fail" in data[u'Message'] or "fail" in data[u'Message']:
+            if "Fail" in data["Message"] or "fail" in data["Message"]:
                 self.logger.debug(f"\n{job_id} job failed.")
                 return False
-            elif data[u'Message'] == "Job completed successfully.":
+            elif data["Message"] == "Job completed successfully.":
                 self.logger.info(f"JobID = {data[u'Id']}")
-                self.logger.info(f" Name = {data[u'Name']}")
-                self.logger.info(f" Message = {data[u'Message']}")
-                self.logger.info(f" PercentComplete = {str(data[u'PercentComplete'])}")
+                self.logger.info(f"Name = {data[u'Name']}")
+                self.logger.info(f"Message = {data[u'Message']}")
+                self.logger.info(f"PercentComplete = {str(data[u'PercentComplete'])}")
                 break
             else:
-                self.progress_bar(count, self.retries, data[u'Message'], prompt="Status")
+                self.progress_bar(count, self.retries, data["Message"], prompt="Status")
                 await asyncio.sleep(30)
 
     async def send_reset(self, reset_type):
@@ -1032,7 +1046,9 @@ class Badfish:
     async def boot_to_type(self, host_type, _interfaces_path):
         if _interfaces_path:
             if not os.path.exists(_interfaces_path):
-                raise BadfishException("No such file or directory: %s." % _interfaces_path)
+                raise BadfishException(
+                    "No such file or directory: %s." % _interfaces_path
+                )
         else:
             raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
@@ -1078,7 +1094,9 @@ class Badfish:
         }
 
         sriov_mode = await self.get_sriov_mode()
-        if (sriov_mode.lower() == "enabled" and enable) or (sriov_mode.lower() == "disabled" and not enable):
+        if (sriov_mode.lower() == "enabled" and enable) or (
+            sriov_mode.lower() == "disabled" and not enable
+        ):
             self.logger.warning("SRIOV mode is already in that state. IGNORING.")
             return
 
@@ -1201,7 +1219,11 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             for info in data.items():
-                if "odata" not in info[0] and "Description" not in info[0] and "Oem" not in info[0]:
+                if (
+                    "odata" not in info[0]
+                    and "Description" not in info[0]
+                    and "Oem" not in info[0]
+                ):
                     self.logger.info("%s: %s" % (info[0], info[1]))
 
             self.logger.info("*" * 48)
@@ -1434,7 +1456,9 @@ class Badfish:
                     data.update({interface: values})
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return data
 
@@ -1479,7 +1503,9 @@ class Badfish:
                 data.update({int_name: values})
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return data
 
@@ -1543,7 +1569,9 @@ class Badfish:
                     values[field] = value
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return values
 
@@ -1592,7 +1620,9 @@ class Badfish:
                 proc_details.update({proc_name: values})
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return proc_details
 
@@ -1621,7 +1651,9 @@ class Badfish:
                     values[field] = value
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return values
 
@@ -1667,7 +1699,9 @@ class Badfish:
                 mem_details.update({mem_name: values})
 
         except (ValueError, AttributeError):
-            raise BadfishException("There was something wrong getting network interfaces")
+            raise BadfishException(
+                "There was something wrong getting network interfaces"
+            )
 
         return mem_details
 
@@ -1704,7 +1738,10 @@ class Badfish:
         return True
 
     async def change_bios_password(self, old_password, new_password):
-        _url = "%s%s/Bios/Actions/Bios.ChangePassword" % (self.host_uri, self.system_resource)
+        _url = "%s%s/Bios/Actions/Bios.ChangePassword" % (
+            self.host_uri,
+            self.system_resource,
+        )
         _payload = {
             "PasswordName": "SetupPassword",
             "OldPassword": old_password,
@@ -1716,18 +1753,12 @@ class Badfish:
         status_code = _response.status
 
         if status_code in [200, 204]:
-            self.logger.info(
-                "Command passed to set BIOS password."
-            )
+            self.logger.info("Command passed to set BIOS password.")
         elif status_code == 404:
-            self.logger.error(
-                "BIOS password change not supported on this system."
-            )
+            self.logger.error("BIOS password change not supported on this system.")
             return False
         else:
-            self.logger.warning(
-                "Command failed to set BIOS password"
-            )
+            self.logger.warning("Command failed to set BIOS password")
 
             await self.error_handler(_response)
 
@@ -1739,32 +1770,30 @@ class Badfish:
         await self.check_job_status(job_id)
 
     async def set_bios_password(self, old_password, new_password):
-        if new_password == '':
+        if new_password == "":
             self.logger.error("Missing argument: `--new-password`")
             return False
 
         await self.change_bios_password(old_password, new_password)
 
     async def remove_bios_password(self, old_password):
-        if old_password == '':
+        if old_password == "":
             self.logger.error("Missing argument: `--old-password`")
             return False
         await self.change_bios_password(old_password, "")
 
     async def take_screenshot(self):
-        _uri = self.host_uri+self.redfish_uri+'/Dell'+self.manager_resource[11:]
+        _uri = self.host_uri + self.redfish_uri + "/Dell" + self.manager_resource[11:]
         _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
-        _headers = {'content-type': 'application/json'}
-        _payload = {'FileType': 'ServerScreenShot'}
+        _headers = {"content-type": "application/json"}
+        _payload = {"FileType": "ServerScreenShot"}
         _response = await self.post_request(_url, _payload, _headers)
 
         status_code = _response.status
         if status_code in [200, 202]:
             self.logger.debug("POST command passed to get server screenshot.")
         else:
-            self.logger.error(
-                "POST command failed to get the server screenshot."
-            )
+            self.logger.error("POST command failed to get the server screenshot.")
 
             await self.error_handler(_response)
 
@@ -1777,7 +1806,7 @@ class Badfish:
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = "screenshot_%s.png" % timestamp
         with open(filename, "wb") as fh:
-            fh.write(base64.decodebytes(bytes(data['ServerScreenShotFile'], 'utf-8')))
+            fh.write(base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8")))
         self.logger.info(f"Image saved: {filename}")
         return True
 
@@ -1922,9 +1951,9 @@ async def execute_badfish(_host, _args, logger):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog='badfish',
+        prog="badfish",
         description="Tool for managing server hardware via the Redfish API.",
-        allow_abbrev=False
+        allow_abbrev=False,
     )
     parser.add_argument("-H", "--host", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username", required=True)
@@ -1969,13 +1998,19 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
-        "--power-state", help="Get power state", action="store_true",
+        "--power-state",
+        help="Get power state",
+        action="store_true",
     )
     parser.add_argument(
-        "--power-on", help="Power on host", action="store_true",
+        "--power-on",
+        help="Power on host",
+        action="store_true",
     )
     parser.add_argument(
-        "--power-off", help="Power off host", action="store_true",
+        "--power-off",
+        help="Power off host",
+        action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument(
@@ -2006,16 +2041,24 @@ def main(argv=None):
         help="Check a job status and details",
     )
     parser.add_argument(
-        "--ls-jobs", help="List any scheduled jobs in queue", action="store_true",
+        "--ls-jobs",
+        help="List any scheduled jobs in queue",
+        action="store_true",
     )
     parser.add_argument(
-        "--ls-interfaces", help="List Network interfaces", action="store_true",
+        "--ls-interfaces",
+        help="List Network interfaces",
+        action="store_true",
     )
     parser.add_argument(
-        "--ls-processors", help="List Processor Summary", action="store_true",
+        "--ls-processors",
+        help="List Processor Summary",
+        action="store_true",
     )
     parser.add_argument(
-        "--ls-memory", help="List Memory Summary", action="store_true",
+        "--ls-memory",
+        help="List Memory Summary",
+        action="store_true",
     )
     parser.add_argument(
         "--check-virtual-media",
