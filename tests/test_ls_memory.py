@@ -19,7 +19,7 @@ class TestLsMemory(TestBase):
             MEMORY_SUMMARY_RESP,
             MEMORY_MEMBERS_RESP,
             MEMORY_A5_RESP,
-            MEMORY_B2_RESP
+            MEMORY_B2_RESP,
         ]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
