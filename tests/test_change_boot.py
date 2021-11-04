@@ -16,7 +16,6 @@ from tests.config import (
     RESET_TYPE_RESP,
     DEVICE_NIC_2,
     BAD_DEVICE_NAME,
-    ERROR_DEV_NO_MATCH,
     TOGGLE_DEV_NO_MATCH,
     TOGGLE_DEV_OK,
 )
