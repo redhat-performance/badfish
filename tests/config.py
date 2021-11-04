@@ -411,7 +411,8 @@ BIOS_PASS_SET_GOOD = f"""\
 BIOS_PASS_SET_MISS_ARG = """\
 - ERROR    - Missing argument: `--new-password`
 """
-BIOS_PASS_RM_GOOD = """\
+BIOS_PASS_RM_GOOD = (
+    """\
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
@@ -419,7 +420,9 @@ BIOS_PASS_RM_GOOD = """\
 - INFO     - Name = Task
 - INFO     - Message = Job completed successfully.
 - INFO     - PercentComplete = 100
-""" % JOB_ID
+"""
+    % JOB_ID
+)
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
