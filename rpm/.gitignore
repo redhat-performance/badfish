@@ -1,0 +1,5 @@
+*.spec
+*.tar.gz
+*.src.rpm
+noarch/
+python3-badfish.spec/

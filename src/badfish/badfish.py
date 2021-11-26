@@ -20,7 +20,7 @@ except ImportError:
     from queue import Queue
 from logging.handlers import QueueHandler, QueueListener
 
-from async_lru import alru_cache
+from helpers.async_lru import alru_cache
 from logging import (
     Formatter,
     FileHandler,
@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(_host, _username, _password, _logger, _retries, _loop=None):
+async def badfish_factory(_host, _username, _password, _logger, _retries=RETRIES, _loop=None):
     badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
     await badfish.init()
     return badfish
@@ -56,11 +56,9 @@ class Badfish:
         self.root_uri = "%s%s" % (self.host_uri, self.redfish_uri)
         self.logger = _logger
         self.semaphore = asyncio.Semaphore(50)
-        if not _loop:
+        self.loop = _loop
+        if not self.loop:
             self.loop = asyncio.get_event_loop()
-        else:
-            self.loop = _loop
-
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None

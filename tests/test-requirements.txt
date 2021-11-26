@@ -9,5 +9,3 @@ requests-mock==1.5.2
 asynctest==0.13.0
 pyyaml>=4.2b1
 aiohttp>=3.7.4
-async-lru==1.0.2
-attrs==19.1.0
