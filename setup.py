@@ -11,9 +11,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/redhat-performance/badfish",
     install_requires=[
-        "pyyaml>=4.2b1",
+        "pyyaml>=3.10",
         "aiohttp>=3.7.4",
-        "setuptools>=46.4.0",
+        "setuptools>=39.0",
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
