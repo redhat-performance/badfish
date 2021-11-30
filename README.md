@@ -100,10 +100,12 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 dnf copr enable quadsdev/python3-badfish  -y
 dnf install python3-badfish -y
 ```
+* Note: For EL7 you'll need a working Python 3.6+ so [Software Collections/SCL](https://www.softwarecollections.org/en/scls/rhscl/rh-python36/) will be required before installing and using Badfish as an RPM package.
+
 Active releases:
 - Centos-stream 8
-- Epel for CentOS 7
-- Epel for CentOS 8
+- EPEL for CentOS 7
+- EPEL for CentOS 8
 - Fedora 33
 - Fedora 34
 - Fedora 35
