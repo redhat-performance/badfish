@@ -35,7 +35,13 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(_host, _username, _password, _logger, _retries=RETRIES, _loop=None):
+async def badfish_factory(
+    _host, _username, _password, _logger=None, _retries=RETRIES, _loop=None
+):
+    if not _logger:
+        bfl = BadfishLogger()
+        _logger = bfl.logger
+
     badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
     await badfish.init()
     return badfish
@@ -43,6 +49,34 @@ async def badfish_factory(_host, _username, _password, _logger, _retries=RETRIES
 
 class BadfishException(Exception):
     pass
+
+
+class BadfishLogger(object):
+    def __init__(self, verbose=False, multi_host=False, log_file=None):
+        self.log_level = DEBUG if verbose else INFO
+        self.multi_host = multi_host
+        self.log_file = log_file
+
+        _host_name_tag = "[%(name)s] " if self.multi_host else ""
+        _format_str = f"{_host_name_tag}- %(levelname)-8s - %(message)s"
+        _file_format_str = f"%(asctime)-12s: {_host_name_tag}- %(levelname)-8s - %(message)s"
+
+        _queue = Queue()
+        self.stream_handler = StreamHandler()
+        self.stream_handler.setFormatter(Formatter(_format_str))
+        self.queue_listener = QueueListener(_queue, self.stream_handler)
+        self.logger = getLogger(__name__)
+        self.queue_handler = QueueHandler(_queue)
+        self.logger.addHandler(self.queue_handler)
+        self.logger.setLevel(self.log_level)
+
+        self.queue_listener.start()
+
+        if self.log_file:
+            self.file_handler = FileHandler(self.log_file)
+            self.file_handler.setFormatter(Formatter(_file_format_str))
+            self.file_handler.setLevel(self.log_level)
+            self.queue_listener.handlers = self.queue_listener.handlers + (self.file_handler,)
 
 
 class Badfish:
@@ -2140,32 +2174,10 @@ def main(argv=None):
     log_level = DEBUG if _args["verbose"] else INFO
 
     host_list = _args["host_list"]
+    multi_host = True if host_list else False
     host = _args["host"]
     result = True
-
-    if host_list:
-        FMT = "[%(name)s] - %(levelname)-8s - %(message)s"
-        FILEFMT = "%(asctime)-12s: [%(name)s] - %(levelname)-8s - %(message)s"
-    else:
-        FMT = "- %(levelname)-8s - %(message)s"
-        FILEFMT = "%(asctime)-12s: %(levelname)-8s - %(message)s"
-
-    _queue = Queue()
-    _stream_handler = StreamHandler()
-    _stream_handler.setFormatter(Formatter(FMT))
-    _queue_listener = QueueListener(_queue, _stream_handler)
-    _logger = getLogger(__name__)
-    _queue_handler = QueueHandler(_queue)
-    _logger.addHandler(_queue_handler)
-    _logger.setLevel(log_level)
-
-    _queue_listener.start()
-
-    if _args["log"]:
-        file_handler = FileHandler(_args["log"])
-        file_handler.setFormatter(Formatter(FILEFMT))
-        file_handler.setLevel(log_level)
-        _queue_listener.handlers = _queue_listener.handlers + (file_handler,)
+    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"])
 
     loop = asyncio.get_event_loop()
     tasks = []
@@ -2177,52 +2189,52 @@ def main(argv=None):
                         continue
 
                     logger = getLogger(_host.strip().split(".")[0])
-                    logger.addHandler(_queue_handler)
+                    logger.addHandler(bfl.queue_handler)
                     logger.setLevel(log_level)
                     fn = functools.partial(
                         execute_badfish, _host.strip(), _args, logger
                     )
                     tasks.append(fn)
         except IOError as ex:
-            _logger.debug(ex)
-            _logger.error("There was something wrong reading from %s" % host_list)
+            bfl.logger.debug(ex)
+            bfl.logger.error("There was something wrong reading from %s" % host_list)
         results = []
         try:
             results = loop.run_until_complete(
                 asyncio.gather(*[task() for task in tasks], return_exceptions=True)
             )
         except KeyboardInterrupt:
-            _logger.warning("\nBadfish terminated")
+            bfl.logger.warning("\nBadfish terminated")
             result = False
         except (asyncio.CancelledError, BadfishException) as ex:
-            _logger.warning("There was something wrong executing Badfish")
-            _logger.debug(ex)
+            bfl.logger.warning("There was something wrong executing Badfish")
+            bfl.logger.debug(ex)
             result = False
         if results:
             result = True
-            _logger.info("RESULTS:")
+            bfl.logger.info("RESULTS:")
             for res in results:
                 if len(res) > 1 and res[1]:
-                    _logger.info(f"{res[0]}: SUCCESSFUL")
+                    bfl.logger.info(f"{res[0]}: SUCCESSFUL")
                 else:
-                    _logger.info(f"{res[0]}: FAILED")
+                    bfl.logger.info(f"{res[0]}: FAILED")
                     result = False
     elif not host:
-        _logger.error(
+        bfl.logger.error(
             "You must specify at least either a host (-H) or a host list (--host-list)."
         )
     else:
         try:
             _host, result = loop.run_until_complete(
-                execute_badfish(host, _args, _logger)
+                execute_badfish(host, _args, bfl.logger)
             )
         except KeyboardInterrupt:
-            _logger.warning("Badfish terminated")
+            bfl.logger.warning("Badfish terminated")
         except BadfishException as ex:
-            _logger.warning("There was something wrong executing Badfish")
-            _logger.debug(ex)
+            bfl.logger.warning("There was something wrong executing Badfish")
+            bfl.logger.debug(ex)
             result = False
-    _queue_listener.stop()
+    bfl.queue_listener.stop()
 
     if result:
         return 0

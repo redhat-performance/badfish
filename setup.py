@@ -16,7 +16,10 @@ setuptools.setup(
         "setuptools>=39.0",
     ],
     package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
+    packages=setuptools.find_packages(
+        where="src",
+        include=['helpers', 'badfish']
+    ),
     project_urls={
         "Bug Tracker": "https://github.com/redhat-performance/badfish/issues",
         "Documentation": "https://github.com/redhat-performance/badfish/blob/master/README.md",
