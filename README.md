@@ -12,8 +12,6 @@
       * [Setup](#setup)
          * [Badfish RPM package](#badfish-rpm-package)
          * [Badfish Standalone CLI](#badfish-standalone-cli)
-         * [Badfish Standalone Script](#badfish-standalone-script)
-         * [Badfish Standalone within a virtualenv](#badfish-standalone-within-a-virtualenv)
       * [Usage](#usage)
         * [As Python Library](#as-python-library)
         * [Via Podman](#via-podman)
@@ -126,29 +124,11 @@ if [ -d "$HOME/.local/bin" ] ; then
 fi
 ```
 
-### Badfish Standalone Script
-```bash
-git clone https://github.com/redhat-performance/badfish && cd badfish
-pip install -r requirements.txt
-```
-NOTE:
-* This will allow the badfish script execution via `./src/badfish/badfish.py`
-
-### Badfish Standalone within a virtualenv
-```bash
-git clone https://github.com/redhat-performance/badfish && cd badfish
-virtualenv .badfish_venv
-source .badfish_venv/bin/activate
-```
-NOTE:
-* Both setup methods above can be used within a virtualenv
-* After using badfish, the virtual environment can be deactivated running the ```deactivate``` command
-
 ## Usage
 Badfish can be consumed in 2 forms after successful installation. Either via the standalone cli tool or as a python library.
 For an extensive use of the cli tool check the [Common Operations](#common-operations) section of this file.
 
-NOTE: Badfish operates against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+NOTE: Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
 ### As Python Library
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
@@ -160,8 +140,8 @@ badfish = await badfish_factory(
     _username=_username,
     _password=_password,
 )
-boot_devices = await badfish.get_boot_devices()
-success = await badfish.boot_to(boot_devices[0])
+await badfish.get_boot_devices()
+success = await badfish.boot_to(badfish.boot_devices[0]['Name'])
 if success:
     print("Change boot device success")
 result = await badfish.reboot_server()
