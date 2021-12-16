@@ -358,6 +358,7 @@ JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
 SCREENSHOT_NAME = "screenshot_now.png"
+GIF_NAME = "animated_screenshot_now.gif"
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -524,9 +525,4 @@ BIOS_GET_ONE_BAD = (
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
 
-SCREENSHOT_OK = (
-    """\
-- INFO     - Image saved: %s
-"""
-    % SCREENSHOT_NAME
-)
+IMAGE_SAVED = """- INFO     - Image saved: %s\n"""

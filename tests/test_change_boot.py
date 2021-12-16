@@ -18,7 +18,8 @@ from tests.config import (
     BAD_DEVICE_NAME,
     TOGGLE_DEV_NO_MATCH,
     TOGGLE_DEV_OK,
-    BOOT_MODE_NO_RESP, RESPONSE_CHANGE_NO_BOOT_PREFIX,
+    BOOT_MODE_NO_RESP,
+    RESPONSE_CHANGE_NO_BOOT_PREFIX,
 )
 from tests.test_base import TestBase
 

@@ -1,12 +1,13 @@
 import os
 import pytest
 
-from asynctest import patch
+from asynctest import patch, CoroutineMock
 from tests.config import (
     INIT_RESP,
     SCREENSHOT_RESP,
-    SCREENSHOT_OK,
+    IMAGE_SAVED,
     SCREENSHOT_NAME,
+    GIF_NAME,
 )
 from tests.test_base import TestBase
 
@@ -32,17 +33,17 @@ class TestScreenshot(TestBase):
         with patch("time.strftime", return_value="now"):
             _, err = self.badfish_call()
 
-        assert err == SCREENSHOT_OK
+        assert err == IMAGE_SAVED % SCREENSHOT_NAME
 
 
 class TestGif(TestBase):
     option_arg = "--gif"
 
-    @patch('tempfile.NamedTemporaryFile')
+    @patch("PIL.Image.open")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_gif_ok(self, mock_get, mock_post, mock_tmp):
-        mock_tmp.__enter__.return_value.name = "my_tmp_file"
+    def test_gif_ok(self, mock_get, mock_post, mock_img):
+        mock_img.return_value.__aenter__.return_value = CoroutineMock()
 
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, SCREENSHOT_RESP)
@@ -51,4 +52,4 @@ class TestGif(TestBase):
         with patch("time.strftime", return_value="now"):
             _, err = self.badfish_call()
 
-        assert err == SCREENSHOT_OK
+        assert err == IMAGE_SAVED % GIF_NAME
