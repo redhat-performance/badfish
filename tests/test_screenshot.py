@@ -33,3 +33,22 @@ class TestScreenshot(TestBase):
             _, err = self.badfish_call()
 
         assert err == SCREENSHOT_OK
+
+
+class TestGif(TestBase):
+    option_arg = "--gif"
+
+    @patch('tempfile.NamedTemporaryFile')
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_gif_ok(self, mock_get, mock_post, mock_tmp):
+        mock_tmp.__enter__.return_value.name = "my_tmp_file"
+
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, 200, SCREENSHOT_RESP)
+        self.args = [self.option_arg]
+
+        with patch("time.strftime", return_value="now"):
+            _, err = self.badfish_call()
+
+        assert err == SCREENSHOT_OK

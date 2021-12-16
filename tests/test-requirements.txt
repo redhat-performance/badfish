@@ -9,4 +9,4 @@ requests-mock==1.5.2
 asynctest==0.13.0
 pyyaml>=3.10
 aiohttp>=3.7.4
-pillow>=6.2.2
+pillow>=5.1.0

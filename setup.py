@@ -14,7 +14,7 @@ setuptools.setup(
         "pyyaml>=3.10",
         "aiohttp>=3.7.4",
         "setuptools>=39.0",
-        "pillow>=6.2.2",
+        "pillow>=5.1.0",
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src", include=["helpers", "badfish"]),

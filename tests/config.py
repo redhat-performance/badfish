@@ -124,6 +124,10 @@ RESPONSE_RESET = (
 RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nnot_ok.\n"
 
 # test_change_boot
+RESPONSE_CHANGE_NO_BOOT_PREFIX = (
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Assuming boot mode is Bios.\n"
+)
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
@@ -150,6 +154,7 @@ STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
+BOOT_MODE_NO_RESP = '{"Attributes": {"NoBootMode": ""}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
 
 ETHERNET_INTERFACES_RESP = (
