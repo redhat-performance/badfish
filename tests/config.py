@@ -357,8 +357,9 @@ TASK_OK_RESP = (
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
-SCREENSHOT_NAME = "screenshot_now.png"
-GIF_NAME = "animated_screenshot_now.gif"
+MOCK_HOST_SHORT_FQDN = MOCK_HOST.split(".")[0]
+SCREENSHOT_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.png"
+GIF_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.gif"
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """

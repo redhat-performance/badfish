@@ -3,7 +3,6 @@ import asyncio
 import base64
 import functools
 import tempfile
-
 import aiohttp
 import json
 import argparse
@@ -1853,7 +1852,8 @@ class Badfish:
                 filename = fh.name
         else:
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            filename = "screenshot_%s.png" % timestamp
+            fqdn_short = self.host.split(".")[0]
+            filename = f"{fqdn_short}_screenshot_{timestamp}.png"
             with open(filename, "wb") as fh:
                 fh.write(
                     base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
@@ -1882,7 +1882,8 @@ class Badfish:
             time.sleep(interval)
 
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = "animated_screenshot_%s.gif" % timestamp
+        fqdn_short = self.host.split(".")[0]
+        filename = f"{fqdn_short}_screenshot_{timestamp}.gif"
         frames[0].save(
             filename,
             format="GIF",
