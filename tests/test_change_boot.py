@@ -18,6 +18,8 @@ from tests.config import (
     BAD_DEVICE_NAME,
     TOGGLE_DEV_NO_MATCH,
     TOGGLE_DEV_OK,
+    BOOT_MODE_NO_RESP,
+    RESPONSE_CHANGE_NO_BOOT_PREFIX,
 )
 from tests.test_base import TestBase
 
@@ -68,6 +70,27 @@ class TestChangeBoot(TestBase):
         self.args = ["-i", INTERFACES_PATH, self.option_arg, "director"]
         _, err = self.badfish_call()
         assert err == RESPONSE_CHANGE_BOOT
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.get")
+    def test_change_to_director_no_boot(self, mock_get, mock_patch, mock_post):
+        get_resp = [
+            BOOT_MODE_NO_RESP,
+            self.boot_seq_resp_fmt_for.replace("'", '"'),
+            BLANK_RESP,
+            BOOT_MODE_RESP,
+            RESET_TYPE_RESP,
+            STATE_ON_RESP,
+            STATE_ON_RESP,
+        ]
+        responses = INIT_RESP + get_resp
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_patch, 200, ["OK"])
+        self.set_mock_response(mock_post, 200, JOB_OK_RESP)
+        self.args = ["-i", INTERFACES_PATH, self.option_arg, "director"]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHANGE_NO_BOOT_PREFIX + RESPONSE_CHANGE_BOOT
 
     @patch("aiohttp.ClientSession.get")
     def test_change_bad_type(self, mock_get):
