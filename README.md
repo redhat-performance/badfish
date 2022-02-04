@@ -445,6 +445,8 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_inte
 ### Dell Foreman and PXE Interface
 Your usage may vary, this is what our configuration looks like via ```config/idrac_interfaces.yml```
 
+* Note that these are BIOS mode, EFI interfaces may be different and not yet recorded everywhere for our uses.
+
 | Machine Type | Network Interface      |
 | ------------ | ----------------------:|
 | Dell fc640   |  NIC.Integrated.1-1-1  |
@@ -455,6 +457,8 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r730xd  |  NIC.Integrated.1-3-1  |
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
 | Dell r640    |  NIC.Integrated.1-1-1  |
+| Dell r650    |  NIC.Integrated.1-1-1  |
+| Dell r750    |  NIC.Integrated.1-1-1  |
 
 ### Host type overrides
 Every other method that requires passing the `-i` argument, is going to parse the key strings from this and look for the most adequate candidate for the given FQDN.
