@@ -1830,6 +1830,8 @@ class Badfish:
         status_code = _response.status
         if status_code in [200, 202]:
             self.logger.debug("POST command passed to get server screenshot.")
+        elif status_code == 404:
+            raise BadfishException("The system does not support screenshots.")
         else:
             if not gif:
                 self.logger.error("POST command failed to get the server screenshot.")

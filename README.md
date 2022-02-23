@@ -485,12 +485,9 @@ With rack, ULocation and blade being optional in a hierarchical fashion otherwis
 | director_f21_h17_r620_interfaces | mgmt-f22-h17-000-r620.domain.com | NO             |
 
 ## Contributing
-We love pull requests and welcome contributions from everyone!  Please use the `development` branch to send pull requests.  Here are the general steps you'd want to follow.
 
-1) Fork the Badfish Github repository
-2) Clone the forked repository
-3) Push your changes to your forked clone
-4) Open a pull request against our `development` branch.
+Please refer to our contributing [guide](CONTRIBUTING.md).
+
 
 * Here is some useful documentation
   - [Creating a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request)
