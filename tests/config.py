@@ -164,7 +164,6 @@ ETHERNET_INTERFACES_RESP = (
     "]}"
 )
 
-
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
@@ -522,6 +521,9 @@ BIOS_GET_ONE_BAD = (
 """
     % ATTRIBUTE_BAD
 )
+NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
+NEXT_BOOT_PXE_BAD = ('- ERROR    - Command failed, error code is 400.\n'
+                     '- ERROR    - Error reading response from host.\n')
 
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
