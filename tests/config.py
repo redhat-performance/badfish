@@ -202,11 +202,16 @@ RESPONSE_LS_INTERFACES = (
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = "- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
+RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
 RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
+RESPONSE_CHECK_JOB = (f'- INFO     - JobID = {JOB_ID}\n'
+                      '- INFO     - Name = Task\n'
+                      '- INFO     - Message = Job completed successfully.\n'
+                      '- INFO     - PercentComplete = 100\n')
+RESPONSE_CHECK_JOB_BAD = '- ERROR    - Command failed to check job status, return code is 404\n'
 DELLJOBSERVICE_UNSUPPORTED = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
