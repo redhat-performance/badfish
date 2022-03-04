@@ -1,6 +1,9 @@
 [paths]
 source = src/badfish
 
+[run]
+omit = tests/*
+
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
