@@ -8,6 +8,7 @@ from tests.config import (
     RESPONSE_LS_JOBS_EMPTY,
     RESPONSE_CLEAR_JOBS_UNSUPPORTED,
     RESPONSE_CLEAR_JOBS_LIST,
+    JOB_ID, TASK_OK_RESP, RESPONSE_CHECK_JOB, RESPONSE_CHECK_JOB_BAD,
 )
 from tests.test_base import TestBase
 
@@ -95,3 +96,29 @@ class TestClearJobs(TestBase):
         self.args = self.args + [force_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_CLEAR_JOBS
+
+
+class TestCheckJob(TestBase):
+    args = ["--check-job"]
+
+    @patch("aiohttp.ClientSession.get")
+    def test_check_job_ok(self, mock_get):
+        responses_add = [
+            TASK_OK_RESP,
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.args = self.args + [JOB_ID]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHECK_JOB
+
+    @patch("aiohttp.ClientSession.get")
+    def test_check_job_bad(self, mock_get):
+        responses_add = [
+            BLANK_RESP,
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 404], responses)
+        self.args = self.args + ["JID_WHICHDOESNOTEXIST"]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHECK_JOB_BAD

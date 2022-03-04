@@ -124,6 +124,10 @@ RESPONSE_RESET = (
 RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nnot_ok.\n"
 
 # test_change_boot
+RESPONSE_CHANGE_NO_BOOT_PREFIX = (
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Assuming boot mode is Bios.\n"
+)
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
@@ -150,6 +154,7 @@ STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
+BOOT_MODE_NO_RESP = '{"Attributes": {"NoBootMode": ""}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
 
 ETHERNET_INTERFACES_RESP = (
@@ -158,8 +163,24 @@ ETHERNET_INTERFACES_RESP = (
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
     "]}"
 )
-
-
+ETHERNET_INTERFACES_RESP_NIC_SLOT = (
+    '{'
+    '"Id": "NIC.Slot.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E1",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
+ETHERNET_INTERFACES_RESP_NIC_INT = (
+    '{'
+    '"Id": "NIC.Integrated.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E0",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
@@ -195,14 +216,31 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     MACAddress: B0:26:28:D8:68:C0\n"
     "- INFO     -     Vendor: Intel\n"
 )
+RESPONSE_LS_ETHERNET = (
+    '- INFO     - NIC.Slot.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E1\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
+    '- INFO     - NIC.Integrated.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E0\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
+)
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = "- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
+RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
 RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
+RESPONSE_CHECK_JOB = (f'- INFO     - JobID = {JOB_ID}\n'
+                      '- INFO     - Name = Task\n'
+                      '- INFO     - Message = Job completed successfully.\n'
+                      '- INFO     - PercentComplete = 100\n')
+RESPONSE_CHECK_JOB_BAD = '- ERROR    - Command failed to check job status, return code is 404\n'
 DELLJOBSERVICE_UNSUPPORTED = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
@@ -352,7 +390,9 @@ TASK_OK_RESP = (
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
-SCREENSHOT_NAME = "screenshot_now.png"
+MOCK_HOST_SHORT_FQDN = MOCK_HOST.split(".")[0]
+SCREENSHOT_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.png"
+GIF_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.gif"
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -515,13 +555,11 @@ BIOS_GET_ONE_BAD = (
 """
     % ATTRIBUTE_BAD
 )
+NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
+NEXT_BOOT_PXE_BAD = ('- ERROR    - Command failed, error code is 400.\n'
+                     '- ERROR    - Error reading response from host.\n')
 
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
 
-SCREENSHOT_OK = (
-    """\
-- INFO     - Image saved: %s
-"""
-    % SCREENSHOT_NAME
-)
+IMAGE_SAVED = """- INFO     - Image saved: %s\n"""

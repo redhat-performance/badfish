@@ -6,12 +6,13 @@ from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 from asynctest import patch
 
-from badfish.badfish import main, BadfishException
+from src.badfish.badfish import main, BadfishException
 from tests import config
 
 
 class TestBase(AioHTTPTestCase):
     patch("asyncio.sleep").start()
+    patch("time.sleep").start()
 
     async def get_application(self):
         return web.Application()
