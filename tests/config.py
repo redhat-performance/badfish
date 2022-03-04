@@ -163,7 +163,24 @@ ETHERNET_INTERFACES_RESP = (
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
     "]}"
 )
-
+ETHERNET_INTERFACES_RESP_NIC_SLOT = (
+    '{'
+    '"Id": "NIC.Slot.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E1",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
+ETHERNET_INTERFACES_RESP_NIC_INT = (
+    '{'
+    '"Id": "NIC.Integrated.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E0",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
@@ -198,6 +215,18 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     LinkSpeedMbps: 1000\n"
     "- INFO     -     MACAddress: B0:26:28:D8:68:C0\n"
     "- INFO     -     Vendor: Intel\n"
+)
+RESPONSE_LS_ETHERNET = (
+    '- INFO     - NIC.Slot.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E1\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
+    '- INFO     - NIC.Integrated.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E0\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
 )
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
