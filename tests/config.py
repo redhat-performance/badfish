@@ -163,8 +163,24 @@ ETHERNET_INTERFACES_RESP = (
     '{"@odata.id":"/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Integrated.1-1-1"}'
     "]}"
 )
-
-
+ETHERNET_INTERFACES_RESP_NIC_SLOT = (
+    '{'
+    '"Id": "NIC.Slot.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E1",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
+ETHERNET_INTERFACES_RESP_NIC_INT = (
+    '{'
+    '"Id": "NIC.Integrated.1-1-1",'
+    '"MACAddress": "F8:BC:12:22:89:E0",'
+    '"Name": "System Ethernet Interface",'
+    '"SpeedMbps": 10240,'
+    '"Status": {"Health": "OK", "State": "Enabled"}'
+    '}'
+)
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
     f'{{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{DEVICE_NIC_I}"}},'
@@ -200,14 +216,31 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     MACAddress: B0:26:28:D8:68:C0\n"
     "- INFO     -     Vendor: Intel\n"
 )
+RESPONSE_LS_ETHERNET = (
+    '- INFO     - NIC.Slot.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E1\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
+    '- INFO     - NIC.Integrated.1-1-1:\n'
+    '- INFO     -     Name: System Ethernet Interface\n'
+    '- INFO     -     MACAddress: F8:BC:12:22:89:E0\n'
+    '- INFO     -     Health: OK\n'
+    '- INFO     -     SpeedMbps: 10240\n'
+)
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = "- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
+RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
 RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
+RESPONSE_CHECK_JOB = (f'- INFO     - JobID = {JOB_ID}\n'
+                      '- INFO     - Name = Task\n'
+                      '- INFO     - Message = Job completed successfully.\n'
+                      '- INFO     - PercentComplete = 100\n')
+RESPONSE_CHECK_JOB_BAD = '- ERROR    - Command failed to check job status, return code is 404\n'
 DELLJOBSERVICE_UNSUPPORTED = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
@@ -522,6 +555,9 @@ BIOS_GET_ONE_BAD = (
 """
     % ATTRIBUTE_BAD
 )
+NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
+NEXT_BOOT_PXE_BAD = ('- ERROR    - Command failed, error code is 400.\n'
+                     '- ERROR    - Error reading response from host.\n')
 
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
