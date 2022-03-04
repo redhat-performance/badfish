@@ -1,8 +1,8 @@
 from asynctest import patch
 from tests.config import (
     INIT_RESP,
-    BIOS_RESPONSE_OK,
-    NEXT_BOOT_PXE_OK, NEXT_BOOT_PXE_BAD,
+    NEXT_BOOT_PXE_OK,
+    NEXT_BOOT_PXE_BAD,
 )
 from tests.test_base import TestBase
 

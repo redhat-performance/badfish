@@ -12,10 +12,11 @@ python:
   - "3.9"
 # command to install dependencies
 install:
-  - pip install tox-travis codecov
+  - pip install tox-travis
+  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then pip install codecov; fi
 
 # command to run tests
 script: tox
 
 after_success:
-  - codecov
+  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then codecov; fi 
