@@ -53,7 +53,7 @@ class BadfishException(Exception):
     pass
 
 
-class BadfishLogger(object):
+class BadfishLogger:
     def __init__(self, verbose=False, multi_host=False, log_file=None):
         self.log_level = DEBUG if verbose else INFO
         self.multi_host = multi_host

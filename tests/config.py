@@ -135,6 +135,14 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
+RESPONSE_CHANGE_BOOT_UEFI = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- WARNING  - Attribute value for PxeDev1Interface is already in that state. IGNORING.\n"
+    "- INFO     - Command passed to set BIOS attribute pending values.\n"
+    "- INFO     - Command passed to GracefulRestart server, code return is 200.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+)
 RESPONSE_CHANGE_BAD_TYPE = (
     "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
 )
@@ -154,6 +162,12 @@ STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
+PXE_DEV1_INT_RESP = '{"Attributes": {"PxeDev1Interface": "NIC.Integrated.1-2-1"}}'
+PXE_DEV1_DIS_RESP = '{"Attributes": {"PxeDev1EnDis": "Disabled"}}'
+PXE_DEV2_INT_RESP = '{"Attributes": {"PxeDev2Interface": "NIC.Slot.2-1-1"}}'
+PXE_DEV2_DIS_RESP = '{"Attributes": {"PxeDev2EnDis": "Disabled"}}'
+PXE_DEV3_INT_RESP = '{"Attributes": {"PxeDev3Interface": "HardDisk.List.1-1"}}'
+PXE_DEV3_DIS_RESP = '{"Attributes": {"PxeDev3EnDis": "Disabled"}}'
 BOOT_MODE_NO_RESP = '{"Attributes": {"NoBootMode": ""}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
 
