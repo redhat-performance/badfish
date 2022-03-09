@@ -91,7 +91,7 @@ RESPONSE_BOOT_TO = (
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
-    "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
+    "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
 )
 RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
 RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
@@ -136,7 +136,7 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
 RESPONSE_CHANGE_BAD_TYPE = (
-    "- ERROR    - Expected values for -t argument are: ['director', 'foreman']\n"
+    "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
 )
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
@@ -529,7 +529,8 @@ BIOS_SET_BAD_VALUE = (
 )
 BIOS_SET_BAD_ATTR = """\
 - WARNING  - Could not retrieve Bios Attributes.
-- ERROR    - Attribute not found. Please check attribute name.
+- ERROR    - NotThere not found. Please check attribute name.
+- ERROR    - Attribute not found
 """
 BIOS_GET_ALL_OK = f"""- INFO     - {ATTRIBUTE_OK}: {ATTR_VALUE_OK}\n"""
 BIOS_GET_ONE_OK = """\

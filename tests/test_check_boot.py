@@ -50,6 +50,7 @@ class TestCheckBoot(TestBase):
 
     @patch("aiohttp.ClientSession.get")
     def test_check_boot_no_match(self, mock_get):
+        # TODO: FIX
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_NO_MATCH)
         responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
         responses = INIT_RESP + responses_add
