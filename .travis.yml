@@ -1,7 +1,5 @@
 dist: xenial
 os: linux
-
-# Set the build language to Pythonlanguage: python
 language: python
 
 # Set the python versions
@@ -10,6 +8,7 @@ python:
   - "3.7"
   - "3.8"
   - "3.9"
+  - "3.10"
 # command to install dependencies
 install:
   - pip install tox-travis
@@ -19,4 +18,4 @@ install:
 script: tox
 
 after_success:
-  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then codecov; fi 
+  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then codecov; fi
