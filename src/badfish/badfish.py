@@ -53,7 +53,7 @@ class BadfishException(Exception):
     pass
 
 
-class BadfishLogger(object):
+class BadfishLogger:
     def __init__(self, verbose=False, multi_host=False, log_file=None):
         self.log_level = DEBUG if verbose else INFO
         self.multi_host = multi_host
@@ -339,7 +339,7 @@ class Badfish:
             self.logger.warning("Could not retrieve Bios Attributes.")
             return None
 
-    async def set_bios_attribute(self, attribute, value):
+    async def set_bios_attribute(self, attributes):
         data = await self.get_bios_attributes_registry()
         accepted = False
         for entry in data["RegistryEntries"]["Attributes"]:
@@ -348,35 +348,49 @@ class Badfish:
                 for low_entry in entry.values()
                 if type(low_entry) == str
             ]
-            if attribute.lower() in entries:
-                for values in entry.items():
-                    if values[0] == "Value":
-                        accepted_values = [value["ValueName"] for value in values[1]]
-                        for accepted_value in accepted_values:
-                            if value.lower() == accepted_value.lower():
-                                value = accepted_value
-                                accepted = True
-                        if not accepted:
-                            self.logger.warning(
-                                f"List of accepted values for '{attribute}': {accepted_values}"
-                            )
-                            raise BadfishException("Value not accepted")
+            _warnings = []
+            _not_found = []
+            _remove = []
+            for attribute, value in attributes.items():
+                if attribute.lower() in entries:
+                    for values in entry.items():
+                        if values[0] == "Value":
+                            accepted_values = [
+                                value["ValueName"] for value in values[1]
+                            ]
+                            for accepted_value in accepted_values:
+                                if value.lower() == accepted_value.lower():
+                                    value = accepted_value
+                                    accepted = True
+                            if not accepted:
+                                _warnings.append(
+                                    f"List of accepted values for '{attribute}': {accepted_values}"
+                                )
 
-        _payload = {
-            "Attributes": {
-                attribute: value,
-            }
-        }
+                attribute_value = await self.get_bios_attribute(attribute)
+                if attribute_value:
+                    if value.lower() == attribute_value.lower():
+                        self.logger.warning(
+                            f"Attribute value for {attribute} is already in that state. IGNORING."
+                        )
+                        _remove.append(attribute)
+                else:
+                    _not_found.append(
+                        f"{attribute} not found. Please check attribute name."
+                    )
+            if _warnings:
+                for warning in _warnings:
+                    self.logger.warning(warning)
+                raise BadfishException("Value not accepted")
+            if _not_found:
+                for warning in _not_found:
+                    self.logger.error(warning)
+                raise BadfishException("Attribute not found")
+            if _remove:
+                for attribute in _remove:
+                    attributes.pop(attribute)
 
-        attribute_value = await self.get_bios_attribute(attribute)
-        if attribute_value:
-            if value.lower() == attribute_value.lower():
-                self.logger.warning(
-                    "Attribute value is already in that state. IGNORING."
-                )
-                return
-        else:
-            raise BadfishException("Attribute not found. Please check attribute name.")
+        _payload = {"Attributes": attributes}
 
         await self.patch_bios(_payload, insist=False)
         await self.reboot_server()
@@ -467,7 +481,6 @@ class Badfish:
 
     async def get_host_type(self, _interfaces_path):
         await self.get_boot_devices()
-
         if _interfaces_path:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for host_type in host_types:
@@ -666,18 +679,41 @@ class Badfish:
             raise BadfishException(
                 "You must provide a path to the interfaces yaml via `-i` optional argument."
             )
-
-        _type = await self.get_host_type(interfaces_path)
+        _type = None
+        if host_type.lower() != "uefi":
+            _type = await self.get_host_type(interfaces_path)
         if (_type and _type.lower() != host_type.lower()) or not _type:
             await self.clear_job_queue()
-            await self.change_boot_order(host_type, interfaces_path)
+            if host_type.lower() == "uefi":
+                payload = dict()
+                boot_mode = await self.get_bios_boot_mode()
+                if boot_mode.lower() != "uefi":
+                    payload["BootMode"] = "Uefi"
+                interfaces = await self.get_interfaces_by_type(
+                    host_type, interfaces_path
+                )
 
-            if pxe:
-                await self.set_next_boot_pxe()
+                for i, interface in enumerate(interfaces, 1):
+                    payload[f"PxeDev{i}Interface"] = interface
+                    payload[f"PxeDev{i}EnDis"] = "Enabled"
 
-            await self.create_bios_config_job(self.bios_uri)
+                await self.set_bios_attribute(payload)
 
-            await self.reboot_server(graceful=False)
+            else:
+                boot_mode = await self.get_bios_boot_mode()
+                if boot_mode.lower() == "uefi":
+                    self.logger.warning(
+                        "Changes being requested will be valid for Bios BootMode. "
+                        "Current boot mode is set to Uefi."
+                    )
+                await self.change_boot_order(host_type, interfaces_path)
+
+                if pxe:
+                    await self.set_next_boot_pxe()
+
+                await self.create_bios_config_job(self.bios_uri)
+
+                await self.reboot_server(graceful=False)
 
         else:
             self.logger.warning(
@@ -2020,7 +2056,8 @@ async def execute_badfish(_host, _args, logger):
                 for attribute, value in data["Attributes"].items():
                     logger.info(f"{attribute}: {value}")
         elif set_bios_attribute:
-            await badfish.set_bios_attribute(attribute, value)
+            payload = {attribute: value}
+            await badfish.set_bios_attribute(payload)
         elif set_bios_password:
             await badfish.set_bios_password(old_password, new_password)
         elif remove_bios_password:

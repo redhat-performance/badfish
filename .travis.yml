@@ -1,7 +1,5 @@
 dist: xenial
 os: linux
-
-# Set the build language to Pythonlanguage: python
 language: python
 
 # Set the python versions
@@ -19,4 +17,4 @@ install:
 script: tox
 
 after_success:
-  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then codecov; fi 
+  - if [ "$TRAVIS_PYTHON_VERSION" = "3.9" ]; then codecov; fi
