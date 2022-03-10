@@ -90,9 +90,7 @@ RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
-RESPONSE_BOOT_TO_BAD_TYPE = (
-    "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
-)
+RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
 RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
 RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 RESPONSE_BOOT_TO_BAD_MAC = (
@@ -143,9 +141,7 @@ RESPONSE_CHANGE_BOOT_UEFI = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
-RESPONSE_CHANGE_BAD_TYPE = (
-    "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
-)
+RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
@@ -162,12 +158,13 @@ STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
-PXE_DEV1_INT_RESP = '{"Attributes": {"PxeDev1Interface": "NIC.Integrated.1-2-1"}}'
-PXE_DEV1_DIS_RESP = '{"Attributes": {"PxeDev1EnDis": "Disabled"}}'
-PXE_DEV2_INT_RESP = '{"Attributes": {"PxeDev2Interface": "NIC.Slot.2-1-1"}}'
-PXE_DEV2_DIS_RESP = '{"Attributes": {"PxeDev2EnDis": "Disabled"}}'
-PXE_DEV3_INT_RESP = '{"Attributes": {"PxeDev3Interface": "HardDisk.List.1-1"}}'
-PXE_DEV3_DIS_RESP = '{"Attributes": {"PxeDev3EnDis": "Disabled"}}'
+PXE_DEV_RESP = (
+    '{"Attributes": {'
+    '"PxeDev1Interface": "NIC.Integrated.1-2-1", "PxeDev1EnDis": "Disabled",'
+    '"PxeDev2Interface": "NIC.Slot.2-1-1", "PxeDev2EnDis": "Disabled",'
+    '"PxeDev3Interface": "HardDisk.List.1-1", "PxeDev3EnDis": "Disabled"'
+    "}}"
+)
 BOOT_MODE_NO_RESP = '{"Attributes": {"NoBootMode": ""}}'
 BOOT_SEQ_RESP = '{"Attributes": {"BootSeq": %s}}'
 
@@ -178,22 +175,22 @@ ETHERNET_INTERFACES_RESP = (
     "]}"
 )
 ETHERNET_INTERFACES_RESP_NIC_SLOT = (
-    '{'
+    "{"
     '"Id": "NIC.Slot.1-1-1",'
     '"MACAddress": "F8:BC:12:22:89:E1",'
     '"Name": "System Ethernet Interface",'
     '"SpeedMbps": 10240,'
     '"Status": {"Health": "OK", "State": "Enabled"}'
-    '}'
+    "}"
 )
 ETHERNET_INTERFACES_RESP_NIC_INT = (
-    '{'
+    "{"
     '"Id": "NIC.Integrated.1-1-1",'
     '"MACAddress": "F8:BC:12:22:89:E0",'
     '"Name": "System Ethernet Interface",'
     '"SpeedMbps": 10240,'
     '"Status": {"Health": "OK", "State": "Enabled"}'
-    '}'
+    "}"
 )
 NETWORK_ADAPTERS_RESP = (
     '{"Members": ['
@@ -231,16 +228,16 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     Vendor: Intel\n"
 )
 RESPONSE_LS_ETHERNET = (
-    '- INFO     - NIC.Slot.1-1-1:\n'
-    '- INFO     -     Name: System Ethernet Interface\n'
-    '- INFO     -     MACAddress: F8:BC:12:22:89:E1\n'
-    '- INFO     -     Health: OK\n'
-    '- INFO     -     SpeedMbps: 10240\n'
-    '- INFO     - NIC.Integrated.1-1-1:\n'
-    '- INFO     -     Name: System Ethernet Interface\n'
-    '- INFO     -     MACAddress: F8:BC:12:22:89:E0\n'
-    '- INFO     -     Health: OK\n'
-    '- INFO     -     SpeedMbps: 10240\n'
+    "- INFO     - NIC.Slot.1-1-1:\n"
+    "- INFO     -     Name: System Ethernet Interface\n"
+    "- INFO     -     MACAddress: F8:BC:12:22:89:E1\n"
+    "- INFO     -     Health: OK\n"
+    "- INFO     -     SpeedMbps: 10240\n"
+    "- INFO     - NIC.Integrated.1-1-1:\n"
+    "- INFO     -     Name: System Ethernet Interface\n"
+    "- INFO     -     MACAddress: F8:BC:12:22:89:E0\n"
+    "- INFO     -     Health: OK\n"
+    "- INFO     -     SpeedMbps: 10240\n"
 )
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
@@ -250,11 +247,15 @@ RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
-RESPONSE_CHECK_JOB = (f'- INFO     - JobID = {JOB_ID}\n'
-                      '- INFO     - Name = Task\n'
-                      '- INFO     - Message = Job completed successfully.\n'
-                      '- INFO     - PercentComplete = 100\n')
-RESPONSE_CHECK_JOB_BAD = '- ERROR    - Command failed to check job status, return code is 404\n'
+RESPONSE_CHECK_JOB = (
+    f"- INFO     - JobID = {JOB_ID}\n"
+    "- INFO     - Name = Task\n"
+    "- INFO     - Message = Job completed successfully.\n"
+    "- INFO     - PercentComplete = 100\n"
+)
+RESPONSE_CHECK_JOB_BAD = (
+    "- ERROR    - Command failed to check job status, return code is 404\n"
+)
 DELLJOBSERVICE_UNSUPPORTED = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
@@ -571,8 +572,10 @@ BIOS_GET_ONE_BAD = (
     % ATTRIBUTE_BAD
 )
 NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
-NEXT_BOOT_PXE_BAD = ('- ERROR    - Command failed, error code is 400.\n'
-                     '- ERROR    - Error reading response from host.\n')
+NEXT_BOOT_PXE_BAD = (
+    "- ERROR    - Command failed, error code is 400.\n"
+    "- ERROR    - Error reading response from host.\n"
+)
 
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"

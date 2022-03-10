@@ -355,7 +355,9 @@ class Badfish:
                 if attribute.lower() in entries:
                     for values in entry.items():
                         if values[0] == "Value":
-                            accepted_values = [value["ValueName"] for value in values[1]]
+                            accepted_values = [
+                                value["ValueName"] for value in values[1]
+                            ]
                             for accepted_value in accepted_values:
                                 if value.lower() == accepted_value.lower():
                                     value = accepted_value
@@ -373,7 +375,9 @@ class Badfish:
                         )
                         _remove.append(attribute)
                 else:
-                    _not_found.append(f"{attribute} not found. Please check attribute name.")
+                    _not_found.append(
+                        f"{attribute} not found. Please check attribute name."
+                    )
             if _warnings:
                 for warning in _warnings:
                     self.logger.warning(warning)
@@ -386,9 +390,7 @@ class Badfish:
                 for attribute in _remove:
                     attributes.pop(attribute)
 
-        _payload = {
-            "Attributes": attributes
-        }
+        _payload = {"Attributes": attributes}
 
         await self.patch_bios(_payload, insist=False)
         await self.reboot_server()
@@ -687,7 +689,9 @@ class Badfish:
                 boot_mode = await self.get_bios_boot_mode()
                 if boot_mode.lower() != "uefi":
                     payload["BootMode"] = "Uefi"
-                interfaces = await self.get_interfaces_by_type(host_type, interfaces_path)
+                interfaces = await self.get_interfaces_by_type(
+                    host_type, interfaces_path
+                )
 
                 for i, interface in enumerate(interfaces, 1):
                     payload[f"PxeDev{i}Interface"] = interface

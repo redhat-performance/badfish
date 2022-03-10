@@ -19,9 +19,10 @@ from tests.config import (
     TOGGLE_DEV_NO_MATCH,
     TOGGLE_DEV_OK,
     BOOT_MODE_NO_RESP,
-    RESPONSE_CHANGE_NO_BOOT_PREFIX, BIOS_REGISTRY_OK,
-    PXE_DEV1_INT_RESP, PXE_DEV1_DIS_RESP, PXE_DEV2_DIS_RESP, PXE_DEV2_INT_RESP, PXE_DEV3_INT_RESP, PXE_DEV3_DIS_RESP,
+    RESPONSE_CHANGE_NO_BOOT_PREFIX,
+    BIOS_REGISTRY_OK,
     RESPONSE_CHANGE_BOOT_UEFI,
+    PXE_DEV_RESP,
 )
 from tests.test_base import TestBase
 
@@ -84,18 +85,11 @@ class TestChangeBoot(TestBase):
             BOOT_MODE_RESP,
             BIOS_REGISTRY_OK.replace("'", '"'),
             BOOT_MODE_RESP,
-            PXE_DEV1_INT_RESP,
-            PXE_DEV1_DIS_RESP,
-            PXE_DEV2_INT_RESP,
-            PXE_DEV2_DIS_RESP,
-            PXE_DEV3_INT_RESP,
-            PXE_DEV3_DIS_RESP,
-            BOOT_MODE_RESP,
-            PXE_DEV1_DIS_RESP,
-            PXE_DEV2_INT_RESP,
-            PXE_DEV2_DIS_RESP,
-            PXE_DEV3_INT_RESP,
-            PXE_DEV3_DIS_RESP,
+        ]
+        get_resp = get_resp + [PXE_DEV_RESP for _ in range(6)]
+        get_resp.append(BOOT_MODE_RESP)
+        get_resp = get_resp + [PXE_DEV_RESP for _ in range(5)]
+        get_resp = get_resp + [
             RESET_TYPE_RESP,
             STATE_ON_RESP,
             STATE_ON_RESP,
