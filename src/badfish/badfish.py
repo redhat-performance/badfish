@@ -1441,17 +1441,12 @@ class Badfish:
         _vmc_url = "%s%s/Actions/IsoConfig.UnMount" % (self.host_uri, vmc)
         _headers = {"content-type": "application/json"}
         _payload = {}
-        try:
-            disc_response = await self.post_request(_vmc_url, _payload, _headers)
-            if disc_response.status == 200:
-                self.logger.info("Successfully unmounted all VirtualMedia")
-            else:
-                raise BadfishException(
-                    "There was something wrong unmounting the VirtualMedia"
-                )
-        except ValueError:
+        disc_response = await self.post_request(_vmc_url, _payload, _headers)
+        if disc_response.status == 200:
+            self.logger.info("Successfully unmounted all VirtualMedia")
+        else:
             raise BadfishException(
-                "There was something wrong getting values for VirtualMedia"
+                "There was something wrong unmounting the VirtualMedia"
             )
 
         return True
@@ -1644,7 +1639,7 @@ class Badfish:
 
         except (ValueError, AttributeError):
             raise BadfishException(
-                "There was something wrong getting network interfaces"
+                "There was something wrong getting processor summary"
             )
 
         return values
@@ -1695,7 +1690,7 @@ class Badfish:
 
         except (ValueError, AttributeError):
             raise BadfishException(
-                "There was something wrong getting network interfaces"
+                "There was something wrong getting processor details"
             )
 
         return proc_details
@@ -1726,7 +1721,7 @@ class Badfish:
 
         except (ValueError, AttributeError):
             raise BadfishException(
-                "There was something wrong getting network interfaces"
+                "There was something wrong getting memory summary"
             )
 
         return values
@@ -1774,7 +1769,7 @@ class Badfish:
 
         except (ValueError, AttributeError):
             raise BadfishException(
-                "There was something wrong getting network interfaces"
+                "There was something wrong getting memory details"
             )
 
         return mem_details
