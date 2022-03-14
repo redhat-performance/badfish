@@ -66,10 +66,10 @@ class TestBootTo(TestBase):
         get_resp = [
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
-            BLANK_RESP,  # 503
-            BLANK_RESP,  # clear job in 400 clause
-            RESET_TYPE_RESP,  # get in reset_idrac
-            STATE_ON_RESP,  # get power state in polling_hst_state
+            BLANK_RESP,
+            BLANK_RESP,
+            RESET_TYPE_RESP,
+            STATE_ON_RESP,
         ]
         responses = INIT_RESP + get_resp
         self.set_mock_response(mock_get, 200, responses)

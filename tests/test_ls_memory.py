@@ -21,10 +21,10 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_ls_memory(self, mock_get):
         responses_add = [
-            MEMORY_SUMMARY_RESP,  # beginning in get_memory_summary()
-            MEMORY_MEMBERS_RESP,  # beginning in get_memory_details()
-            MEMORY_A5_RESP,       # for cycle first iteration in get_memory_details()
-            MEMORY_B2_RESP,       # for cycle second iteration in get_memory_details()
+            MEMORY_SUMMARY_RESP,
+            MEMORY_MEMBERS_RESP,
+            MEMORY_A5_RESP,
+            MEMORY_B2_RESP,
         ]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
@@ -57,7 +57,7 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_ls_memory_details_not_found(self, mock_get):
         responses_add = [
-            MEMORY_SUMMARY_RESP,  # beginning in get_memory_summary()
+            MEMORY_SUMMARY_RESP,
             "Not Found",
         ]
         responses = INIT_RESP + responses_add
@@ -69,7 +69,7 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_ls_memory_details_value_error(self, mock_get):
         responses_add = [
-            MEMORY_SUMMARY_RESP,  # beginning in get_memory_summary()
+            MEMORY_SUMMARY_RESP,
             "",
         ]
         responses = INIT_RESP + responses_add

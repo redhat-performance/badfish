@@ -3,7 +3,8 @@ from tests.config import (
     RESET_TYPE_RESP,
     BOOT_SEQ_RESPONSE_DIRECTOR,
     RESPONSE_RESET,
-    INIT_RESP, RESPONSE_RESET_FAIL,
+    INIT_RESP,
+    RESPONSE_RESET_FAIL,
 )
 from tests.test_base import TestBase
 

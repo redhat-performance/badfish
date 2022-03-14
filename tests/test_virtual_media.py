@@ -136,7 +136,7 @@ class TestUnmountVirtualMedia(TestBase):
         ]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
-        self.set_mock_response(mock_post, 200, JOB_OK_RESP)  # not really needed
+        self.set_mock_response(mock_post, 200, JOB_OK_RESP)
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == VMEDIA_UNMOUNT_UNSUPPORTED
