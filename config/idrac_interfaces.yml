@@ -34,8 +34,25 @@ foreman_r750_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
 foreman_7425_interfaces: NIC.Integrated.1-3-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,HardDisk.List.1-1
 foreman_7525_interfaces: NIC.Embedded.1-1-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
 foreman_r930_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+# These are for EFI
+# Expanding rest of models as a workaround for issue #239
 uefi_r630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
 uefi_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-1-1
+uefi_fc640_b01_interfaces: NIC.ChassisSlot.8-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_fc640_b02_interfaces: NIC.ChassisSlot.4-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_fc640_b03_interfaces: NIC.ChassisSlot.6-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_fc640_b04_interfaces: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_r630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
+uefi_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_r650_interfaces: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_r720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_r730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_740xd_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+uefi_r740xd_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_7425_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+uefi_7525_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+uefi_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 
 # To understand how custom overrides and hierarchy work please see https://github.com/redhat-performance/badfish#host-type-overrides
 

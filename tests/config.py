@@ -91,6 +91,29 @@ RESPONSE_BOOT_TO = (
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
+RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- ERROR    - Command failed, error code is: 503.\n"
+    "- INFO     - Retrying to send one time boot.\n"
+    "- INFO     - Command passed to set BIOS attribute pending values.\n"
+)
+RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- ERROR    - Command failed, error code is: 400.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n"
+    "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
+    "- INFO     - Polling for host state: On\n"
+    "- INFO     - Command passed to set BIOS attribute pending values.\n"
+    "- ERROR    - POST command failed to create BIOS config job, status code is 400.\n"
+    "- ERROR    - {'JobID': 'JID_498218641680'}\n"
+)
+RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- ERROR    - Command failed, error code is: 403.\n"
+    "- ERROR    - Error reading response from host.\n"
+)
+
 RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
 RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 RESPONSE_BOOT_TO_BAD_MAC = (
@@ -239,6 +262,12 @@ RESPONSE_LS_ETHERNET = (
     "- INFO     -     Health: OK\n"
     "- INFO     -     SpeedMbps: 10240\n"
 )
+RESPONSE_LS_INTERFACES_NOT_SUPPORTED = (
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_INTERFACES_VALUE_ERROR = (
+    "- ERROR    - There was something wrong getting network interfaces\n"
+)
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
@@ -351,6 +380,30 @@ RESPONSE_LS_MEMORY = (
     "- INFO     -     MemoryDeviceType: DDR4\n"
     "- INFO     -     OperatingSpeedMhz: 2933\n"
 )
+RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = (
+    "- ERROR    - There was something wrong getting memory summary\n"
+)
+MEMORY_SUMMARY_RESP_FAULTY = (
+    '{"MemorySum": {'
+    '"MemoryMirroring": "System",'
+    '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"},'
+    '"TotalSystemMemoryGiB": 384}}'
+)
+RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = (
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND = (
+    "- INFO     - Memory Summary:\n"
+    "- INFO     -     MemoryMirroring: System\n"
+    "- INFO     -     TotalSystemMemoryGiB: 384\n"
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR = (
+    "- INFO     - Memory Summary:\n"
+    "- INFO     -     MemoryMirroring: System\n"
+    "- INFO     -     TotalSystemMemoryGiB: 384\n"
+    "- ERROR    - There was something wrong getting memory details\n"
+)
 
 PROCESSOR_SUMMARY_RESP = (
     '{"ProcessorSummary": {'
@@ -396,6 +449,33 @@ RESPONSE_LS_PROCESSORS = (
     "- INFO     -     TotalCores: 20\n"
     "- INFO     -     TotalThreads: 40\n"
 )
+PROCESSOR_SUMMARY_RESP_FAULTY = (
+    '{"ProcessorSum": {'
+    '"Count": 2,'
+    '"LogicalProcessorCount": 80,'
+    '"Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",'
+    '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"}}}'
+)
+RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = (
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = (
+    "- ERROR    - There was something wrong getting processor summary\n"
+)
+RESPONSE_LS_PROCESSORS_DETAILS_NOT_FOUND = (
+    "- INFO     - Processor Summary:\n"
+    "- INFO     -     Count: 2\n"
+    "- INFO     -     LogicalProcessorCount: 80\n"
+    "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
+    "- INFO     - Processor Summary:\n"
+    "- INFO     -     Count: 2\n"
+    "- INFO     -     LogicalProcessorCount: 80\n"
+    "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- ERROR    - There was something wrong getting processor details\n"
+)
 
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = (
@@ -408,6 +488,12 @@ SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
 MOCK_HOST_SHORT_FQDN = MOCK_HOST.split(".")[0]
 SCREENSHOT_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.png"
 GIF_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.gif"
+SCREENSHOT_NOT_SUPPORTED = "- ERROR    - The system does not support screenshots.\n"
+SCREENSHOT_BAD_REQUEST = (
+    "- ERROR    - POST command failed to get the server screenshot.\n"
+    "- ERROR    - {'ServerScreenShotFile': \"%s\"}\n" % str(SCREENSHOT_64)
+)
+SCREENSHOT_GIF_FALSE_OK = "- ERROR    - Error reading response from host.\n"
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -417,6 +503,8 @@ VMEDIA_GET_MEMBERS_RESP = """
   ]
 }
 """
+VMEDIA_GET_ENDPOINT_FALSE = '{"VirtualMedia":false}'
+VMEDIA_GET_ENDPOINT_EMPTY = '{"VirtualMedia": {"@odata.id":false}}'
 VMEDIA_MEMBER_RM_DISK_RESP = """
 {
   "Id":"RemovableDisk",
@@ -453,6 +541,21 @@ VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
 VMEDIA_UNMOUNT_UNSUPPORTED = (
     "- WARNING  - OOB management does not support Virtual Media unmount\n"
 )
+VMEDIA_FIRMWARE_ERROR = (
+    "- ERROR    - Not able to access Firmware inventory.\n"
+)
+VMEDIA_CONFIG_NO_MEDIA = (
+    "- ERROR    - Not able to check for supported virtual media unmount\n"
+)
+VMEDIA_UNMOUNT_WENT_WRONG = (
+    "- ERROR    - There was something wrong unmounting the VirtualMedia\n"
+)
+VMEDIA_CHECK_DISC_VALUE_ERROR = (
+    "- ERROR    - There was something wrong getting values for VirtualMedia\n"
+)
+VMEDIA_NO_ENDPOINT_ERROR = (
+    "- ERROR    - No VirtualMedia endpoint found\n"
+)
 
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
@@ -481,6 +584,13 @@ BIOS_PASS_RM_GOOD = (
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
+BIOS_PASS_CHANGE_NOT_SUPPORTED = (
+    "- ERROR    - BIOS password change not supported on this system.\n"
+)
+BIOS_PASS_CHANGE_CMD_FAILED = (
+    "- WARNING  - Command failed to set BIOS password\n"
+    "- ERROR    - Error reading response from host.\n"
+)
 
 ATTRIBUTE_OK = "ProcC1E"
 ATTRIBUTE_BAD = "NotThere"
