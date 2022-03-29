@@ -421,7 +421,10 @@ NOTE:
 * You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
 
 ### Change between BIOS and UEFI modes
-* Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers (currently Dell only).
+* Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers.
+
+NOTE:
+  * This is only supported on Dell devices.
 
 #### Querying bootmode
 * First determine what bootmode state your server is using before proceeding.
@@ -436,7 +439,10 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute Bootmode --value Bios
 ```
-* Note that like all batch-driven actions this takes a reboot and time to process so be patient.
+
+NOTE:
+  * Like all batch-driven actions this takes a reboot and time to process so be patient.
+  * You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
 
 ### Get server screenshot
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
