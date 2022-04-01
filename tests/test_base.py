@@ -68,3 +68,18 @@ class TestBase(AioHTTPTestCase):
             pass
         out, err = self._capsys.readouterr()
         return out, err
+
+
+class MockResponse:
+    def __init__(self, text: str, status: int):
+        self.txt = text
+        self.status = status
+
+    async def text(self, arg1, arg2):
+        return self.txt
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    async def __aenter__(self):
+        return self
