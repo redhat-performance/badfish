@@ -8,6 +8,9 @@ from tests.config import (
     IMAGE_SAVED,
     SCREENSHOT_NAME,
     GIF_NAME,
+    SCREENSHOT_NOT_SUPPORTED,
+    SCREENSHOT_BAD_REQUEST,
+    SCREENSHOT_GIF_FALSE_OK,
 )
 from tests.test_base import TestBase
 
@@ -53,3 +56,50 @@ class TestGif(TestBase):
             _, err = self.badfish_call()
 
         assert err == IMAGE_SAVED % GIF_NAME
+
+    @patch("PIL.Image.open")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_gif_bad_request(self, mock_get, mock_post, mock_img):
+        mock_img.return_value.__aenter__.return_value = CoroutineMock()
+
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, [400, 400, 200, 200],
+                               ["", "", SCREENSHOT_RESP, SCREENSHOT_RESP])
+        self.args = [self.option_arg]
+
+        with patch("time.strftime", return_value="now"):
+            _, err = self.badfish_call()
+
+        assert err == SCREENSHOT_GIF_FALSE_OK
+
+
+class TestScreenshotErrors(TestBase):
+    option_arg = "--screenshot"
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_screenshot_not_supported(self, mock_get, mock_post):
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, 404, "Not Found")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == SCREENSHOT_NOT_SUPPORTED
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_screenshot_bad_request(self, mock_get, mock_post):
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, 400, SCREENSHOT_RESP)
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == SCREENSHOT_BAD_REQUEST
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_screenshot_false_ok(self, mock_get, mock_post):
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, 200, "")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == SCREENSHOT_GIF_FALSE_OK

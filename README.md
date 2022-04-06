@@ -48,6 +48,10 @@
          * [Get BIOS attributes](#get-bios-attributes)
          * [Get specific BIOS attribute](#get-specific-bios-attribute)
          * [Set BIOS attribute](#set-bios-attribute)
+         * [Change between BIOS and UEFI modes](#change-between-bios-and-uefi-modes)
+            * [Querying bootmode](#querying-bootmode)
+            * [Setting UEFI mode](#setting-uefi-mode)
+            * [Setting BIOS mode](#setting-bios-mode)
          * [Get server screenshot](#get-server-screenshot)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
@@ -415,6 +419,30 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 ```
 NOTE:
 * You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
+
+### Change between BIOS and UEFI modes
+* Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers.
+
+NOTE:
+  * This is only supported on Dell devices.
+
+#### Querying bootmode
+* First determine what bootmode state your server is using before proceeding.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute --attribute BootMode
+```
+#### Setting UEFI mode
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Uefi
+```
+### Setting BIOS mode
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Bios
+```
+
+NOTE:
+  * Like all batch-driven actions this takes a reboot and time to process so be patient.
+  * You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
 
 ### Get server screenshot
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
