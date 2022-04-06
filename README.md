@@ -433,11 +433,11 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute
 ```
 #### Setting UEFI mode
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute Bootmode --value Uefi
+badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Uefi
 ```
 ### Setting BIOS mode
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute Bootmode --value Bios
+badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Bios
 ```
 
 NOTE:
