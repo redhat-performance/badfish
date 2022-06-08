@@ -84,7 +84,7 @@ class TestRebootOnly(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT
 
-    @patch("src.badfish.badfish.RETRIES", 0)
+    @patch("badfish.badfish.RETRIES", 0)
     @patch("aiohttp.ClientSession.get")
     @patch("aiohttp.ClientSession.post")
     def test_reboot_only_failed_grace_and_force(self, mock_post, mock_get):

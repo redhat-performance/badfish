@@ -71,7 +71,7 @@ class TestPowerOff(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_OFF_MISS_STATE
 
-    @patch("src.badfish.badfish.Badfish.get_request")
+    @patch("badfish.badfish.Badfish.get_request")
     def test_power_off_none(self, mock_get_req_call):
         responses = INIT_RESP
         mock_get_req_call.side_effect = [
@@ -116,7 +116,7 @@ class TestPowerState(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_STATE_EMPTY
 
-    @patch("src.badfish.badfish.Badfish.get_request")
+    @patch("badfish.badfish.Badfish.get_request")
     def test_power_state_none(self, mock_get_req_call):
         responses = INIT_RESP
         mock_get_req_call.side_effect = [
