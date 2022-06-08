@@ -43,6 +43,9 @@ BOOT_SEQ_RESPONSE_NO_MATCH = [
     render_device_dict(1, DEVICE_NIC_1),
     render_device_dict(2, DEVICE_NIC_2),
 ]
+BOOT_SEQ_RESPONSE_FOREMAN_SHORTER = [
+    render_device_dict(0, DEVICE_NIC_1),
+]
 
 RESPONSE_WITHOUT = (
     "- INFO     - Current boot order:\n"
@@ -126,6 +129,22 @@ RESPONSE_REBOOT_ONLY_SUCCESS = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
+RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET = (
+    "- ERROR    - Command failed to GracefulRestart server, status code is: 400.\n"
+    "- ERROR    - Error reading response from host.\n"
+)
+RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT = (
+    "- INFO     - Command passed to RestartNow server, code return is 204.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 204.\n"
+)
+RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE = (
+    "- WARNING  - Command failed to GracefulRestart server, host appears to be already in that state.\n"
+    "- INFO     - Polling for host state: Off\n"
+    "- WARNING  - Unable to graceful shutdown the server, will perform forced shutdown now.\n"
+    "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+)
 
 # test_power
 RESPONSE_POWER_ON_OK = "- INFO     - Command passed to On server, code return is 204.\n"
@@ -136,6 +155,7 @@ RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
 RESPONSE_POWER_OFF_ALREADY = "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
 RESPONSE_POWER_OFF_MISS_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
 RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears to be already in that state.\n"
+RESPONSE_POWER_OFF_NONE = "- WARNING  - Power state appears to be already set to 'off'.\n"
 
 # test_reset_%s
 RESPONSE_RESET = (
@@ -152,6 +172,31 @@ RESPONSE_CHANGE_NO_BOOT_PREFIX = (
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
+    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
+    "- INFO     - Polling for host state: Not Down\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+)
+RESPONSE_CHANGE_BOOT_INCORRECT_PATH = "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
+RESPONSE_CHANGE_BOOT_PATCH_ERROR = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    "execute.\n"
+    "- WARNING  - Changes being requested will be valid for Bios BootMode. Current boot mode is set to Uefi.\n"
+    "- ERROR    - There was something wrong with your request.\n"
+    "- ERROR    - Error reading response from host.\n"
+)
+RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    "execute.\n"
+    "- WARNING  - Changes being requested will be valid for Bios BootMode. Current boot mode is set to Uefi.\n"
+    "- WARNING  - Some interfaces are not valid boot devices. Ignoring: NIC.Slot.2-1-1, HardDisk.List.1-1\n"
+    "- WARNING  - No changes were made since the boot order already matches the requested.\n"
+    "- WARNING  - Actions resource not found\n"
+    "- ERROR    - Power state not found. Try to racreset.\n"
+)
+RESPONSE_CHANGE_BOOT_PXE = (
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    "execute.\n"
+    '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
     "- INFO     - Command passed to ForceOff server, code return is 200.\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
@@ -175,12 +220,28 @@ RESET_TYPE_RESP = (
     '{"Actions":{"#Manager.Reset":{"ResetType@Redfish.AllowableValues":["GracefulRestart"],'
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
 )
+RESET_TYPE_NG_RESP = (
+    '{"Actions":{"#ComputerSystem.Reset":{"ResetType@Redfish.AllowableValues":["RestartNow"],'
+    '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
+)
 INIT_RESP = [ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
+
+RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
+    f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
+)
+RESPONSE_INIT_CREDENTIALS_FAILED_COMS = f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
+RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = "- ERROR    - Failed to authenticate. Verify your credentials.\n"
+RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = "- ERROR    - Systems resource not found\n"
 
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
+STATE_DOWN_RESP = '{"PowerState": "Down"}'
+RESPONSE_POWER_STATE_ON = f'- INFO     - Power state for {MOCK_HOST}: On\n'
+RESPONSE_POWER_STATE_DOWN = f'- INFO     - Power state for {MOCK_HOST}: Down\n'
+RESPONSE_POWER_STATE_EMPTY = '- ERROR    - Power state not found. Try to racreset.\n'
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
+BOOT_MODE_RESP_UEFI = '{"Attributes": {"BootMode": "UEFI"}}'
 PXE_DEV_RESP = (
     '{"Attributes": {'
     '"PxeDev1Interface": "NIC.Integrated.1-2-1", "PxeDev1EnDis": "Disabled",'
@@ -285,11 +346,27 @@ RESPONSE_CHECK_JOB = (
 RESPONSE_CHECK_JOB_BAD = (
     "- ERROR    - Command failed to check job status, return code is 404\n"
 )
+RESPONSE_CHECK_JOB_ERROR = "- ERROR    - Command failed to check job status\n"
+
 DELLJOBSERVICE_UNSUPPORTED = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
 )
 RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
 RESPONSE_CLEAR_JOBS_LIST = f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
+RESPONSE_CLEAR_JOBS_LIST_EXCEPTION = (
+    "- WARNING  - iDRAC version installed does not support DellJobService\n"
+    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
+    "- INFO     - Attempting to clear job list instead.\n"
+    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
+    "- ERROR    - Job queue not cleared, there was something wrong with your request.\n"
+)
+RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
+    "- WARNING  - iDRAC version installed does not support DellJobService\n"
+    "- INFO     - Attempting to clear job list instead.\n"
+    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
+    "- ERROR    - Failed to communicate with server.\n"
+)
+RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
 
 FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
@@ -317,6 +394,9 @@ FIRMWARE_INVENTORY_2_RESP = (
     '"Updateable": "True",'
     '"Version": "19.5.12"}'
 )
+FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = (
+    '{"error": "Something went wrong when getting firmware inventory"}'
+)
 RESPONSE_FIRMWARE_INVENTORY = (
     "- INFO     - Id: Installed-0-16.25.40.62\n"
     "- INFO     - Name: Mellanox ConnectX-5\n"
@@ -333,6 +413,19 @@ RESPONSE_FIRMWARE_INVENTORY = (
     "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
     "- INFO     - Updateable: True\n"
     "- INFO     - Version: 19.5.12\n"
+    "- INFO     - ************************************************\n"
+)
+RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = (
+    "- ERROR    - Not able to access Firmware inventory.\n"
+)
+RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE = (
+    "- INFO     - Id: Installed-0-16.25.40.62\n"
+    "- INFO     - Name: Mellanox ConnectX-5\n"
+    "- INFO     - ReleaseDate: 00:00:00Z\n"
+    "- INFO     - SoftwareId: 0\n"
+    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     - Updateable: True\n"
+    "- INFO     - Version: 16.25.40.62\n"
     "- INFO     - ************************************************\n"
 )
 
@@ -591,6 +684,19 @@ BIOS_PASS_CHANGE_CMD_FAILED = (
     "- WARNING  - Command failed to set BIOS password\n"
     "- ERROR    - Error reading response from host.\n"
 )
+BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE = (
+    "- INFO     - Command passed to set BIOS password.\n"
+    "- WARNING  - Host will now be rebooted for changes to take place.\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+    "- ERROR    - Command failed to check job status, return code is 400\n"
+)
+BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG = (
+    "- INFO     - Command passed to set BIOS password.\n"
+    "- WARNING  - Host will now be rebooted for changes to take place.\n"
+    "- INFO     - Command passed to On server, code return is 200.\n"
+)
+CHECK_JOB_STATUS_FAIL_MSG = '{"Message": "Fail"}'
+CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT = '{"Message": "Unexpected content"}'
 
 ATTRIBUTE_OK = "ProcC1E"
 ATTRIBUTE_BAD = "NotThere"
@@ -691,3 +797,28 @@ SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
 
 IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
+
+KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
+WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
+KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.badfish] - WARNING  - Badfish terminated\n"
+WRONG_BADFISH_EXECUTION_HOST_LIST = "[badfish.badfish] - WARNING  - There was something wrong executing Badfish\n"
+SUCCESSFUL_HOST_LIST = (
+    "[badfish.badfish] - INFO     - RESULTS:\n"
+    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
+)
+NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
+HOST_LIST_EXTRAS = (
+    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - INFO     - ************************************************\n"
+    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - INFO     - ************************************************\n"
+    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - INFO     - ************************************************\n"
+    "[badfish.badfish] - INFO     - RESULTS:\n"
+    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+)
+HOST_FILE_ERROR = "[badfish.badfish] - ERROR    - There was something wrong reading from non/existent/file\n"

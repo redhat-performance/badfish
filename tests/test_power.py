@@ -9,8 +9,13 @@ from tests.config import (
     RESPONSE_POWER_OFF_ALREADY,
     JOB_OK_RESP,
     RESPONSE_POWER_OFF_MISS_STATE,
+    STATE_ON_RESP,
+    RESPONSE_POWER_STATE_ON,
+    RESPONSE_POWER_STATE_DOWN,
+    RESPONSE_POWER_STATE_EMPTY,
+    RESPONSE_POWER_OFF_NONE,
 )
-from tests.test_base import TestBase
+from tests.test_base import TestBase, MockResponse
 
 
 class TestPowerOn(TestBase):
@@ -65,3 +70,62 @@ class TestPowerOff(TestBase):
         self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
         _, err = self.badfish_call()
         assert err == RESPONSE_POWER_OFF_MISS_STATE
+
+    @patch("badfish.badfish.Badfish.get_request")
+    def test_power_off_none(self, mock_get_req_call):
+        responses = INIT_RESP
+        mock_get_req_call.side_effect = [
+            MockResponse(responses[0], 200),
+            MockResponse(responses[0], 200),
+            MockResponse(responses[1], 200),
+            MockResponse(responses[2], 200),
+            MockResponse(responses[3], 200),
+            None
+        ]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_POWER_OFF_NONE
+
+
+class TestPowerState(TestBase):
+    args = ["--power-state"]
+
+    @patch("aiohttp.ClientSession.get")
+    def test_power_state(self, mock_get):
+        responses = INIT_RESP + [
+            STATE_ON_RESP
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_POWER_STATE_ON
+
+    @patch("aiohttp.ClientSession.get")
+    def test_power_state_bad_request(self, mock_get):
+        responses = INIT_RESP + [
+            "Bad Request"
+        ]
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 400], responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_POWER_STATE_DOWN
+
+    @patch("aiohttp.ClientSession.get")
+    def test_power_state_empty_data(self, mock_get):
+        responses = INIT_RESP + [
+            "{}"
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_POWER_STATE_EMPTY
+
+    @patch("badfish.badfish.Badfish.get_request")
+    def test_power_state_none(self, mock_get_req_call):
+        responses = INIT_RESP
+        mock_get_req_call.side_effect = [
+            MockResponse(responses[0], 200),
+            MockResponse(responses[0], 200),
+            MockResponse(responses[1], 200),
+            MockResponse(responses[2], 200),
+            MockResponse(responses[3], 200),
+            None
+        ]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_POWER_STATE_DOWN

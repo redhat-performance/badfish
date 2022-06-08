@@ -12,8 +12,17 @@ from tests.config import (
     TASK_OK_RESP,
     RESPONSE_CHECK_JOB,
     RESPONSE_CHECK_JOB_BAD,
+    RESPONSE_CLEAR_JOBS_LIST_EXCEPTION,
+    RESPONSE_CHECK_JOB_ERROR,
+    RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION,
+    RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
 )
-from tests.test_base import TestBase
+from tests.test_base import TestBase, MockResponse
+from src.badfish.badfish import BadfishException
+
+
+def raise_badfish_exception_stub_del_req(arg1=None, arg2=None):
+    raise BadfishException
 
 
 class TestJobQueue(TestBase):
@@ -100,6 +109,51 @@ class TestClearJobs(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_CLEAR_JOBS
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_clear_jobs_list_exception(self, mock_get, mock_post, mock_delete):
+        responses_add = [
+            JOB_OK_RESP,
+            BLANK_RESP,
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_delete, 400, BLANK_RESP)
+        self.set_mock_response(mock_post, 200, BLANK_RESP)
+        status_codes = [200, 200, 200, 200, 400, 200]
+        self.set_mock_response(mock_get, status_codes, responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CLEAR_JOBS_LIST_EXCEPTION
+
+
+class TestDeleteJob(TestBase):
+    args = ["--clear-jobs"]
+
+    @patch("aiohttp.ClientSession.delete", raise_badfish_exception_stub_del_req)
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_delete_unsupported_exception(self, mock_get, mock_post):
+        responses_add = [
+            JOB_OK_RESP
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_post, 200, BLANK_RESP)
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 400, 200], responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_delete_supported_exception(self, mock_get, mock_post):
+        responses_add = [
+            JOB_OK_RESP
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_post, 400, "Bad Request")
+        self.set_mock_response(mock_get, 200, responses)
+        _, err = self.badfish_call()
+        assert err == RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION
+
 
 class TestCheckJob(TestBase):
     args = ["--check-job"]
@@ -125,3 +179,18 @@ class TestCheckJob(TestBase):
         self.args = self.args + ["JID_WHICHDOESNOTEXIST"]
         _, err = self.badfish_call()
         assert err == RESPONSE_CHECK_JOB_BAD
+
+    @patch("badfish.badfish.Badfish.get_request")
+    def test_check_job_error(self, mock_get_req_call):
+        responses = INIT_RESP
+        mock_get_req_call.side_effect = [
+            MockResponse(responses[0], 200),
+            MockResponse(responses[0], 200),
+            MockResponse(responses[1], 200),
+            MockResponse(responses[2], 200),
+            MockResponse(responses[3], 200),
+            None
+        ]
+        self.args = self.args + [JOB_ID]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_CHECK_JOB_ERROR

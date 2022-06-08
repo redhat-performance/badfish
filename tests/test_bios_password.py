@@ -12,6 +12,10 @@ from tests.config import (
     STATE_OFF_RESP,
     BIOS_PASS_CHANGE_NOT_SUPPORTED,
     BIOS_PASS_CHANGE_CMD_FAILED,
+    BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE,
+    CHECK_JOB_STATUS_FAIL_MSG,
+    CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT,
+    BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG,
 )
 from tests.test_base import TestBase
 
@@ -98,3 +102,51 @@ class TestChangeBiosPass(TestBase):
         self.args = [self.option_arg, "--new-password", "new_pass"]
         _, err = self.badfish_call()
         assert err == BIOS_PASS_CHANGE_CMD_FAILED
+
+
+class TestSetBiosPassCheckJobStatus(TestBase):
+    option_arg = "--set-bios-password"
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_sbp_check_job_bad_code(self, mock_get, mock_post):
+        responses = INIT_RESP + [
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            "{}",
+        ]
+        status_codes = [200, 200, 200, 200, 200, 400]
+        self.set_mock_response(mock_get, status_codes, responses)
+        self.set_mock_response(mock_post, 200, JOB_OK_RESP)
+        self.args = [self.option_arg, "--new-password", "new_pass"]
+        _, err = self.badfish_call()
+        assert err == BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_sbp_check_job_fail_msg(self, mock_get, mock_post):
+        responses = INIT_RESP + [
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            CHECK_JOB_STATUS_FAIL_MSG,
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, JOB_OK_RESP)
+        self.args = [self.option_arg, "--new-password", "new_pass"]
+        _, err = self.badfish_call()
+        assert err == BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG
+
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_sbp_check_job_unexpected_msg(self, mock_get, mock_post):
+        responses = INIT_RESP + [
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT,
+            TASK_OK_RESP
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, JOB_OK_RESP)
+        self.args = [self.option_arg, "--new-password", "new_pass"]
+        _, err = self.badfish_call()
+        assert err == BIOS_PASS_SET_GOOD
