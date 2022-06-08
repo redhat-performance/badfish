@@ -3,6 +3,7 @@
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
 [![codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Docker Repository on Quay](https://quay.io/repository/quads/badfish/status "Docker Repository on Quay")](https://quay.io/repository/quads/badfish)
+[![GA](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
 
    * [About Badfish](#badfish)
       * [Scope](#scope)
