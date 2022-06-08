@@ -16,7 +16,7 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install -r tests/test-requirements.txt
-        pytest --cov=./ --cov-report=xml --cov-config=.coveragerc -p no:warnings
+        PYTHONPATH=src pytest --cov=./ --cov-report=xml --cov-config=.coveragerc -p no:warnings
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
