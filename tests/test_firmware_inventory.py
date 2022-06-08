@@ -50,7 +50,7 @@ class TestFirmwareInventory(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS
 
-    @patch("src.badfish.badfish.Badfish.get_request")
+    @patch("badfish.badfish.Badfish.get_request")
     def test_firmware_inventory_none_response(self, mock_get_req_call):
         responses_add = [
             FIRMWARE_INVENTORY_RESP,

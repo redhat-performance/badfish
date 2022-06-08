@@ -77,7 +77,7 @@ class TestLsInterfaces(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_LS_INTERFACES_NOT_SUPPORTED
-    
+
     @patch("aiohttp.ClientSession.get")
     def test_ls_interfaces_ethernet_value_error(self, mock_get):
         responses_add = [
