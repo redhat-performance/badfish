@@ -2,6 +2,7 @@ name: Lint
 
 on:
   push:
+    branches: [master, development]
     paths:
       - '/src'
       - '/tests'
@@ -15,7 +16,7 @@ jobs:
         with:
           python-version: 3.9
           architecture: x64
-      - name: Checkout PyTorch
+      - name: Checkout Badfish
         uses: actions/checkout@master
       - name: Install flake8
         run: pip install flake8
