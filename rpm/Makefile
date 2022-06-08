@@ -14,7 +14,7 @@ $(TARBALL):
 	( cd .. && git archive --prefix python3-badfish-$(VERSION)/ HEAD ) \
 	    | gzip > "$@"
 
-python3-badfish.spec: python3-badfish.spec.tpl ../setup.py
+python3-badfish.spec: python3-badfish.spec.tpl
 	@echo "  GEN $@" ; \
 	sed -e "s|@VERSION@|$(VERSION)|g" \
 	    -e "s|@RELEASE@|$(RELEASE)|g" \

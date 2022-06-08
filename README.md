@@ -1,7 +1,6 @@
 ![badfish](/image/badfish-original-licensed.small.png)
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
-[![Build Status](https://travis-ci.com/redhat-performance/badfish.svg?branch=master)](https://travis-ci.com/redhat-performance/badfish)
 [![codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Docker Repository on Quay](https://quay.io/repository/quads/badfish/status "Docker Repository on Quay")](https://quay.io/repository/quads/badfish)
 
@@ -116,8 +115,8 @@ Active releases:
 ### Badfish Standalone CLI
 ```bash
 git clone https://github.com/redhat-performance/badfish && cd badfish
-python setup.py build
-python setup.py install --prefix ~/.local
+python -m build
+python -m pip install dist/badfish-1.0.2.tar.gz
 ```
 NOTE:
 
@@ -140,6 +139,7 @@ NOTE: Badfish operates optionally against a YAML configuration file to toggle be
 
 ### As Python Library
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
+
 ```python
 from badfish.badfish import badfish_factory
 

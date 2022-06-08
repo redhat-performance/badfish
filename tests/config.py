@@ -691,3 +691,4 @@ SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
 SRIOV_STATE = "- INFO     - Enabled\n"
 
 IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
+HOST_FILE_ERROR = "[badfish.badfish] - ERROR    - There was something wrong reading from non/existent/file\n"
