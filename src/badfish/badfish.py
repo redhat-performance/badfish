@@ -666,14 +666,14 @@ class Badfish:
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
         if interfaces_path:
+            if not os.path.exists(interfaces_path):
+                raise BadfishException(
+                    "No such file or directory: '%s'." % interfaces_path
+                )
             host_types = await self.get_host_types_from_yaml(interfaces_path)
             if host_type.lower() not in host_types:
                 raise BadfishException(
                     f"Expected values for -t argument are: {host_types}"
-                )
-            if not os.path.exists(interfaces_path):
-                raise BadfishException(
-                    "No such file or directory: %s." % interfaces_path
                 )
         else:
             raise BadfishException(
@@ -2315,7 +2315,7 @@ def main(argv=None):
                 asyncio.gather(*[task() for task in tasks], return_exceptions=True)
             )
         except KeyboardInterrupt:
-            bfl.logger.warning("\nBadfish terminated")
+            bfl.logger.warning("Badfish terminated")
             result = False
         except (asyncio.CancelledError, BadfishException) as ex:
             bfl.logger.warning("There was something wrong executing Badfish")
