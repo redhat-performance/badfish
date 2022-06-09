@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Work around permission issue
-        run: git config --global --add safe.directory /__w/badfish/badfish
-
       - name: Check out proper version of sources
         uses: actions/checkout@v1
 
@@ -28,6 +25,9 @@ jobs:
       - name: Install tooling for source RPM build
         run: |
           dnf -y install @development-tools @rpm-development-tools copr-cli make
+
+      - name: Work around GHA permission issue
+        run: git config --global --add safe.directory /__w/badfish/badfish
 
       - name: Build the source RPM
         run: |
