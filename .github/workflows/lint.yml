@@ -1,8 +1,11 @@
 name: Lint
 
 on:
-  pull_request:
-    branches: [ master, development ]
+  pull_request_target:
+    types: [ opened, edited ]
+
+permissions:
+    checks: write
 
 jobs:
   run-linters:
@@ -25,7 +28,7 @@ jobs:
         uses: wearerequired/lint-action@v2
         with:
           black: true
-          black_dir: src/, tests/
+          black_dir: src/
           flake8: true
-          flake8_dir: src/, tests/
-          flake8_ignore: D203, E501, E203, W503
+          flake8_dir: src/
+          flake8_args: "--ignore D203, E501, E203, W503"
