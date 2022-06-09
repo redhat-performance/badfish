@@ -2,6 +2,10 @@ name: Codecov
 on:
   push:
     branches: [master, development]
+
+  pull_request:
+    branches: [master, development]
+
 jobs:
   run:
     runs-on: ubuntu-latest
