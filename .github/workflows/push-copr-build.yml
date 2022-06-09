@@ -3,7 +3,7 @@ name: RPM build in Fedora Copr
 on:
   # Build only on pushes into master branch.
   push:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   build:
@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Work around permission issue
+        run: git config --global --add safe.directory /__w/badfish/badfish
+
       - name: Check out proper version of sources
         uses: actions/checkout@v1
 
@@ -21,12 +24,15 @@ jobs:
         run: |
           mkdir -p "$HOME/.config"
           echo "$API_TOKEN_CONTENT" > "$HOME/.config/copr"
+
       - name: Install tooling for source RPM build
         run: |
           dnf -y install @development-tools @rpm-development-tools copr-cli make
+
       - name: Build the source RPM
         run: |
           cd rpm && make srpm
+
       - name: Submit the build by uploading the source RPM
         run: |
           copr build quadsdev/python3-badfish rpm/*.src.rpm
