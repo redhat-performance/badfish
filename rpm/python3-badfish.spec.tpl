@@ -36,8 +36,6 @@ BuildRequires:  python3-pip
 %files -n %{name}
 %doc README.md
 %license LICENSE
-%{python3_sitelib}/*
-%{_bindir}/%{project}
 
 %changelog
 * @DATE@ Gonzalo Rafuls <gonza@redhat.com> - @VERSION@-@RELEASE@
