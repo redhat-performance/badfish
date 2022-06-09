@@ -19,6 +19,7 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-devel
+BuildRequires:  python3-pip
 
 %description
 %{desc}
