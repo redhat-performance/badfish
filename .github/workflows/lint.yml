@@ -7,6 +7,12 @@ on:
       - '/src'
       - '/tests'
 
+  pull_request:
+    branches: [master, development]
+    paths:
+      - '/src'
+      - '/tests'
+
 jobs:
   flake8_py3:
     runs-on: ubuntu-latest
