@@ -20,6 +20,7 @@ BuildArch:      noarch
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-devel
 BuildRequires:  python3-pip
+BuildRequires:  zlib-devel
 
 %description
 %{desc}
