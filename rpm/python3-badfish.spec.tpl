@@ -30,7 +30,7 @@ BuildRequires:  python3-devel
 %py3_build
 
 %install
-%py3_install
+%{__python3} setup.py install --prefix ~/.local
 
 %files -n %{name}
 %doc README.md
