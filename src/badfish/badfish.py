@@ -1720,9 +1720,7 @@ class Badfish:
                     values[field] = value
 
         except (ValueError, AttributeError):
-            raise BadfishException(
-                "There was something wrong getting memory summary"
-            )
+            raise BadfishException("There was something wrong getting memory summary")
 
         return values
 
@@ -1768,9 +1766,7 @@ class Badfish:
                 mem_details.update({mem_name: values})
 
         except (ValueError, AttributeError):
-            raise BadfishException(
-                "There was something wrong getting memory details"
-            )
+            raise BadfishException("There was something wrong getting memory details")
 
         return mem_details
 

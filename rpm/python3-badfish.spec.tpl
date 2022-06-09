@@ -31,7 +31,7 @@ BuildRequires:  python3-pip
 %py3_build
 
 %install
-%{__python3} -m pip install --prefix ~/.local
+%{__python3} -m pip install . --prefix ~/.local
 
 %files -n %{name}
 %doc README.md
