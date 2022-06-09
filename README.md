@@ -15,6 +15,7 @@
       * [Usage](#usage)
         * [As Python Library](#as-python-library)
         * [Via Podman](#via-podman)
+        * [Via Virtualenv](#via-virtualenv)
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
@@ -171,6 +172,17 @@ podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PA
 NOTE:
 * If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with `--dns`
 * If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
+
+### Via Virtualenv
+[Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
+
+While we strongly recommend using the [podman](#via-podman) method of calling Badfish inside a virtualenv you can still do it directly from the repository but you may need to provide symlinks from your Badfish repository into your virtualenv.  e.g. if Python3.10 is your python version:
+
+```
+ln -s {BADFISH_REPO_PATH}/src/helpers {VIRTUALENV_PATH}/lib/python3.10/site-packages/helpers
+```
+
+We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within the $PYTHONPATH of your virtualenv without more symlinks or workarounds.
 
 ## Common Operations
 
