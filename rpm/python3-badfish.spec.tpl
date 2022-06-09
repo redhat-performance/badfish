@@ -21,6 +21,7 @@ BuildRequires:  python3-setuptools
 BuildRequires:  python3-devel
 BuildRequires:  python3-pip
 BuildRequires:  zlib-devel
+BuildRequires:  libjpeg-turbo-devel
 
 %description
 %{desc}
