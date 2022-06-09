@@ -3,12 +3,9 @@ name: RPM build in Fedora Copr
 on:
   # Build only on pushes into master branch.
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
-  schedule:
-    # This always runs against the default branch.  Two runs per month.
-    -   cron: '0 0 1,16 * *'
+    branches: [ master ]
 
 jobs:
   build:
