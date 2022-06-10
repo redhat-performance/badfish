@@ -3,6 +3,9 @@ name: Lint
 on:
   pull_request_target:
     types: [ opened, edited ]
+    branches: [ master ]
+  push:
+    branches: [ master ]
 
 permissions:
     checks: write
