@@ -14,12 +14,12 @@ Summary:        %{sum}
 
 License:        GPLv3
 URL:            https://github.com/%{org}/%{project}
-Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
-BuildRequires:  python3-setuptools
+BuildRequires:  %{py3_dist setuptools}
+BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
-BuildRequires:  python3-pip
 BuildRequires:  zlib-devel
 BuildRequires:  libjpeg-turbo-devel
 
@@ -33,11 +33,14 @@ BuildRequires:  libjpeg-turbo-devel
 %py3_build
 
 %install
-%{__python3} -m pip install . --prefix ~/.local
+%py3_install
 
 %files -n %{name}
 %doc README.md
 %license LICENSE
+%{python3_sitelib}/%{project}/
+%{python3_sitelib}/%{project}-%{version}-py%{python3_version}.egg-info/
+%{_bindir}/%{project}
 
 %changelog
 * @DATE@ Gonzalo Rafuls <gonza@redhat.com> - @VERSION@-@RELEASE@
