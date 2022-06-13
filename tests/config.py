@@ -162,7 +162,7 @@ RESPONSE_RESET = (
     "- INFO     - Status code 204 returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
-RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nnot_ok.\n"
+RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
 
 # test_change_boot
 RESPONSE_CHANGE_NO_BOOT_PREFIX = (
@@ -213,7 +213,10 @@ RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
-ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'
+ROOT_RESP = (
+    '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}, '
+    '"RedfishVersion": "1.0.2"}'
+)
 SYS_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}]}'
 MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
 RESET_TYPE_RESP = (
@@ -224,7 +227,7 @@ RESET_TYPE_NG_RESP = (
     '{"Actions":{"#ComputerSystem.Reset":{"ResetType@Redfish.AllowableValues":["RestartNow"],'
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
 )
-INIT_RESP = [ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
+INIT_RESP = [ROOT_RESP, ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
 
 RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
     f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
@@ -810,11 +813,11 @@ SUCCESSFUL_HOST_LIST = (
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[badfish.badfish] - INFO     - RESULTS:\n"
     "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"

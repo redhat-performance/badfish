@@ -7,13 +7,13 @@ from tests.config import (
     WRONG_BADFISH_EXECUTION_HOST_LIST,
     SUCCESSFUL_HOST_LIST,
     NO_HOST_ERROR,
-    BLANK_RESP,
     HOST_LIST_EXTRAS,
     ROOT_RESP,
     SYS_RESP,
     MAN_RESP,
     RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
-    RESPONSE_INIT_CREDENTIALS_FAILED_COMS, RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED,
+    RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
+    RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED,
     RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
 )
 from tests.test_base import TestBase
@@ -65,9 +65,13 @@ class TestHostListExecution(TestBase):
         _, err = self.badfish_call(mock_host=None)
         assert err == SUCCESSFUL_HOST_LIST
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_host_list_extras(self, mock_get):
-        self.set_mock_response(mock_get, 200, BLANK_RESP)
+    def test_host_list_extras(self, mock_get, mock_post, mock_delete):
+        self.set_mock_response(mock_get, 200, ROOT_RESP)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call(mock_host=None)
         assert err == HOST_LIST_EXTRAS
 
@@ -75,29 +79,44 @@ class TestHostListExecution(TestBase):
 class TestInitialization(TestBase):
     args = ['--ls-jobs']
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_validate_credentials_unauthorized(self, mock_get):
-        self.set_mock_response(mock_get, 401, 'Unauthorized')
+    def test_validate_credentials_unauthorized(self, mock_get, mock_post, mock_delete):
+        self.set_mock_response(mock_get, 200, ROOT_RESP)
+        self.set_mock_response(mock_post, 401, "Unauthorized")
+        self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
         assert err == RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_validate_credentials_failed_coms(self, mock_get):
-        responses = [ROOT_RESP]
-        self.set_mock_response(mock_get, 400, responses)
+    def test_validate_credentials_failed_coms(self, mock_get, mock_post, mock_delete):
+        self.set_mock_response(mock_get, 200, [ROOT_RESP])
+        self.set_mock_response(mock_post, 400, "Bad Request")
+        self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
         assert err == RESPONSE_INIT_CREDENTIALS_FAILED_COMS
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_find_systems_resource_unauthorized(self, mock_get):
-        responses = [ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
-        self.set_mock_response(mock_get, [200, 200, 401], responses)
+    def test_find_systems_resource_unauthorized(self, mock_get, mock_post, mock_delete):
+        responses = [ROOT_RESP, ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
+        self.set_mock_response(mock_get, [200, 200, 401, 200, 200], responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
         assert err == RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED
 
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_find_systems_resource_not_found(self, mock_get):
-        responses = ["{}", SYS_RESP, ROOT_RESP, MAN_RESP]
+    def test_find_systems_resource_not_found(self, mock_get, mock_post, mock_delete):
+        responses = [ROOT_RESP, "{}", MAN_RESP]
         self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
         assert err == RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND

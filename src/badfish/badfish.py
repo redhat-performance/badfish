@@ -103,13 +103,17 @@ class Badfish:
         self.manager_resource = None
         self.bios_uri = None
         self.boot_devices = None
+        self.session_uri = None
+        self.session_id = None
+        self.token = None
 
     async def init(self):
-        await self.validate_credentials()
+        self.session_uri = await self.find_session_uri()
+        self.token = await self.validate_credentials()
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
+            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
         )
 
     @staticmethod
@@ -153,17 +157,26 @@ class Badfish:
             raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
-    async def get_request(self, uri, _continue=False):
+    async def get_request(self, uri, _continue=False, _get_token=False):
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        uri,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
-                        ssl=False,
-                        timeout=60,
-                    ) as _response:
-                        await _response.read()
+                    if not _get_token:
+                        async with session.get(
+                            uri,
+                            headers={"X-Auth-Token": self.token},
+                            ssl=False,
+                            timeout=60,
+                        ) as _response:
+                            await _response.read()
+                    else:
+                        async with session.get(
+                            uri,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
+                            timeout=60,
+                        ) as _response:
+                            await _response.read()
         except (Exception, TimeoutError) as ex:
             if _continue:
                 return
@@ -172,15 +185,16 @@ class Badfish:
                 raise BadfishException("Failed to communicate with server.")
         return _response
 
-    async def post_request(self, uri, payload, headers):
+    async def post_request(self, uri, payload, headers, _get_token=False):
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
+                    if not _get_token:
+                        headers.update({"X-Auth-Token": self.token})
                     async with session.post(
                         uri,
                         data=json.dumps(payload),
                         headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
                         ssl=False,
                     ) as _response:
                         if _response.status != 204:
@@ -195,11 +209,11 @@ class Badfish:
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
+                    headers.update({"X-Auth-Token": self.token})
                     async with session.patch(
                         uri,
                         data=json.dumps(payload),
                         headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
                         ssl=False,
                     ) as _response:
                         await _response.read()
@@ -215,10 +229,10 @@ class Badfish:
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
+                    headers.update({"X-Auth-Token": self.token})
                     async with session.delete(
                         uri,
                         headers=headers,
-                        auth=aiohttp.BasicAuth(self.username, self.password),
                         ssl=False,
                     ) as _response:
                         await _response.read()
@@ -502,16 +516,50 @@ class Badfish:
 
         return None
 
-    async def validate_credentials(self):
-        response = await self.get_request(self.root_uri + "/Systems")
+    async def find_session_uri(self):
+        _response = await self.get_request(self.root_uri, _get_token=True)
+        raw = await _response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
 
-        if response.status == 401:
+        status = _response.status
+        if status == 401:
             raise BadfishException(
                 f"Failed to authenticate. Verify your credentials for {self.host}"
             )
-
-        if response.status not in [200, 201]:
+        if status not in [200, 201]:
             raise BadfishException(f"Failed to communicate with {self.host}")
+
+        redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        session_uri = None
+        if redfish_version >= 160:
+            session_uri = "/redfish/v1/SessionService/Sessions"
+        elif redfish_version < 160:
+            session_uri = "/redfish/v1/Sessions"
+
+        _uri = "%s%s" % (self.host_uri, session_uri)
+        check_response = await self.get_request(_uri, _get_token=True)
+        if check_response.status == 404:
+            session_uri = "/redfish/v1/SessionService/Sessions"
+
+        return session_uri
+
+    async def validate_credentials(self):
+        payload = {"UserName": self.username, "Password": self.password}
+        headers = {'content-type': 'application/json'}
+        _uri = "%s%s" % (self.host_uri, self.session_uri)
+        _response = await self.post_request(_uri, headers=headers, payload=payload, _get_token=True)
+
+        raw = await _response.text("utf-8", "ignore")
+        status = _response.status
+        if status == 401:
+            raise BadfishException(
+                f"Failed to authenticate. Verify your credentials for {self.host}"
+            )
+        if status not in [200, 201]:
+            raise BadfishException(f"Failed to communicate with {self.host}")
+
+        self.session_id = _response.headers.get("Location")
+        return _response.headers.get("X-Auth-Token")
 
     async def get_interfaces_endpoints(self):
         _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
@@ -596,7 +644,7 @@ class Badfish:
             else:
                 managers = data["Managers"]["@odata.id"]
                 response = await self.get_request(self.host_uri + managers)
-                if response:
+                if response and response.status in [200, 201]:
                     raw = await response.text("utf-8", "ignore")
                     data = json.loads(raw.strip())
                     if data.get("Members"):
@@ -646,7 +694,8 @@ class Badfish:
             self.logger.warning("Power state appears to be already set to 'off'.")
             return
 
-        if _response.status == 200:
+        status = _response.status
+        if status == 200:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         else:
@@ -914,8 +963,8 @@ class Badfish:
 
             await self.error_handler(_response)
 
-        raw = str(_response.__dict__)
-        result = re.search("JID_.+?,", raw).group()
+        raw = await _response.text("utf-8", "ignore")
+        result = re.search("JID_.+?", raw).group()
         job_id = re.sub("[,']", "", result)
         if job_id:
             self.logger.debug("%s job ID successfully created" % job_id)
@@ -1926,6 +1975,14 @@ class Badfish:
         for _file in files:
             os.remove(_file)
 
+    async def delete_session(self):
+        headers = {'content-type': 'application/json'}
+        _uri = "%s%s" % (self.host_uri, self.session_id)
+        _response = await self.delete_request(_uri, headers=headers)
+        if _response.status not in [200, 201]:
+            raise BadfishException(f"Failed to delete X-Auth-Token for {self.host}")
+        return
+
 
 async def execute_badfish(_host, _args, logger):
     _username = _args["u"]
@@ -2061,6 +2118,7 @@ async def execute_badfish(_host, _args, logger):
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
 
+        await badfish.delete_session()
     except BadfishException as ex:
         logger.error(ex)
         result = False
