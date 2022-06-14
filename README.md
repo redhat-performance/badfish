@@ -110,6 +110,7 @@ dnf install python3-badfish -y
 Active releases:
 - CentOS-stream 8
 - EPEL for CentOS 8
+- Fedora 33
 - Fedora 34
 - Fedora 35
 - Fedora 36
