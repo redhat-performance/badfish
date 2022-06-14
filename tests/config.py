@@ -155,14 +155,18 @@ RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
 RESPONSE_POWER_OFF_ALREADY = "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
 RESPONSE_POWER_OFF_MISS_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
 RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears to be already in that state.\n"
-RESPONSE_POWER_OFF_NONE = "- WARNING  - Power state appears to be already set to 'off'.\n"
+RESPONSE_POWER_OFF_NONE = (
+    "- WARNING  - Power state appears to be already set to 'off'.\n"
+)
 
 # test_reset_%s
 RESPONSE_RESET = (
     "- INFO     - Status code 204 returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
-RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nnot_ok.\n"
+RESPONSE_RESET_FAIL = (
+    "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
+)
 
 # test_change_boot
 RESPONSE_CHANGE_NO_BOOT_PREFIX = (
@@ -176,7 +180,9 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
-RESPONSE_CHANGE_BOOT_INCORRECT_PATH = "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
+RESPONSE_CHANGE_BOOT_INCORRECT_PATH = (
+    "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
+)
 RESPONSE_CHANGE_BOOT_PATCH_ERROR = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
@@ -213,7 +219,10 @@ RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
-ROOT_RESP = '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}}'
+ROOT_RESP = (
+    '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}, '
+    '"RedfishVersion": "1.0.2"}'
+)
 SYS_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}]}'
 MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
 RESET_TYPE_RESP = (
@@ -224,21 +233,25 @@ RESET_TYPE_NG_RESP = (
     '{"Actions":{"#ComputerSystem.Reset":{"ResetType@Redfish.AllowableValues":["RestartNow"],'
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
 )
-INIT_RESP = [ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
+INIT_RESP = [ROOT_RESP, ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
 
 RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
     f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
 )
-RESPONSE_INIT_CREDENTIALS_FAILED_COMS = f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
-RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = "- ERROR    - Failed to authenticate. Verify your credentials.\n"
+RESPONSE_INIT_CREDENTIALS_FAILED_COMS = (
+    f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
+)
+RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = (
+    "- ERROR    - Failed to authenticate. Verify your credentials.\n"
+)
 RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = "- ERROR    - Systems resource not found\n"
 
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
-RESPONSE_POWER_STATE_ON = f'- INFO     - Power state for {MOCK_HOST}: On\n'
-RESPONSE_POWER_STATE_DOWN = f'- INFO     - Power state for {MOCK_HOST}: Down\n'
-RESPONSE_POWER_STATE_EMPTY = '- ERROR    - Power state not found. Try to racreset.\n'
+RESPONSE_POWER_STATE_ON = f"- INFO     - Power state for {MOCK_HOST}: On\n"
+RESPONSE_POWER_STATE_DOWN = f"- INFO     - Power state for {MOCK_HOST}: Down\n"
+RESPONSE_POWER_STATE_EMPTY = "- ERROR    - Power state not found. Try to racreset.\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_MODE_RESP_UEFI = '{"Attributes": {"BootMode": "UEFI"}}'
@@ -366,7 +379,9 @@ RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
     "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
     "- ERROR    - Failed to communicate with server.\n"
 )
-RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
+RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = (
+    "- ERROR    - Error reading response from host.\n"
+)
 
 FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
@@ -570,6 +585,41 @@ RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
     "- ERROR    - There was something wrong getting processor details\n"
 )
 
+DELL_REDFISH_ROOT_OEM_RESP = """
+    {"Oem":
+        {"Dell":
+            {"@odata.context":"/redfish/v1/$metadata#DellServiceRoot.DellServiceRoot",
+             "@odata.type":"#DellServiceRoot.v1_0_0.DellServiceRoot",
+             "IsBranded":0,
+             "ManagerMACAddress":"f4:13:37:ee:30:69",
+             "ServiceTag":"HXVMC42"}
+        }
+    }
+"""
+SYSTEM_SERIAL_NUMBER_RESP = """
+    {"@odata.id":"/redfish/v1/Systems/1",
+    "Id":"1", "Name":"System",
+    "Description":"Description of server",
+    "SerialNumber":"S211337X8693420",
+    "Manufacturer":"Supermicro",
+    "Model":"SYS-5039MS-HUH4F" }
+"""
+EMPTY_OEM_RESP = '{"Oem":{}}'
+RESPONSE_LS_SERIAL_SERVICE_TAG = (
+    "- INFO     - Found ServiceTag:\n"
+    "- INFO     -     f01-h01-000-r630.host.io's ServiceTag: HXVMC42\n"
+)
+RESPONSE_LS_SERIAL_NUMBER = (
+    "- INFO     - Found System Serial Number:\n"
+    "- INFO     -     f01-h01-000-r630.host.io's System SerialNumber: S211337X8693420\n"
+)
+RESPONSE_LS_SERIAL_UNSUPPORTED = (
+    "- ERROR    - Server does not support this functionality\n"
+)
+RESPONSE_LS_SERIAL_SOMETHING_WRONG = (
+    "- ERROR    - There was something wrong getting serial summary\n"
+)
+
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = (
     '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}'
@@ -634,9 +684,7 @@ VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
 VMEDIA_UNMOUNT_UNSUPPORTED = (
     "- WARNING  - OOB management does not support Virtual Media unmount\n"
 )
-VMEDIA_FIRMWARE_ERROR = (
-    "- ERROR    - Not able to access Firmware inventory.\n"
-)
+VMEDIA_FIRMWARE_ERROR = "- ERROR    - Not able to access Firmware inventory.\n"
 VMEDIA_CONFIG_NO_MEDIA = (
     "- ERROR    - Not able to check for supported virtual media unmount\n"
 )
@@ -646,9 +694,7 @@ VMEDIA_UNMOUNT_WENT_WRONG = (
 VMEDIA_CHECK_DISC_VALUE_ERROR = (
     "- ERROR    - There was something wrong getting values for VirtualMedia\n"
 )
-VMEDIA_NO_ENDPOINT_ERROR = (
-    "- ERROR    - No VirtualMedia endpoint found\n"
-)
+VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
 
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
@@ -801,7 +847,9 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
 KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.badfish] - WARNING  - Badfish terminated\n"
-WRONG_BADFISH_EXECUTION_HOST_LIST = "[badfish.badfish] - WARNING  - There was something wrong executing Badfish\n"
+WRONG_BADFISH_EXECUTION_HOST_LIST = (
+    "[badfish.badfish] - WARNING  - There was something wrong executing Badfish\n"
+)
 SUCCESSFUL_HOST_LIST = (
     "[badfish.badfish] - INFO     - RESULTS:\n"
     "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
@@ -810,11 +858,11 @@ SUCCESSFUL_HOST_LIST = (
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[f01-h01-000-r630] - ERROR    - Systems resource not found\n"
+    "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[badfish.badfish] - INFO     - RESULTS:\n"
     "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
