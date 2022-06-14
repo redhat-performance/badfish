@@ -42,6 +42,7 @@
          * [List Network Interfaces](#list-network-interfaces)
          * [List Memory](#list-memory)
          * [List Processors](#list-processors)
+         * [List Serial Number or Service Tag](#list-serial-number-or-service-tag)
          * [Check Virtual Media](#check-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Get SRIOV mode](#get-sriov-mode)
@@ -379,6 +380,12 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-memory
 For getting a detailed list of processors you can run ```badfish``` with the ```--ls-processors``` option.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-processors
+```
+
+### List Serial Number or Service Tag
+For getting the system's serial number or on Dell servers the service tag (equivalent to `racadm getsvctag`) you can run ```badfish``` with the ```--ls-serial``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-serial
 ```
 
 ### Check Virtual Media
