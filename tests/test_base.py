@@ -18,11 +18,15 @@ class TestBase(AioHTTPTestCase):
         return web.Application()
 
     @staticmethod
-    def set_mock_response(mock, status, responses):
+    def set_mock_response(mock, status, responses, post=False):
         mock.return_value.__aenter__.return_value.name = responses
         if type(status) == list:
             status_mock = MagicMock()
-            type(status_mock).status = PropertyMock(side_effect=status)
+            if post:
+                dup_stats = [val for val in status for _ in range(2)]
+                type(status_mock).status = PropertyMock(side_effect=dup_stats)
+            else:
+                type(status_mock).status = PropertyMock(side_effect=status)
             mock.return_value.__aenter__.return_value = status_mock
         else:
             mock.return_value.__aenter__.return_value.status = status

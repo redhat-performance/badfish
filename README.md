@@ -42,6 +42,7 @@
          * [List Network Interfaces](#list-network-interfaces)
          * [List Memory](#list-memory)
          * [List Processors](#list-processors)
+         * [List Serial Number or Service Tag](#list-serial-number-or-service-tag)
          * [Check Virtual Media](#check-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Get SRIOV mode](#get-sriov-mode)
@@ -83,6 +84,9 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Clear iDRAC job queue
 * Revert to factory settings
 * Check/set SRIOV
+* Take a remote screenshot or animated GIF of server KVM console activity.
+* Support tokenized authentication
+* Check and set BIOS attributes (e.g. setting UEFI or BIOS mode)
 * Get firmware inventory of installed devices supported by iDRAC
 * Check/ummount virtual media en-masse across a set of systems
 * Obtain limited hardware information (CPU, Memory, Interfaces)
@@ -94,8 +98,8 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * (Dell) iDRAC7,8,9 or newer
 * (Dell) Firmware version ```2.60.60.60``` or higher
 * iDRAC administrative account
-* Python >= ```3.6``` or [podman](https://podman.io/getting-started/installation) as a container.
-* python3-devel >= ```3.6``` (If using standalone below).
+* Python >= ```3.8``` or [podman](https://podman.io/getting-started/installation) as a container.
+* python3-devel >= ```3.8``` (If using standalone or RPM package below).
 
 ## Setup
 ### Badfish RPM package
@@ -105,14 +109,14 @@ dnf install python3-badfish -y
 ```
 
 Active releases:
-- Centos-stream 8
-- EPEL for CentOS 7
+- CentOS-stream 8
 - EPEL for CentOS 8
 - Fedora 33
 - Fedora 34
 - Fedora 35
+- Fedora 36
 
-* Note: For EL7 you'll need a working Python 3.6+ and dependencies _(python3-pyyaml, python3-setuptools)_ so setting up [Software Collections/SCL](https://www.softwarecollections.org/en/scls/rhscl/rh-python36/) will be required before installing and using Badfish as an RPM package.
+* CentOS 9 Stream / EPEL 9 is not available until [python3-pillow](https://github.com/python-pillow/Pillow/issues/4953) is packaged and built for this platform, however you can always satisfy this dependency yourself or just use [podman instead](#via-podman) for any platform or distribution.
 
 ### Badfish Standalone CLI
 ```bash
@@ -376,6 +380,12 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-memory
 For getting a detailed list of processors you can run ```badfish``` with the ```--ls-processors``` option.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-processors
+```
+
+### List Serial Number or Service Tag
+For getting the system's serial number or on Dell servers the service tag (equivalent to `racadm getsvctag`) you can run ```badfish``` with the ```--ls-serial``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-serial
 ```
 
 ### Check Virtual Media
