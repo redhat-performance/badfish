@@ -38,7 +38,9 @@ class TestLsProcessors(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_processors_summary_proc_data_error(self, mock_get, mock_post, mock_delete):
+    def test_ls_processors_summary_proc_data_error(
+        self, mock_get, mock_post, mock_delete
+    ):
         responses_add = [
             PROCESSOR_SUMMARY_RESP_FAULTY,
         ]
@@ -69,10 +71,7 @@ class TestLsProcessors(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_ls_processors_details_not_found(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            PROCESSOR_SUMMARY_RESP,
-            "Not Found"
-        ]
+        responses_add = [PROCESSOR_SUMMARY_RESP, "Not Found"]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -85,10 +84,7 @@ class TestLsProcessors(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_ls_processors_details_value_error(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            PROCESSOR_SUMMARY_RESP,
-            ""
-        ]
+        responses_add = [PROCESSOR_SUMMARY_RESP, ""]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")

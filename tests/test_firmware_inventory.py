@@ -36,9 +36,7 @@ class TestFirmwareInventory(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_firmware_inventory_json_invalid(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            ""
-        ]
+        responses_add = [""]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -50,10 +48,10 @@ class TestFirmwareInventory(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_firmware_inventory_json_contains_error(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR
-        ]
+    def test_firmware_inventory_json_contains_error(
+        self, mock_get, mock_post, mock_delete
+    ):
+        responses_add = [FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -65,11 +63,10 @@ class TestFirmwareInventory(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("badfish.badfish.Badfish.get_request")
-    def test_firmware_inventory_none_response(self, mock_get_req_call, mock_post, mock_delete):
-        responses_add = [
-            FIRMWARE_INVENTORY_RESP,
-            FIRMWARE_INVENTORY_1_RESP
-        ]
+    def test_firmware_inventory_none_response(
+        self, mock_get_req_call, mock_post, mock_delete
+    ):
+        responses_add = [FIRMWARE_INVENTORY_RESP, FIRMWARE_INVENTORY_1_RESP]
         responses = INIT_RESP + responses_add
         mock_get_req_call.side_effect = [
             MockResponse(responses[0], 200),
@@ -80,7 +77,7 @@ class TestFirmwareInventory(TestBase):
             MockResponse(responses[4], 200),
             MockResponse(responses[5], 200),
             None,
-            MockResponse(responses[6], 200)
+            MockResponse(responses[6], 200),
         ]
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")

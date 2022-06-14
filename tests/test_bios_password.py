@@ -73,9 +73,7 @@ class TestRemoveBiosPass(TestBase):
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "--old-password", "new_pass"]
-        _, err = self.badfish_call(
-
-        )
+        _, err = self.badfish_call()
         assert err == BIOS_PASS_RM_GOOD
 
     @patch("aiohttp.ClientSession.delete")
@@ -165,7 +163,7 @@ class TestSetBiosPassCheckJobStatus(TestBase):
             RESET_TYPE_RESP,
             STATE_OFF_RESP,
             CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT,
-            TASK_OK_RESP
+            TASK_OK_RESP,
         ]
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)

@@ -56,7 +56,9 @@ class TestSetBiosAttribute(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_set_bios_attribute_bad_value(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_set_bios_attribute_bad_value(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         get_resp = [
             BIOS_REGISTRY_OK.replace("'", '"'),
             BIOS_RESPONSE_DIS,
@@ -81,7 +83,9 @@ class TestSetBiosAttribute(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_set_bios_attribute_bad_attr(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_set_bios_attribute_bad_attr(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         get_resp = [
             BIOS_REGISTRY_OK.replace("'", '"'),
             BIOS_RESPONSE_DIS,

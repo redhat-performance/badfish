@@ -40,9 +40,7 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_ls_memory_summary_value_error(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            ""
-        ]
+        responses_add = [""]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")

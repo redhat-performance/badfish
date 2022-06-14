@@ -40,7 +40,9 @@ class TestRebootOnly(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_reboot_only_success_with_polling_down(self, mock_get, mock_post, mock_delete):
+    def test_reboot_only_success_with_polling_down(
+        self, mock_get, mock_post, mock_delete
+    ):
         responses = INIT_RESP + [
             RESET_TYPE_RESP,
             STATE_ON_RESP,
@@ -101,7 +103,9 @@ class TestRebootOnly(TestBase):
             STATE_ON_RESP,
         ]
         self.set_mock_response(mock_get, 200, responses)
-        self.set_mock_response(mock_post, [200, 409, 409], ["OK", "Conflict", "Conflict"], True)
+        self.set_mock_response(
+            mock_post, [200, 409, 409], ["OK", "Conflict", "Conflict"], True
+        )
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()

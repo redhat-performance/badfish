@@ -21,7 +21,7 @@ except ImportError:
     from queue import Queue
 from logging.handlers import QueueHandler, QueueListener
 
-from .helpers.async_lru import alru_cache
+from src.badfish.helpers.async_lru import alru_cache
 from PIL import Image
 from logging import (
     Formatter,
@@ -113,7 +113,7 @@ class Badfish:
         self.system_resource = await self.find_systems_resource()
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = (
-            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri):]
+            "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
         )
 
     @staticmethod
@@ -545,11 +545,15 @@ class Badfish:
 
     async def validate_credentials(self):
         payload = {"UserName": self.username, "Password": self.password}
-        headers = {'content-type': 'application/json'}
+        headers = {"content-type": "application/json"}
         _uri = "%s%s" % (self.host_uri, self.session_uri)
-        _response = await self.post_request(_uri, headers=headers, payload=payload, _get_token=True)
+        _response = await self.post_request(
+            _uri, headers=headers, payload=payload, _get_token=True
+        )
 
-        raw = await _response.text("utf-8", "ignore")
+        # Mock shifting value on value access and not on call.
+        await _response.text("utf-8", "ignore")
+
         status = _response.status
         if status == 401:
             raise BadfishException(
@@ -1819,6 +1823,39 @@ class Badfish:
 
         return mem_details
 
+    async def get_serial_summary(self):
+        _uri = "%s%s" % (self.host_uri, self.redfish_uri)
+        _response = await self.get_request(_uri)
+
+        if _response.status in [400, 404]:
+            raise BadfishException("Server does not support this functionality")
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            service_data = data.get("Oem").get("Dell")
+
+            if not service_data:
+                serial_uri = "%s%s/Systems/1" % (self.host_uri, self.redfish_uri)
+                serial_response = await self.get_request(serial_uri)
+
+                if _response.status in [400, 404]:
+                    raise BadfishException("Server does not support this functionality")
+
+                serial_raw = await serial_response.text("utf-8", "ignore")
+                serial_data = json.loads(serial_raw.strip())
+                serial_number_data = serial_data.get("SerialNumber")
+
+                if not serial_number_data:
+                    raise BadfishException("Server does not support this functionality")
+                else:
+                    return serial_number_data
+
+        except (ValueError, AttributeError):
+            raise BadfishException("There was something wrong getting serial summary")
+
+        return service_data
+
     async def list_processors(self):
         data = await self.get_processor_summary()
 
@@ -1848,6 +1885,18 @@ class Badfish:
             self.logger.info(f"{_memory}:")
             for _key, _value in _properties.items():
                 self.logger.info(f"    {_key}: {_value}")
+
+        return True
+
+    async def list_serial(self):
+        data = await self.get_serial_summary()
+
+        if "ServiceTag" in data:
+            self.logger.info("Found ServiceTag:")
+            self.logger.info(f"    {self.host}'s ServiceTag: {data.get('ServiceTag')}")
+        else:
+            self.logger.info("Found System Serial Number:")
+            self.logger.info(f"    {self.host}'s System SerialNumber: {data}")
 
         return True
 
@@ -1976,7 +2025,7 @@ class Badfish:
             os.remove(_file)
 
     async def delete_session(self):
-        headers = {'content-type': 'application/json'}
+        headers = {"content-type": "application/json"}
         _uri = "%s%s" % (self.host_uri, self.session_id)
         _response = await self.delete_request(_uri, headers=headers)
         if _response.status not in [200, 201]:
@@ -2010,6 +2059,7 @@ async def execute_badfish(_host, _args, logger):
     list_interfaces = _args["ls_interfaces"]
     list_processors = _args["ls_processors"]
     list_memory = _args["ls_memory"]
+    list_serial = _args["ls_serial"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
     get_sriov = _args["get_sriov"]
@@ -2084,6 +2134,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.list_processors()
         elif list_memory:
             await badfish.list_memory()
+        elif list_serial:
+            await badfish.list_serial()
         elif check_virtual_media:
             await badfish.check_virtual_media()
         elif unmount_virtual_media:
@@ -2238,6 +2290,11 @@ def main(argv=None):
     parser.add_argument(
         "--ls-memory",
         help="List Memory Summary",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--ls-serial",
+        help="List 'Serial Number'/'Service Tag'",
         action="store_true",
     )
     parser.add_argument(

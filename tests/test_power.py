@@ -97,7 +97,7 @@ class TestPowerOff(TestBase):
             MockResponse(responses[2], 200),
             MockResponse(responses[3], 200),
             MockResponse(responses[4], 200),
-            None
+            None,
         ]
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -112,9 +112,7 @@ class TestPowerState(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_power_state(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + [
-            STATE_ON_RESP
-        ]
+        responses = INIT_RESP + [STATE_ON_RESP]
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -125,9 +123,7 @@ class TestPowerState(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_power_state_bad_request(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + [
-            "Bad Request"
-        ]
+        responses = INIT_RESP + ["Bad Request"]
         self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 400], responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -138,9 +134,7 @@ class TestPowerState(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_power_state_empty_data(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + [
-            "{}"
-        ]
+        responses = INIT_RESP + ["{}"]
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -159,7 +153,7 @@ class TestPowerState(TestBase):
             MockResponse(responses[2], 200),
             MockResponse(responses[3], 200),
             MockResponse(responses[4], 200),
-            None
+            None,
         ]
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")

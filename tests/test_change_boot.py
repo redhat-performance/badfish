@@ -79,7 +79,9 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_boot_patch_error(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_change_boot_patch_error(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         get_resp = [
             BOOT_MODE_RESP,
             self.boot_seq_resp_fmt_dir.replace("'", '"'),
@@ -103,7 +105,9 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_boot_less_valid_devices(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_change_boot_less_valid_devices(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         boot_seq_resp_fmt_for = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_FOREMAN_SHORTER)
         get_resp = [
             BOOT_MODE_RESP,
@@ -204,7 +208,9 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_to_director_no_boot(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_change_to_director_no_boot(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         get_resp = [
             BOOT_MODE_NO_RESP,
             self.boot_seq_resp_fmt_for.replace("'", '"'),

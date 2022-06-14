@@ -47,7 +47,11 @@ class TestSingleHostExecution(TestBase):
 
 
 class TestHostListExecution(TestBase):
-    args = ["--host-list", f'{os.path.dirname(__file__)}/fixtures/hosts_good.txt', "--ls-jobs"]
+    args = [
+        "--host-list",
+        f"{os.path.dirname(__file__)}/fixtures/hosts_good.txt",
+        "--ls-jobs",
+    ]
 
     @patch("badfish.badfish.execute_badfish", raise_keyb_interrupt_stub)
     def test_host_list_keyb_interrupt(self):
@@ -77,7 +81,7 @@ class TestHostListExecution(TestBase):
 
 
 class TestInitialization(TestBase):
-    args = ['--ls-jobs']
+    args = ["--ls-jobs"]
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

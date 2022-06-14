@@ -70,7 +70,9 @@ class TestGif(TestBase):
 
         self.set_mock_response(mock_get, 200, INIT_RESP)
         post_responses = ["OK", "", "", SCREENSHOT_RESP, SCREENSHOT_RESP]
-        self.set_mock_response(mock_post, [200, 400, 400, 200, 200], post_responses, True)
+        self.set_mock_response(
+            mock_post, [200, 400, 400, 200, 200], post_responses, True
+        )
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
 

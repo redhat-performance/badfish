@@ -81,7 +81,9 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_interfaces_ethernet_not_supported(self, mock_get, mock_post, mock_delete):
+    def test_ls_interfaces_ethernet_not_supported(
+        self, mock_get, mock_post, mock_delete
+    ):
         responses_add = [
             "Not Found",
         ]

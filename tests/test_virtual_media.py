@@ -63,11 +63,7 @@ class TestCheckVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_check_vmedia_disc_value_error(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_VM_RESP,
-            VMEDIA_GET_MEMBERS_RESP,
-            ""
-        ]
+        responses_get = [VMEDIA_GET_VM_RESP, VMEDIA_GET_MEMBERS_RESP, ""]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -80,9 +76,7 @@ class TestCheckVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_check_vmedia_get_no_endpoint(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_ENDPOINT_FALSE
-        ]
+        responses_get = [VMEDIA_GET_ENDPOINT_FALSE]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -95,9 +89,7 @@ class TestCheckVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_check_vmedia_get_endpoint_empty(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_ENDPOINT_EMPTY
-        ]
+        responses_get = [VMEDIA_GET_ENDPOINT_EMPTY]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -110,9 +102,7 @@ class TestCheckVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_check_vmedia_get_empty(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            ""
-        ]
+        responses_get = [""]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -125,10 +115,7 @@ class TestCheckVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_check_vmedia_get_vm_response_empty(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_VM_RESP,
-            ""
-        ]
+        responses_get = [VMEDIA_GET_VM_RESP, ""]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -176,7 +163,9 @@ class TestUnmountVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_unmount_vmedia_config_firmware_error(self, mock_get, mock_post, mock_delete):
+    def test_unmount_vmedia_config_firmware_error(
+        self, mock_get, mock_post, mock_delete
+    ):
         responses_get = [
             "",
         ]
@@ -192,10 +181,7 @@ class TestUnmountVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_unmount_vmedia_config_no_media(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_VM_RESP,
-            ""
-        ]
+        responses_get = [VMEDIA_GET_VM_RESP, ""]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -208,10 +194,7 @@ class TestUnmountVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_unmount_vmedia_went_wrong(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            VMEDIA_GET_VM_RESP,
-            VMEDIA_GET_CONF_RESP
-        ]
+        responses_get = [VMEDIA_GET_VM_RESP, VMEDIA_GET_CONF_RESP]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 400], ["OK", "Bad Request"], True)

@@ -96,9 +96,15 @@ class TestClearJobs(TestBase):
             BLANK_RESP,
         ]
         responses = INIT_RESP + responses_add
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 400, 400, 400], responses)
+        self.set_mock_response(
+            mock_get, [200, 200, 200, 200, 200, 400, 400, 400], responses
+        )
         self.set_mock_response(mock_post, 200, "OK")
-        self.set_mock_response(mock_delete, [400, 400, 200, 200], ["Bad Request", "Bad Request", "OK", "OK"])
+        self.set_mock_response(
+            mock_delete,
+            [400, 400, 200, 200],
+            ["Bad Request", "Bad Request", "OK", "OK"],
+        )
         _, err = self.badfish_call()
         assert err == RESPONSE_CLEAR_JOBS_LIST
 
@@ -143,9 +149,7 @@ class TestDeleteJob(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_delete_unsupported_exception(self, mock_get, mock_post):
-        responses_add = [
-            JOB_OK_RESP
-        ]
+        responses_add = [JOB_OK_RESP]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 400, 200], responses)
         self.set_mock_response(mock_post, 200, "OK")
@@ -156,9 +160,7 @@ class TestDeleteJob(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_delete_supported_exception(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            JOB_OK_RESP
-        ]
+        responses_add = [JOB_OK_RESP]
         responses = INIT_RESP + responses_add
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 400], ["Bad Request", "OK"], True)
@@ -212,7 +214,7 @@ class TestCheckJob(TestBase):
             MockResponse(responses[2], 200),
             MockResponse(responses[3], 200),
             MockResponse(responses[4], 200),
-            None
+            None,
         ]
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")

@@ -35,7 +35,9 @@ class TestCheckBoot(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_check_boot_with_interfaces_director(self, mock_get, mock_post, mock_delete):
+    def test_check_boot_with_interfaces_director(
+        self, mock_get, mock_post, mock_delete
+    ):
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
         responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
         responses = INIT_RESP + responses_add

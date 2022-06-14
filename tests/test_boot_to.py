@@ -46,7 +46,9 @@ class TestBootTo(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_boot_to_service_unavailable(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_boot_to_service_unavailable(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
         get_resp = [
             BOOT_MODE_RESP,
@@ -91,7 +93,9 @@ class TestBootTo(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_boot_to_service_err_handler(self, mock_get, mock_patch, mock_post, mock_delete):
+    def test_boot_to_service_err_handler(
+        self, mock_get, mock_patch, mock_post, mock_delete
+    ):
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
         get_resp = [
             BOOT_MODE_RESP,
