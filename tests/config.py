@@ -636,7 +636,11 @@ SCREENSHOT_BAD_REQUEST = (
     "- ERROR    - POST command failed to get the server screenshot.\n"
     "- ERROR    - {'ServerScreenShotFile': \"%s\"}\n" % str(SCREENSHOT_64)
 )
-SCREENSHOT_GIF_FALSE_OK = "- ERROR    - Error reading response from host.\n"
+SCREENSHOT_FALSE_OK = "- ERROR    - Error reading response from host.\n"
+SCREENSHOT_GIF_FALSE_OK = (
+    "- ERROR    - POST command failed to get the server screenshot.\n"
+    "- ERROR    - Error reading response from host.\n"
+)
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
