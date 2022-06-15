@@ -2000,10 +2000,7 @@ class Badfish:
         files = []
         size = (720, 400)
         for i in range(iterations):
-            if i == 0:
-                filename = await self.get_screenshot(gif=True, first=True)
-            else:
-                filename = await self.get_screenshot(gif=True)
+            filename = await self.get_screenshot(gif=True, first=(i == 0))
             if filename:
                 files.append(filename)
                 new_frame = Image.open(filename)
