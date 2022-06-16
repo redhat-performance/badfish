@@ -57,13 +57,13 @@ uefi_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-
 # To understand how custom overrides and hierarchy work please see https://github.com/redhat-performance/badfish#host-type-overrides
 
 # Custom Rack F04
-director_f04_r640_interfaces: NIC.Slot.3-2,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
-foreman_f04_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
+director_f18_r640_interfaces: NIC.Slot.3-2,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
+foreman_f18_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
 
-# Custom F04 specific overrides
-# h34 (should resemble other r640 hosts)
-director_f04_h34_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-foreman_f04_h34_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+## Custom F04 specific overrides (examples)
+## h34 (should resemble other r640 hosts)
+#director_f04_h34_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+#foreman_f04_h34_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
 # h35 (should resemble other r640 hosts)
-director_f04_h35_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-foreman_f04_h35_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+#director_f04_h35_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+#foreman_f04_h35_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
