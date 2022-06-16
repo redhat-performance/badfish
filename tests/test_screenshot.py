@@ -11,6 +11,7 @@ from tests.config import (
     SCREENSHOT_NOT_SUPPORTED,
     SCREENSHOT_BAD_REQUEST,
     SCREENSHOT_GIF_FALSE_OK,
+    SCREENSHOT_FALSE_OK,
 )
 from tests.test_base import TestBase
 
@@ -116,4 +117,4 @@ class TestScreenshotErrors(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert err == SCREENSHOT_GIF_FALSE_OK
+        assert err == SCREENSHOT_FALSE_OK
