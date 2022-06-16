@@ -208,6 +208,14 @@ We will likely add more libaries in the future and [can't guarantee](https://git
 ### Via RPM System Package
 If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
 
+Note: If you plan on using the `idrac_interfaces.yml` file to further customize or define pre-made boot orders you'll want to model your own [based on the repo example file](config/idrac_interfaces.yml).  This file serves as an example but is specific to our internal environments so you'd most likely want to modify to match your environment and naming conventions.
+
+You can always retrieve our example `idrac_interfaces.yml` file via:
+
+```
+curl  https://raw.githubusercontent.com/redhat-performance/badfish/master/config/idrac_interfaces.yml --output idrac_interfaces.yml
+```
+
 ## Common Operations
 
 ### Enforcing an OpenStack Director-style interface order
