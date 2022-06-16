@@ -1,9 +1,15 @@
+<p align="center">
 ![badfish](/image/badfish-original-licensed.small.png)
+</p>
+<h2 align="center">The Out-of-Band Wrangler</h2>
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
-[![codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
-[![Docker Repository on Quay](https://quay.io/repository/quads/badfish/status "Docker Repository on Quay")](https://quay.io/repository/quads/badfish)
-[![GA](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
+[![Codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
+[![Container image on Quay](https://quay.io/repository/quads/badfish/status "Container image on Quay")](https://quay.io/repository/quads/badfish)
+[![Tox](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
+[![Lint](https://github.com/redhat-performance/badfish/actions/workflows/lint.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
    * [About Badfish](#badfish)
       * [Scope](#scope)
@@ -55,6 +61,7 @@
             * [Setting UEFI mode](#setting-uefi-mode)
             * [Setting BIOS mode](#setting-bios-mode)
          * [Get server screenshot](#get-server-screenshot)
+         * [Get server gif](#get-server-gif)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -471,6 +478,12 @@ NOTE:
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --screenshot
+```
+
+### Get server gif
+If you would like an animated gif with the current state of the server you can now run badfish with ```--gif``` which will, by default, capture a screenshot every 10 seconds for a period of 3 minutes and store it in the current directory in gif format. You can also modify these default values by passing ```--miuntes``` and/or ```--interval``` .
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --gif --minutes 10 --interval 5
 ```
 
 ### Bulk actions via text file with list of hosts

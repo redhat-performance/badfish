@@ -1,5 +1,5 @@
 ---
-name: RPM build in Fedora Copr
+name: RPM build
 on:
   # Build only on pushes into master branch.
   push:
