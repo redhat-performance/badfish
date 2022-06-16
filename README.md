@@ -1,6 +1,7 @@
 <p align="center">
-![badfish](/image/badfish-original-licensed.small.png)
+  <img src="https://github.com/grafuls/badfish/blob/development/image/badfish-original-licensed.small.png" />
 </p>
+
 <h2 align="center">The Out-of-Band Wrangler</h2>
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
