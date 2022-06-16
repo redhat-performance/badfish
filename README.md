@@ -19,10 +19,12 @@
       * [Setup](#setup)
          * [Badfish RPM package](#badfish-rpm-package)
          * [Badfish Standalone CLI](#badfish-standalone-cli)
+         * [Badfish Container](#badfish-container)
       * [Usage](#usage)
         * [As Python Library](#as-python-library)
         * [Via Podman](#via-podman)
         * [Via Virtualenv](#via-virtualenv)
+        * [Via RPM System Package](#via-rpm-system-package)
       * [Common Operations](#common-operations)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
@@ -145,8 +147,15 @@ if [ -d "$HOME/.local/bin" ] ; then
 fi
 ```
 
+### Badfish Container
+Perhaps the easiest way to run Badfish is with Podman, you can see more usage details below on [using the Badfish container with Podman](#via-podman).  You can substitute Docker for Podman as well though not all functionality may be actively tested as we prefer Podman.
+
+```
+podman pull quay.io/quads/badfish
+```
+
 ## Usage
-Badfish can be consumed in 2 forms after successful installation. Either via the standalone cli tool or as a python library.
+Badfish can be consumed in several ways after successful installation. Either via the standalone cli tool or as a python library.
 For an extensive use of the cli tool check the [Common Operations](#common-operations) section of this file.
 
 NOTE: Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
@@ -173,16 +182,15 @@ if not result:
 NOTE: Badfish relies heavily on asyncio for executing multiple tasks. If you will be using badfish from outside an async function you will have to provide an async event loop and run via `run_until_complete`
 
 ### Via Podman
-Badfish happily runs in a container image using podman, for this you need to first pull the Badfish image via:
+Badfish happily runs in a container image using Podman or Docker (likely, but not actively tested).
 ```bash
 podman pull quay.io/quads/badfish
 ```
-You can then run badfish from inside the container:
 ```bash
 podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
 ```
 NOTE:
-* If you are running quads against a host inside a VPN you must specify your VPN DNS server ip address with `--dns`
+* If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
 * If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
 * If you want to run any actions that would have output files like `--screenshot` or `--gif` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish`
 
@@ -196,6 +204,9 @@ ln -s {BADFISH_REPO_PATH}/src/helpers {VIRTUALENV_PATH}/lib/python3.10/site-pack
 ```
 
 We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within the $PYTHONPATH of your virtualenv without more symlinks or workarounds.
+
+### Via RPM System Package
+If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
 
 ## Common Operations
 
