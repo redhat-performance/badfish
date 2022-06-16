@@ -1945,7 +1945,7 @@ class Badfish:
             return False
         await self.change_bios_password(old_password, "")
 
-    async def get_screenshot(self, gif=False):
+    async def get_screenshot(self, gif=False, first=False):
         _uri = self.host_uri + self.redfish_uri + "/Dell" + self.manager_resource[11:]
         _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
         _headers = {"content-type": "application/json"}
@@ -1958,7 +1958,7 @@ class Badfish:
         elif status_code == 404:
             raise BadfishException("The system does not support screenshots.")
         else:
-            if not gif:
+            if not gif or (status_code == 400 and first):
                 self.logger.error("POST command failed to get the server screenshot.")
                 await self.error_handler(_response)
             else:
@@ -1999,8 +1999,8 @@ class Badfish:
         frames = []
         files = []
         size = (720, 400)
-        for _ in range(iterations):
-            filename = await self.get_screenshot(gif=True)
+        for i in range(iterations):
+            filename = await self.get_screenshot(gif=True, first=(i == 0))
             if filename:
                 files.append(filename)
                 new_frame = Image.open(filename)
