@@ -197,13 +197,17 @@ NOTE:
 ### Via Virtualenv
 [Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
 
-While we strongly recommend using the [podman](#via-podman) method of calling Badfish inside a virtualenv you can still do it directly from the repository but you may need to provide symlinks from your Badfish repository into your virtualenv.  e.g. if Python3.10 is your python version:
+While we strongly recommend using the [podman](#via-podman) method of calling Badfish inside a virtual environment you can still do it directly from the repository via virtualenv but you would need to prepend the call to Badfish with the setting of the `PYTHONPATH` environment variable pointing at the path of your Badfish repository.
 
 ```
-ln -s {BADFISH_REPO_PATH}/src/helpers {VIRTUALENV_PATH}/lib/python3.10/site-packages/helpers
+virtualenv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish/badfish.py
 ```
 
-We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within the $PYTHONPATH of your virtualenv without more symlinks or workarounds.
+We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within your virtualenv without more symlinks or workarounds.
 
 ### Via RPM System Package
 If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
