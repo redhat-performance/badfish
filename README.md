@@ -68,6 +68,7 @@
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
+         * [Formatted output](#formatted-output)
       * [iDRAC and Data Format](#idrac-and-data-format)
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
          * [Host type overrides](#host-type-overrides)
@@ -529,6 +530,18 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_inte
 If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
+```
+
+### Formatted output
+If you would like to easier query some information listed by badfish, you can tell badfish to output in either JSON or YAML. Formatted output is also supported for bulk actions with `--host-list`. Supported commands that list some information are:
+- `--ls-*`
+- `--firmware-inventory`
+- `--get-bios-attribute` (also works with specified attribute by `--attribute` after)
+- `--check-boot`
+- `--check-virtual-media`
+- `--power-state`.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --output json/yaml --firmware-inventory
 ```
 
 ## iDRAC and Data Format

@@ -20,11 +20,11 @@ from tests.test_base import TestBase
 from badfish.badfish import BadfishException
 
 
-def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3):
+def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3, ignore4=None):
     raise KeyboardInterrupt
 
 
-def raise_badfish_exception_stub(ignore1, ignore2, ignore3):
+def raise_badfish_exception_stub(ignore1, ignore2, ignore3, ignore4=None):
     raise BadfishException
 
 
