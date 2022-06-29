@@ -971,8 +971,8 @@ class Badfish:
         result = re.search("JID_.+?", raw)
         res_group = ""
         if result:
-            res_group = result.group()                                                                                                                                 |
-        job_id = re.sub("[,']", "", res_group)                                                                                                                         |
+            res_group = result.group()
+        job_id = re.sub("[,']", "", res_group)
         if job_id:
             self.logger.debug("%s job ID successfully created" % job_id)
         return job_id
