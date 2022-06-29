@@ -70,31 +70,47 @@ class BadfishHandler(StreamHandler):
             diff_dict = {host_first: {}, host_second: {}}
             for i in first:
                 for j in second:
-                    if first[i]["SoftwareId"] == second[j]["SoftwareId"] \
-                        and first[i]["Version"] != second[j]["Version"] \
-                            and first[i]["SoftwareId"] != 0:
-                        diff_dict[host_first].update({i: {
-                            "Version": first[i]["Version"],
-                            "Name": first[i]["Name"],
-                        }})
-                        diff_dict[host_second].update({j: {
-                            "Version": second[j]["Version"],
-                            "Name": second[j]["Name"],
-                        }})
+                    if (
+                        first[i]["SoftwareId"] == second[j]["SoftwareId"]
+                        and first[i]["Version"] != second[j]["Version"]
+                        and first[i]["SoftwareId"] != 0
+                    ):
+                        diff_dict[host_first].update(
+                            {
+                                i: {
+                                    "Version": first[i]["Version"],
+                                    "Name": first[i]["Name"],
+                                }
+                            }
+                        )
+                        diff_dict[host_second].update(
+                            {
+                                j: {
+                                    "Version": second[j]["Version"],
+                                    "Name": second[j]["Name"],
+                                }
+                            }
+                        )
 
             if diff_dict[host_first] == {}:
                 return "{}"
             output = ""
-            formatted = json.dumps(diff_dict[host_first], indent=4, sort_keys=False, default=str)
+            formatted = json.dumps(
+                diff_dict[host_first], indent=4, sort_keys=False, default=str
+            )
             len_first = (max(len(line) for line in formatted.splitlines())) + 10
             output += f"{host_first}:".ljust(len_first)
             output += f"{host_second}:\n"
             for i, j in zip(diff_dict[host_first], diff_dict[host_second]):
                 output += f"{i}".ljust(len_first)
                 output += f"{j}\n"
-                output += f"\t- Name: {(diff_dict[host_first][i])['Name']}".ljust(len_first)
+                output += f"\t- Name: {(diff_dict[host_first][i])['Name']}".ljust(
+                    len_first
+                )
                 output += f"\t- Name: {(diff_dict[host_second][j])['Name']}\n"
-                output += f"\t- Version: {(diff_dict[host_first][i])['Version']}".ljust(len_first)
+                output += f"\t- Version: {(diff_dict[host_first][i])['Version']}".ljust(
+                    len_first
+                )
                 output += f"\t- Version: {(diff_dict[host_second][j])['Version']}\n"
             return output
 

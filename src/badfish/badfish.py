@@ -2457,7 +2457,9 @@ def main(argv=None):
     if delta:
         bfh_output = bfl.badfish_handler.diff()
     else:
-        bfh_output = bfl.badfish_handler.output(output if output else "normal", host_order)
+        bfh_output = bfl.badfish_handler.output(
+            output if output else "normal", host_order
+        )
     if _args["log"]:
         og_stdout = sys.stdout
         with open(_args["log"], "w") as f:
