@@ -60,6 +60,44 @@ class BadfishHandler(StreamHandler):
         except yaml.YAMLError:
             self.output_dict = {"unsupported_command": True}
 
+    def diff(self):
+        try:
+            if self.output_dict["error"]:
+                return f"ERROR - {self.output_dict['error_msg']}"
+        except KeyError:
+            host_first, host_second, *_ = self.output_dict.keys()
+            first, second, *_ = self.output_dict.values()
+            diff_dict = {host_first: {}, host_second: {}}
+            for i in first:
+                for j in second:
+                    if first[i]["SoftwareId"] == second[j]["SoftwareId"] \
+                        and first[i]["Version"] != second[j]["Version"] \
+                            and first[i]["SoftwareId"] != 0:
+                        diff_dict[host_first].update({i: {
+                            "Version": first[i]["Version"],
+                            "Name": first[i]["Name"],
+                        }})
+                        diff_dict[host_second].update({j: {
+                            "Version": second[j]["Version"],
+                            "Name": second[j]["Name"],
+                        }})
+
+            if diff_dict[host_first] == {}:
+                return "{}"
+            output = ""
+            formatted = json.dumps(diff_dict[host_first], indent=4, sort_keys=False, default=str)
+            len_first = (max(len(line) for line in formatted.splitlines())) + 10
+            output += f"{host_first}:".ljust(len_first)
+            output += f"{host_second}:\n"
+            for i, j in zip(diff_dict[host_first], diff_dict[host_second]):
+                output += f"{i}".ljust(len_first)
+                output += f"{j}\n"
+                output += f"\t- Name: {(diff_dict[host_first][i])['Name']}".ljust(len_first)
+                output += f"\t- Name: {(diff_dict[host_second][j])['Name']}\n"
+                output += f"\t- Version: {(diff_dict[host_first][i])['Version']}".ljust(len_first)
+                output += f"\t- Version: {(diff_dict[host_second][j])['Version']}\n"
+            return output
+
     def output(self, output_type, host_order=None):
         if output_type == "json":
             return json.dumps(self.output_dict, indent=4, sort_keys=False, default=str)

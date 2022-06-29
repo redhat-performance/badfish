@@ -43,6 +43,7 @@
          * [Toggle boot device](#toggle-boot-device)
          * [Variable number of retries](#variable-number-of-retries)
          * [Firmware inventory](#firmware-inventory)
+         * [Delta of firmware inventories](#delta-of-firmware-inventories)
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
          * [Check Job Status](#check-job-status)
@@ -361,6 +362,12 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_inte
 If you would like to get a detailed list of all the devices supported by iDRAC you can run ```badfish``` with the ```--firware-inventory``` option which will return a list of devices with additional device info.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
+```
+
+### Delta of firmware inventories
+If you would like to get a delta between firmware inventories of two servers, you can do so with the `--delta` option. This option takes a second host address as its argument. Only the firmware that's on both servers and has different versions will get displayed.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory --delta mgmt-your-other-server.example.com
 ```
 
 ### Clear Job Queue

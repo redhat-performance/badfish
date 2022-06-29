@@ -2232,7 +2232,14 @@ def main(argv=None):
         default="",
     )
     parser.add_argument(
-        "--firmware-inventory", help="Get firmware inventory", action="store_true"
+        "--firmware-inventory",
+        help="Get firmware inventory",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--delta",
+        help="Address of the other host between which the delta should be made",
+        default="",
     )
     parser.add_argument(
         "--clear-jobs",
@@ -2365,10 +2372,19 @@ def main(argv=None):
     _args = vars(parser.parse_args(argv))
 
     log_level = DEBUG if _args["verbose"] else INFO
+    host = _args["host"]
+
+    delta = _args["delta"]
+    if _args["firmware_inventory"] and delta:
+        tp = tempfile.NamedTemporaryFile()
+        tp.write(f"{host}\n{delta}".encode())
+        tp.flush()
+        _args["host_list"] = tp.name
+        if not _args["output"]:
+            _args["output"] = "json"
 
     host_list = _args["host_list"]
     multi_host = True if host_list else False
-    host = _args["host"]
     result = True
     output = _args["output"]
     bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output)
@@ -2438,7 +2454,10 @@ def main(argv=None):
             result = False
     bfl.queue_listener.stop()
 
-    bfh_output = bfl.badfish_handler.output(output if output else "normal", host_order)
+    if delta:
+        bfh_output = bfl.badfish_handler.diff()
+    else:
+        bfh_output = bfl.badfish_handler.output(output if output else "normal", host_order)
     if _args["log"]:
         og_stdout = sys.stdout
         with open(_args["log"], "w") as f:
