@@ -17,7 +17,7 @@ from tests.config import (
     RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
 )
 from tests.test_base import TestBase
-from badfish.badfish import BadfishException
+from src.badfish import BadfishException
 
 
 def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3):
@@ -31,12 +31,12 @@ def raise_badfish_exception_stub(ignore1, ignore2, ignore3):
 class TestSingleHostExecution(TestBase):
     args = ["--ls-jobs"]
 
-    @patch("badfish.badfish.execute_badfish", raise_keyb_interrupt_stub)
+    @patch("src.badfish.execute_badfish", raise_keyb_interrupt_stub)
     def test_single_host_keyb_interrupt(self):
         _, err = self.badfish_call()
         assert err == KEYBOARD_INTERRUPT
 
-    @patch("badfish.badfish.execute_badfish", raise_badfish_exception_stub)
+    @patch("src.badfish.execute_badfish", raise_badfish_exception_stub)
     def test_single_host_badfish_exception(self):
         _, err = self.badfish_call()
         assert err == WRONG_BADFISH_EXECUTION
@@ -53,17 +53,17 @@ class TestHostListExecution(TestBase):
         "--ls-jobs",
     ]
 
-    @patch("badfish.badfish.execute_badfish", raise_keyb_interrupt_stub)
+    @patch("src.badfish.execute_badfish", raise_keyb_interrupt_stub)
     def test_host_list_keyb_interrupt(self):
         _, err = self.badfish_call(mock_host=None)
         assert err == KEYBOARD_INTERRUPT_HOST_LIST
 
-    @patch("badfish.badfish.execute_badfish", raise_badfish_exception_stub)
+    @patch("src.badfish.execute_badfish", raise_badfish_exception_stub)
     def test_host_list_badfish_exception(self):
         _, err = self.badfish_call(mock_host=None)
         assert err == WRONG_BADFISH_EXECUTION_HOST_LIST
 
-    @patch("badfish.badfish.execute_badfish")
+    @patch("src.badfish.execute_badfish")
     def test_host_list_successful(self, mock_execute):
         mock_execute.return_value = "Successful."
         _, err = self.badfish_call(mock_host=None)

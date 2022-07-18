@@ -64,7 +64,6 @@
             * [Setting UEFI mode](#setting-uefi-mode)
             * [Setting BIOS mode](#setting-bios-mode)
          * [Get server screenshot](#get-server-screenshot)
-         * [Get server gif](#get-server-gif)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -94,7 +93,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Clear iDRAC job queue
 * Revert to factory settings
 * Check/set SRIOV
-* Take a remote screenshot or animated GIF of server KVM console activity.
+* Take a remote screenshot of server KVM console activity (Dell only).
 * Support tokenized authentication
 * Check and set BIOS attributes (e.g. setting UEFI or BIOS mode)
 * Get firmware inventory of installed devices supported by iDRAC
@@ -125,8 +124,6 @@ Active releases:
 - Fedora 34
 - Fedora 35
 - Fedora 36
-
-* CentOS 9 Stream / EPEL 9 is not available until [python3-pillow](https://github.com/python-pillow/Pillow/issues/4953) is packaged and built for this platform, however you can always satisfy this dependency yourself or just use [podman instead](#via-podman) for any platform or distribution.
 
 ### Badfish Standalone CLI
 ```bash
@@ -164,7 +161,7 @@ NOTE: Badfish operates optionally against a YAML configuration file to toggle be
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
 
 ```python
-from badfish.badfish import badfish_factory
+from badfish import badfish_factory
 
 badfish = await badfish_factory(
     _host=_oob_mgmt,
@@ -192,7 +189,7 @@ podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PA
 NOTE:
 * If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
 * If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
-* If you want to run any actions that would have output files like `--screenshot` or `--gif` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish`
+* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish`
 
 ### Via Virtualenv
 [Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
@@ -204,7 +201,7 @@ virtualenv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish/badfish.py
+PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish.py
 ```
 
 We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within your virtualenv without more symlinks or workarounds.
@@ -266,7 +263,7 @@ ocp5beta_f21_h23_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Sl
 Now you can run Badfish against the custom interface order type you have defined, refer to the [custom overrides](#host-type-overrides) on further usage examples.
 
 ```bash
-src/badfish/badfish.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
+src/badfish.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
 ```
 
 
@@ -505,12 +502,6 @@ NOTE:
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --screenshot
-```
-
-### Get server gif
-If you would like an animated gif with the current state of the server you can now run badfish with ```--gif``` which will, by default, capture a screenshot every 10 seconds for a period of 3 minutes and store it in the current directory in gif format. You can also modify these default values by passing ```--miuntes``` and/or ```--interval``` .
-```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --gif --minutes 10 --interval 5
 ```
 
 ### Bulk actions via text file with list of hosts
