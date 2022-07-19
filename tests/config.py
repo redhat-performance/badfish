@@ -845,15 +845,15 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
-KEYBOARD_INTERRUPT_HOST_LIST = "[src.badfish] - WARNING  - Badfish terminated\n"
+KEYBOARD_INTERRUPT_HOST_LIST = "[src.badfish.main] - WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION_HOST_LIST = (
-    "[src.badfish] - WARNING  - There was something wrong executing Badfish\n"
+    "[src.badfish.main] - WARNING  - There was something wrong executing Badfish\n"
 )
 SUCCESSFUL_HOST_LIST = (
-    "[src.badfish] - INFO     - RESULTS:\n"
-    "[src.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - RESULTS:\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -863,9 +863,9 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[src.badfish] - INFO     - RESULTS:\n"
-    "[src.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - RESULTS:\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[src.badfish] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[src.badfish.main] - ERROR    - There was something wrong reading from non/existent/file\n"

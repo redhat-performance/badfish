@@ -62,7 +62,7 @@ class TestFirmwareInventory(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
-    @patch("src.badfish.Badfish.get_request")
+    @patch("src.badfish.main.Badfish.get_request")
     def test_firmware_inventory_none_response(
         self, mock_get_req_call, mock_post, mock_delete
     ):

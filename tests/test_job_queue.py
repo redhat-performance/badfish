@@ -18,7 +18,7 @@ from tests.config import (
     RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
 )
 from tests.test_base import TestBase, MockResponse
-from src.badfish import BadfishException
+from src.badfish.main import BadfishException
 
 
 def raise_badfish_exception_stub_del_req(arg1=None, arg2=None):
@@ -204,7 +204,7 @@ class TestCheckJob(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
-    @patch("src.badfish.Badfish.get_request")
+    @patch("src.badfish.main.Badfish.get_request")
     def test_check_job_error(self, mock_get_req_call, mock_post, mock_delete):
         responses = INIT_RESP
         mock_get_req_call.side_effect = [

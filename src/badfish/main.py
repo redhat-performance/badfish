@@ -20,7 +20,7 @@ except ImportError:
     from queue import Queue
 from logging.handlers import QueueHandler, QueueListener
 
-from helpers.async_lru import alru_cache
+from src.badfish.helpers.async_lru import alru_cache
 from logging import (
     Formatter,
     FileHandler,

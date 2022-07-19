@@ -135,13 +135,6 @@ NOTE:
 
 * This will allow Badfish to be called from the terminal via the `badfish` command
 * This requires `python3-devel` if you see errors about missing `Python.h`.
-* This is **ideal** for a non-root user, otherwise you'll get badfish in `/root/.local/bin/badfish` for example.
-* If you have problems running as root you will need to add whatever you set in `--prefix=` to your `$PATH` by adding something like the following to the end of your `~/.bashrc` file.
-
-```bash
-if [ -d "$HOME/.local/bin" ] ; then
-  PATH="$PATH:$HOME/.local/bin"
-fi
 ```
 
 ### Badfish Container
@@ -201,7 +194,7 @@ virtualenv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish.py
+PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish/main.py -h
 ```
 
 We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within your virtualenv without more symlinks or workarounds.
@@ -263,7 +256,7 @@ ocp5beta_f21_h23_fc640_interfaces: NIC.Slot.2-4,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Sl
 Now you can run Badfish against the custom interface order type you have defined, refer to the [custom overrides](#host-type-overrides) on further usage examples.
 
 ```bash
-src/badfish.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
+src/main.py --host-list /tmp/hosts -u root -p password -i config/idrac_interfaces.yml -t ocp5beta
 ```
 
 

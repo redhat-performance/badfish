@@ -8,7 +8,7 @@ WORKDIR badfish
 
 RUN apk add build-base
 RUN pip install --no-cache-dir -r requirements.txt
-RUN sed -i 's/src.badfish.helpers/.helpers/' src/badfish/badfish.py
+RUN sed -i 's/src.badfish.helpers/.helpers/' src/badfish/main.py
 RUN python -m build
 RUN python -m pip install dist/badfish-1.0.2.tar.gz
 

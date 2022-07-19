@@ -93,7 +93,7 @@ class TestRebootOnly(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT
 
-    @patch("src.badfish.RETRIES", 0)
+    @patch("src.badfish.main.RETRIES", 0)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.get")
     @patch("aiohttp.ClientSession.post")

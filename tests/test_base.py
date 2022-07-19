@@ -6,7 +6,7 @@ from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 from asynctest import patch
 
-from src.badfish import main, BadfishException
+from src.badfish.main import main, BadfishException
 from tests import config
 
 

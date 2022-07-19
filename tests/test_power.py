@@ -87,7 +87,7 @@ class TestPowerOff(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
-    @patch("src.badfish.Badfish.get_request")
+    @patch("src.badfish.main.Badfish.get_request")
     def test_power_off_none(self, mock_get_req_call, mock_post, mock_delete):
         responses = INIT_RESP
         mock_get_req_call.side_effect = [
@@ -143,7 +143,7 @@ class TestPowerState(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
-    @patch("src.badfish.Badfish.get_request")
+    @patch("src.badfish.main.Badfish.get_request")
     def test_power_state_none(self, mock_get_req_call, mock_post, mock_delete):
         responses = INIT_RESP
         mock_get_req_call.side_effect = [
