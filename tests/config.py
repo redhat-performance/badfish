@@ -630,17 +630,12 @@ SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
 MOCK_HOST_SHORT_FQDN = MOCK_HOST.split(".")[0]
 SCREENSHOT_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.png"
-GIF_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.gif"
 SCREENSHOT_NOT_SUPPORTED = "- ERROR    - The system does not support screenshots.\n"
 SCREENSHOT_BAD_REQUEST = (
     "- ERROR    - POST command failed to get the server screenshot.\n"
     "- ERROR    - {'ServerScreenShotFile': \"%s\"}\n" % str(SCREENSHOT_64)
 )
 SCREENSHOT_FALSE_OK = "- ERROR    - Error reading response from host.\n"
-SCREENSHOT_GIF_FALSE_OK = (
-    "- ERROR    - POST command failed to get the server screenshot.\n"
-    "- ERROR    - Error reading response from host.\n"
-)
 
 VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
 VMEDIA_GET_MEMBERS_RESP = """
@@ -850,15 +845,15 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
-KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.badfish] - WARNING  - Badfish terminated\n"
+KEYBOARD_INTERRUPT_HOST_LIST = "[src.badfish.main] - WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION_HOST_LIST = (
-    "[badfish.badfish] - WARNING  - There was something wrong executing Badfish\n"
+    "[src.badfish.main] - WARNING  - There was something wrong executing Badfish\n"
 )
 SUCCESSFUL_HOST_LIST = (
-    "[badfish.badfish] - INFO     - RESULTS:\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - RESULTS:\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.main] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -868,9 +863,9 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[badfish.badfish] - INFO     - RESULTS:\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - RESULTS:\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.main] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[badfish.badfish] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[src.badfish.main] - ERROR    - There was something wrong reading from non/existent/file\n"

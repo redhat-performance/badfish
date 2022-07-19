@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import functools
-import tempfile
 import aiohttp
 import json
 import argparse
@@ -22,7 +21,6 @@ except ImportError:
 from logging.handlers import QueueHandler, QueueListener
 
 from src.badfish.helpers.async_lru import alru_cache
-from PIL import Image
 from logging import (
     Formatter,
     FileHandler,
@@ -1948,7 +1946,7 @@ class Badfish:
             return False
         await self.change_bios_password(old_password, "")
 
-    async def get_screenshot(self, gif=False, first=False):
+    async def get_screenshot(self):
         _uri = self.host_uri + self.redfish_uri + "/Dell" + self.manager_resource[11:]
         _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
         _headers = {"content-type": "application/json"}
@@ -1961,7 +1959,7 @@ class Badfish:
         elif status_code == 404:
             raise BadfishException("The system does not support screenshots.")
         else:
-            if not gif or (status_code == 400 and first):
+            if status_code == 400:
                 self.logger.error("POST command failed to get the server screenshot.")
                 await self.error_handler(_response)
             else:
@@ -1973,59 +1971,19 @@ class Badfish:
         except ValueError:
             raise BadfishException("Error reading response from host.")
 
-        if gif:
-
-            with tempfile.NamedTemporaryFile("wb", delete=False) as fh:
-                fh.write(
-                    base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
-                )
-                filename = fh.name
-        else:
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            fqdn_short = self.host.split(".")[0]
-            filename = f"{fqdn_short}_screenshot_{timestamp}.png"
-            with open(filename, "wb") as fh:
-                fh.write(
-                    base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
-                )
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        fqdn_short = self.host.split(".")[0]
+        filename = f"{fqdn_short}_screenshot_{timestamp}.png"
+        with open(filename, "wb") as fh:
+            fh.write(
+                base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
+            )
         return filename
 
     async def take_screenshot(self):
         filename = await self.get_screenshot()
         self.logger.info(f"Image saved: {filename}")
         return True
-
-    async def make_gif(self, minutes, interval):
-        minutes_in_seconds = minutes * 60
-        iterations = minutes_in_seconds // interval
-
-        frames = []
-        files = []
-        size = (720, 400)
-        for i in range(iterations):
-            filename = await self.get_screenshot(gif=True, first=(i == 0))
-            if filename:
-                files.append(filename)
-                new_frame = Image.open(filename)
-                new_frame.thumbnail(size, Image.ANTIALIAS)
-                frames.append(new_frame)
-            time.sleep(interval)
-
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        fqdn_short = self.host.split(".")[0]
-        filename = f"{fqdn_short}_screenshot_{timestamp}.gif"
-        frames[0].save(
-            filename,
-            format="GIF",
-            append_images=frames[1:],
-            save_all=True,
-            duration=iterations * 30,
-            loop=0,
-        )
-        self.logger.info(f"Image saved: {filename}")
-
-        for _file in files:
-            os.remove(_file)
 
     async def delete_session(self):
         headers = {"content-type": "application/json"}
@@ -2077,9 +2035,6 @@ async def execute_badfish(_host, _args, logger):
     new_password = _args["new_password"]
     old_password = _args["old_password"]
     screenshot = _args["screenshot"]
-    gif = _args["gif"]
-    minutes = _args["minutes"]
-    interval = _args["interval"]
     retries = int(_args["retries"])
 
     result = True
@@ -2167,8 +2122,6 @@ async def execute_badfish(_host, _args, logger):
             await badfish.remove_bios_password(old_password)
         elif screenshot:
             await badfish.take_screenshot()
-        elif gif:
-            await badfish.make_gif(minutes, interval)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2369,23 +2322,6 @@ def main(argv=None):
         "--screenshot",
         help="Take a screenshot of the system an store it in jpg format",
         action="store_true",
-    )
-    parser.add_argument(
-        "--gif",
-        help="Create a gif clip with 10 seconds interval system screenshots",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--minutes",
-        help="Integer value for the duration of the gif creation in minutes. Default=3",
-        default=3,
-        type=int,
-    )
-    parser.add_argument(
-        "--interval",
-        help="Integer value in seconds for the duration of the intervals of the gif creation. Default=10",
-        default=10,
-        type=int,
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(
