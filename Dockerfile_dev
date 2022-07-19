@@ -9,6 +9,7 @@ WORKDIR badfish
 RUN git checkout development
 
 RUN apk add build-base
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN sed -i 's/src.badfish.helpers/.helpers/' src/badfish/main.py
 RUN python -m build
