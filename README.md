@@ -137,7 +137,6 @@ NOTE:
 
 * This will allow Badfish to be called from the terminal via the `badfish` command
 * This requires `python3-devel` if you see errors about missing `Python.h`.
-```
 
 ### Badfish Container
 Perhaps the easiest way to run Badfish is with Podman, you can see more usage details below on [using the Badfish container with Podman](#via-podman).  You can substitute Docker for Podman as well though not all functionality may be actively tested as we prefer Podman.
