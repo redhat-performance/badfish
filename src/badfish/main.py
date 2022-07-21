@@ -1934,9 +1934,7 @@ class Badfish:
         fqdn_short = self.host.split(".")[0]
         filename = f"{fqdn_short}_screenshot_{timestamp}.png"
         with open(filename, "wb") as fh:
-            fh.write(
-                base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
-            )
+            fh.write(base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8")))
         return filename
 
     async def take_screenshot(self):
