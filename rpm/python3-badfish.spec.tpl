@@ -21,7 +21,6 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
 BuildRequires:  zlib-devel
-BuildRequires:  libjpeg-turbo-devel
 
 %description
 %{desc}
@@ -38,8 +37,8 @@ BuildRequires:  libjpeg-turbo-devel
 %files -n %{name}
 %doc README.md
 %license LICENSE
-%{python3_sitelib}/%{project}/
 %{python3_sitelib}/%{project}-%{version}-py%{python3_version}.egg-info/
+%{python3_sitelib}/src/%{project}
 %{_bindir}/%{project}
 
 %changelog

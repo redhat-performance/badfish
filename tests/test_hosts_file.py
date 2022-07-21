@@ -16,7 +16,7 @@ class TestHostsFile(TestBase):
     def test_hosts_good(self):
         self.args = [self.option_arg, self.mock_hosts_good_path]
 
-        with patch("badfish.badfish.execute_badfish") as badfish_mock:
+        with patch("src.badfish.main.execute_badfish") as badfish_mock:
             self.badfish_call(mock_host=None)
 
         badfish_mock.assert_awaited()
@@ -24,7 +24,7 @@ class TestHostsFile(TestBase):
             len(badfish_mock.await_args_list) == 3
         ), "Amount of calls does not match amount of hosts in file"
         for call in badfish_mock.await_args_list:
-            _host, _args, _logger = call[0]
+            _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
 
             assert _args["host_list"] == self.mock_hosts_good_path
@@ -34,7 +34,7 @@ class TestHostsFile(TestBase):
     def test_hosts_non_existent(self):
         self.args = [self.option_arg, "non/existent/file"]
 
-        with patch("badfish.badfish.execute_badfish") as badfish_mock:
+        with patch("src.badfish.main.execute_badfish") as badfish_mock:
             out, err = self.badfish_call(mock_host=None)
         badfish_mock.assert_not_awaited()
 
@@ -46,7 +46,7 @@ class TestHostsFile(TestBase):
         """
         self.args = [self.option_arg, self.mock_hosts_empty_path]
 
-        with patch("badfish.badfish.execute_badfish") as badfish_mock:
+        with patch("src.badfish.main.execute_badfish") as badfish_mock:
             result = self.badfish_call(mock_host=None)
 
         badfish_mock.assert_not_awaited()
@@ -55,7 +55,7 @@ class TestHostsFile(TestBase):
     def test_hosts_bad(self):
         self.args = [self.option_arg, self.mock_hosts_garbled_path]
 
-        with patch("badfish.badfish.execute_badfish") as badfish_mock:
+        with patch("src.badfish.main.execute_badfish") as badfish_mock:
             self.badfish_call(mock_host=None)
 
         badfish_mock.assert_awaited()
@@ -63,7 +63,7 @@ class TestHostsFile(TestBase):
             len(badfish_mock.await_args_list) == 3
         ), "Amount of calls does not match amount of hosts in file"
         for call in badfish_mock.await_args_list:
-            _host, _args, _logger = call[0]
+            _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
 
             assert _args["host_list"] == self.mock_hosts_garbled_path

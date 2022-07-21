@@ -249,8 +249,12 @@ RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = "- ERROR    - Systems resource not fo
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
-RESPONSE_POWER_STATE_ON = f"- INFO     - Power state for {MOCK_HOST}: On\n"
-RESPONSE_POWER_STATE_DOWN = f"- INFO     - Power state for {MOCK_HOST}: Down\n"
+RESPONSE_POWER_STATE_ON = (
+    "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
+)
+RESPONSE_POWER_STATE_DOWN = (
+    "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
+)
 RESPONSE_POWER_STATE_EMPTY = "- ERROR    - Power state not found. Try to racreset.\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
@@ -345,16 +349,18 @@ RESPONSE_LS_INTERFACES_VALUE_ERROR = (
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     - {JOB_ID}\n"
-RESPONSE_LS_JOBS_EMPTY = "- INFO     - No active jobs found.\n"
+RESPONSE_LS_JOBS = (
+    f"- INFO     - Found active jobs:\n" f"- INFO     -     JobID: {JOB_ID}\n"
+)
+RESPONSE_LS_JOBS_EMPTY = "- INFO     - Found active jobs: None\n"
 RESPONSE_CLEAR_JOBS = (
     f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 )
 RESPONSE_CHECK_JOB = (
-    f"- INFO     - JobID = {JOB_ID}\n"
-    "- INFO     - Name = Task\n"
-    "- INFO     - Message = Job completed successfully.\n"
-    "- INFO     - PercentComplete = 100\n"
+    f"- INFO     - JobID: {JOB_ID}\n"
+    "- INFO     - Name: Task\n"
+    "- INFO     - Message: Job completed successfully.\n"
+    "- INFO     - PercentComplete: 100\n"
 )
 RESPONSE_CHECK_JOB_BAD = (
     "- ERROR    - Command failed to check job status, return code is 404\n"
@@ -413,35 +419,35 @@ FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = (
     '{"error": "Something went wrong when getting firmware inventory"}'
 )
 RESPONSE_FIRMWARE_INVENTORY = (
-    "- INFO     - Id: Installed-0-16.25.40.62\n"
-    "- INFO     - Name: Mellanox ConnectX-5\n"
-    "- INFO     - ReleaseDate: 00:00:00Z\n"
-    "- INFO     - SoftwareId: 0\n"
-    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     - Updateable: True\n"
-    "- INFO     - Version: 16.25.40.62\n"
-    "- INFO     - ************************************************\n"
-    "- INFO     - Id: Installed-0-19.5.12\n"
-    "- INFO     - Name: Intel(R) Ethernet Network Adapter\n"
-    "- INFO     - ReleaseDate: 00:00:00Z\n"
-    "- INFO     - SoftwareId: 0\n"
-    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     - Updateable: True\n"
-    "- INFO     - Version: 19.5.12\n"
-    "- INFO     - ************************************************\n"
+    "- INFO     - Installed-0-16.25.40.62:\n"
+    "- INFO     -     Id: Installed-0-16.25.40.62\n"
+    "- INFO     -     Name: Mellanox ConnectX-5\n"
+    "- INFO     -     ReleaseDate: 00:00:00Z\n"
+    "- INFO     -     SoftwareId: 0\n"
+    "- INFO     -     Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -     Updateable: True\n"
+    "- INFO     -     Version: 16.25.40.62\n"
+    "- INFO     - Installed-0-19.5.12:\n"
+    "- INFO     -     Id: Installed-0-19.5.12\n"
+    "- INFO     -     Name: Intel(R) Ethernet Network Adapter\n"
+    "- INFO     -     ReleaseDate: 00:00:00Z\n"
+    "- INFO     -     SoftwareId: 0\n"
+    "- INFO     -     Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -     Updateable: True\n"
+    "- INFO     -     Version: 19.5.12\n"
 )
 RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = (
     "- ERROR    - Not able to access Firmware inventory.\n"
 )
 RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE = (
-    "- INFO     - Id: Installed-0-16.25.40.62\n"
-    "- INFO     - Name: Mellanox ConnectX-5\n"
-    "- INFO     - ReleaseDate: 00:00:00Z\n"
-    "- INFO     - SoftwareId: 0\n"
-    "- INFO     - Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     - Updateable: True\n"
-    "- INFO     - Version: 16.25.40.62\n"
-    "- INFO     - ************************************************\n"
+    "- INFO     - Installed-0-16.25.40.62:\n"
+    "- INFO     -     Id: Installed-0-16.25.40.62\n"
+    "- INFO     -     Name: Mellanox ConnectX-5\n"
+    "- INFO     -     ReleaseDate: 00:00:00Z\n"
+    "- INFO     -     SoftwareId: 0\n"
+    "- INFO     -     Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -     Updateable: True\n"
+    "- INFO     -     Version: 16.25.40.62\n"
 )
 
 MEMORY_MEMBERS_RESP = (
@@ -606,12 +612,11 @@ SYSTEM_SERIAL_NUMBER_RESP = """
 """
 EMPTY_OEM_RESP = '{"Oem":{}}'
 RESPONSE_LS_SERIAL_SERVICE_TAG = (
-    "- INFO     - Found ServiceTag:\n"
-    "- INFO     -     f01-h01-000-r630.host.io's ServiceTag: HXVMC42\n"
+    "- INFO     - ServiceTag:\n" "- INFO     -     f01-h01-000-r630.host.io: HXVMC42\n"
 )
 RESPONSE_LS_SERIAL_NUMBER = (
-    "- INFO     - Found System Serial Number:\n"
-    "- INFO     -     f01-h01-000-r630.host.io's System SerialNumber: S211337X8693420\n"
+    "- INFO     - Serial Number:\n"
+    "- INFO     -     f01-h01-000-r630.host.io: S211337X8693420\n"
 )
 RESPONSE_LS_SERIAL_UNSUPPORTED = (
     "- ERROR    - Server does not support this functionality\n"
@@ -669,8 +674,14 @@ VMEDIA_MEMBER_CD_RESP = """
 }
 """
 VMEDIA_CHECK_GOOD = """\
-- INFO     - ID: RemovableDisk - Name: Virtual Removable Disk - ImageName: None - Inserted: False
-- INFO     - ID: CD - Name: Virtual CD - ImageName: TestImage - Inserted: True\n\
+- INFO     - RemovableDisk:\n\
+- INFO     -     Name: Virtual Removable Disk\n\
+- INFO     -     ImageName: None\n\
+- INFO     -     Inserted: False\n\
+- INFO     - CD:\n\
+- INFO     -     Name: Virtual CD\n\
+- INFO     -     ImageName: TestImage\n\
+- INFO     -     Inserted: True\n\
 """
 VMEDIA_CHECK_EMPTY = """\
 - WARNING  - No active VirtualMedia found\n\
@@ -704,10 +715,10 @@ BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
-- INFO     - JobID = {JOB_ID}
-- INFO     - Name = Task
-- INFO     - Message = Job completed successfully.
-- INFO     - PercentComplete = 100
+- INFO     - JobID: {JOB_ID}
+- INFO     - Name: Task
+- INFO     - Message: Job completed successfully.
+- INFO     - PercentComplete: 100
 """
 BIOS_PASS_SET_MISS_ARG = """\
 - ERROR    - Missing argument: `--new-password`
@@ -717,10 +728,10 @@ BIOS_PASS_RM_GOOD = (
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
-- INFO     - JobID = %s
-- INFO     - Name = Task
-- INFO     - Message = Job completed successfully.
-- INFO     - PercentComplete = 100
+- INFO     - JobID: %s
+- INFO     - Name: Task
+- INFO     - Message: Job completed successfully.
+- INFO     - PercentComplete: 100
 """
     % JOB_ID
 )
@@ -850,15 +861,15 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
-KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.badfish] - WARNING  - Badfish terminated\n"
-WRONG_BADFISH_EXECUTION_HOST_LIST = (
-    "[badfish.badfish] - WARNING  - There was something wrong executing Badfish\n"
+KEYBOARD_INTERRUPT_HOST_LIST = (
+    "[src.badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 )
+WRONG_BADFISH_EXECUTION_HOST_LIST = "[src.badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 SUCCESSFUL_HOST_LIST = (
-    "[badfish.badfish] - INFO     - RESULTS:\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.badfish] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -868,9 +879,9 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[badfish.badfish] - INFO     - RESULTS:\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.badfish] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[badfish.badfish] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[src.badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"

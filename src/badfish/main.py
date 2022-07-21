@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import functools
-import tempfile
 import aiohttp
 import json
 import argparse
@@ -12,23 +11,16 @@ import sys
 import time
 import warnings
 import yaml
-
-try:
-    # Python 3.7 and newer, fast reentrant implementation
-    # without task tracking (not needed for that when logging)
-    from queue import SimpleQueue as Queue
-except ImportError:
-    from queue import Queue
-from logging.handlers import QueueHandler, QueueListener
+import tempfile
 
 from src.badfish.helpers.async_lru import alru_cache
-from PIL import Image
+from src.badfish.helpers.logger import (
+    BadfishLogger,
+)
+
 from logging import (
-    Formatter,
-    FileHandler,
     DEBUG,
     INFO,
-    StreamHandler,
     getLogger,
 )
 
@@ -51,38 +43,6 @@ async def badfish_factory(
 
 class BadfishException(Exception):
     pass
-
-
-class BadfishLogger:
-    def __init__(self, verbose=False, multi_host=False, log_file=None):
-        self.log_level = DEBUG if verbose else INFO
-        self.multi_host = multi_host
-        self.log_file = log_file
-
-        _host_name_tag = "[%(name)s] " if self.multi_host else ""
-        _format_str = f"{_host_name_tag}- %(levelname)-8s - %(message)s"
-        _file_format_str = (
-            f"%(asctime)-12s: {_host_name_tag}- %(levelname)-8s - %(message)s"
-        )
-
-        _queue = Queue()
-        self.stream_handler = StreamHandler()
-        self.stream_handler.setFormatter(Formatter(_format_str))
-        self.queue_listener = QueueListener(_queue, self.stream_handler)
-        self.logger = getLogger(__name__)
-        self.queue_handler = QueueHandler(_queue)
-        self.logger.addHandler(self.queue_handler)
-        self.logger.setLevel(self.log_level)
-
-        self.queue_listener.start()
-
-        if self.log_file:
-            self.file_handler = FileHandler(self.log_file)
-            self.file_handler.setFormatter(Formatter(_file_format_str))
-            self.file_handler.setLevel(self.log_level)
-            self.queue_listener.handlers = self.queue_listener.handlers + (
-                self.file_handler,
-            )
 
 
 class Badfish:
@@ -947,9 +907,9 @@ class Badfish:
         if _job_queue:
             self.logger.info("Found active jobs:")
             for job in _job_queue:
-                self.logger.info(job)
+                self.logger.info("    JobID: " + job)
         else:
-            self.logger.info("No active jobs found.")
+            self.logger.info("Found active jobs: None")
 
     async def create_job(self, _url, _payload, _headers, expected=None):
         if not expected:
@@ -1001,10 +961,10 @@ class Badfish:
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
 
-            self.logger.info(f"JobID = {data[u'Id']}")
-            self.logger.info(f"Name = {data[u'Name']}")
-            self.logger.info(f"Message = {data[u'Message']}")
-            self.logger.info(f"PercentComplete = {str(data[u'PercentComplete'])}")
+            self.logger.info(f"JobID: {data[u'Id']}")
+            self.logger.info(f"Name: {data[u'Name']}")
+            self.logger.info(f"Message: {data[u'Message']}")
+            self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
         else:
             self.logger.error("Command failed to check job status")
             return False
@@ -1030,10 +990,10 @@ class Badfish:
                 self.logger.debug(f"\n{job_id} job failed.")
                 return False
             elif data["Message"] == "Job completed successfully.":
-                self.logger.info(f"JobID = {data[u'Id']}")
-                self.logger.info(f"Name = {data[u'Name']}")
-                self.logger.info(f"Message = {data[u'Message']}")
-                self.logger.info(f"PercentComplete = {str(data[u'PercentComplete'])}")
+                self.logger.info(f"JobID: {data[u'Id']}")
+                self.logger.info(f"Name: {data[u'Name']}")
+                self.logger.info(f"Message: {data[u'Message']}")
+                self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
                 break
             else:
                 self.progress_bar(count, self.retries, data["Message"], prompt="Status")
@@ -1349,14 +1309,14 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             for info in data.items():
+                if "Id" == info[0]:
+                    self.logger.info("%s:" % info[1])
                 if (
                     "odata" not in info[0]
                     and "Description" not in info[0]
                     and "Oem" not in info[0]
                 ):
-                    self.logger.info("%s: %s" % (info[0], info[1]))
-
-            self.logger.info("*" * 48)
+                    self.logger.info("    %s: %s" % (info[0], info[1]))
 
     async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
@@ -1473,13 +1433,10 @@ class Badfish:
             try:
                 raw = await disc_response.text("utf-8", "ignore")
                 disc_data = json.loads(raw.strip())
-                _id = disc_data.get("Id")
-                name = disc_data.get("Name")
-                image_name = disc_data.get("ImageName")
-                inserted = disc_data.get("Inserted")
-                self.logger.info(
-                    f"ID: {_id} - Name: {name} - ImageName: {image_name} - Inserted: {inserted}"
-                )
+                self.logger.info(f"{disc_data.get('Id')}:")
+                self.logger.info(f"    Name: {disc_data.get('Name')}")
+                self.logger.info(f"    ImageName: {disc_data.get('ImageName')}")
+                self.logger.info(f"    Inserted: {disc_data.get('Inserted')}")
             except ValueError:
                 raise BadfishException(
                     "There was something wrong getting values for VirtualMedia"
@@ -1895,11 +1852,11 @@ class Badfish:
         data = await self.get_serial_summary()
 
         if "ServiceTag" in data:
-            self.logger.info("Found ServiceTag:")
-            self.logger.info(f"    {self.host}'s ServiceTag: {data.get('ServiceTag')}")
+            self.logger.info("ServiceTag:")
+            self.logger.info(f"    {self.host}: {data.get('ServiceTag')}")
         else:
-            self.logger.info("Found System Serial Number:")
-            self.logger.info(f"    {self.host}'s System SerialNumber: {data}")
+            self.logger.info("Serial Number:")
+            self.logger.info(f"    {self.host}: {data}")
 
         return True
 
@@ -1948,7 +1905,7 @@ class Badfish:
             return False
         await self.change_bios_password(old_password, "")
 
-    async def get_screenshot(self, gif=False, first=False):
+    async def get_screenshot(self):
         _uri = self.host_uri + self.redfish_uri + "/Dell" + self.manager_resource[11:]
         _url = "%s/DellLCService/Actions/DellLCService.ExportServerScreenShot" % _uri
         _headers = {"content-type": "application/json"}
@@ -1961,7 +1918,7 @@ class Badfish:
         elif status_code == 404:
             raise BadfishException("The system does not support screenshots.")
         else:
-            if not gif or (status_code == 400 and first):
+            if status_code == 400:
                 self.logger.error("POST command failed to get the server screenshot.")
                 await self.error_handler(_response)
             else:
@@ -1973,59 +1930,17 @@ class Badfish:
         except ValueError:
             raise BadfishException("Error reading response from host.")
 
-        if gif:
-
-            with tempfile.NamedTemporaryFile("wb", delete=False) as fh:
-                fh.write(
-                    base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
-                )
-                filename = fh.name
-        else:
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            fqdn_short = self.host.split(".")[0]
-            filename = f"{fqdn_short}_screenshot_{timestamp}.png"
-            with open(filename, "wb") as fh:
-                fh.write(
-                    base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8"))
-                )
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        fqdn_short = self.host.split(".")[0]
+        filename = f"{fqdn_short}_screenshot_{timestamp}.png"
+        with open(filename, "wb") as fh:
+            fh.write(base64.decodebytes(bytes(data["ServerScreenShotFile"], "utf-8")))
         return filename
 
     async def take_screenshot(self):
         filename = await self.get_screenshot()
         self.logger.info(f"Image saved: {filename}")
         return True
-
-    async def make_gif(self, minutes, interval):
-        minutes_in_seconds = minutes * 60
-        iterations = minutes_in_seconds // interval
-
-        frames = []
-        files = []
-        size = (720, 400)
-        for i in range(iterations):
-            filename = await self.get_screenshot(gif=True, first=(i == 0))
-            if filename:
-                files.append(filename)
-                new_frame = Image.open(filename)
-                new_frame.thumbnail(size, Image.ANTIALIAS)
-                frames.append(new_frame)
-            time.sleep(interval)
-
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        fqdn_short = self.host.split(".")[0]
-        filename = f"{fqdn_short}_screenshot_{timestamp}.gif"
-        frames[0].save(
-            filename,
-            format="GIF",
-            append_images=frames[1:],
-            save_all=True,
-            duration=iterations * 30,
-            loop=0,
-        )
-        self.logger.info(f"Image saved: {filename}")
-
-        for _file in files:
-            os.remove(_file)
 
     async def delete_session(self):
         headers = {"content-type": "application/json"}
@@ -2036,7 +1951,7 @@ class Badfish:
         return
 
 
-async def execute_badfish(_host, _args, logger):
+async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args["u"]
     _password = _args["p"]
     host_type = _args["t"]
@@ -2077,10 +1992,8 @@ async def execute_badfish(_host, _args, logger):
     new_password = _args["new_password"]
     old_password = _args["old_password"]
     screenshot = _args["screenshot"]
-    gif = _args["gif"]
-    minutes = _args["minutes"]
-    interval = _args["interval"]
     retries = int(_args["retries"])
+    output = _args["output"]
 
     result = True
 
@@ -2093,7 +2006,7 @@ async def execute_badfish(_host, _args, logger):
             _retries=retries,
         )
 
-        if _args["host_list"]:
+        if _args["host_list"] and not _args["output"]:
             badfish.logger.info("Executing actions on host: %s" % _host)
 
         if device:
@@ -2122,7 +2035,8 @@ async def execute_badfish(_host, _args, logger):
             await badfish.reset_bios()
         elif power_state:
             state = await badfish.get_power_state()
-            logger.info(f"Power state for {_host}: {state}")
+            logger.info("Power state:")
+            logger.info(f"    {_host}: '{state}'")
         elif power_on:
             await badfish.set_power_state("on")
         elif power_off:
@@ -2167,8 +2081,6 @@ async def execute_badfish(_host, _args, logger):
             await badfish.remove_bios_password(old_password)
         elif screenshot:
             await badfish.take_screenshot()
-        elif gif:
-            await badfish.make_gif(minutes, interval)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2180,6 +2092,12 @@ async def execute_badfish(_host, _args, logger):
 
     if _args["host_list"]:
         logger.info("*" * 48)
+        if output and result:
+            format_handler.host = _host
+            format_handler.parse()
+    else:
+        if output and result:
+            format_handler.parse()
 
     return _host, result
 
@@ -2197,6 +2115,12 @@ def main(argv=None):
     parser.add_argument("-t", help="Type of host as defined on iDRAC interfaces yaml")
     parser.add_argument(
         "-l", "--log", help="Optional argument for logging results to a file"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        choices=["json", "yaml"],
+        help="Optional argument for choosing a special output format (json/yaml), otherwise our normal format is used.",
     )
     parser.add_argument(
         "-f",
@@ -2264,7 +2188,14 @@ def main(argv=None):
         default="",
     )
     parser.add_argument(
-        "--firmware-inventory", help="Get firmware inventory", action="store_true"
+        "--firmware-inventory",
+        help="Get firmware inventory",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--delta",
+        help="Address of the other host between which the delta should be made",
+        default="",
     )
     parser.add_argument(
         "--clear-jobs",
@@ -2370,23 +2301,6 @@ def main(argv=None):
         help="Take a screenshot of the system an store it in jpg format",
         action="store_true",
     )
-    parser.add_argument(
-        "--gif",
-        help="Create a gif clip with 10 seconds interval system screenshots",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--minutes",
-        help="Integer value for the duration of the gif creation in minutes. Default=3",
-        default=3,
-        type=int,
-    )
-    parser.add_argument(
-        "--interval",
-        help="Integer value in seconds for the duration of the intervals of the gif creation. Default=10",
-        default=10,
-        type=int,
-    )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
     parser.add_argument(
         "-r",
@@ -2397,27 +2311,45 @@ def main(argv=None):
     _args = vars(parser.parse_args(argv))
 
     log_level = DEBUG if _args["verbose"] else INFO
+    host = _args["host"]
+
+    delta = _args["delta"]
+    if _args["firmware_inventory"] and delta:
+        tp = tempfile.NamedTemporaryFile()
+        tp.write(f"{host}\n{delta}".encode())
+        tp.flush()
+        _args["host_list"] = tp.name
+        if not _args["output"]:
+            _args["output"] = "json"
 
     host_list = _args["host_list"]
     multi_host = True if host_list else False
-    host = _args["host"]
     result = True
-    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"])
+    output = _args["output"]
+    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output)
 
     loop = asyncio.get_event_loop()
     tasks = []
+    host_order = {"src.badfish.helpers.logger": sys.maxsize}
     if host_list:
         try:
             with open(host_list, "r") as _file:
-                for _host in _file.readlines():
+                for i, _host in enumerate(_file.readlines()):
                     if _host.isspace():
                         continue
 
-                    logger = getLogger(_host.strip().split(".")[0])
+                    host_name = _host.strip().split(".")[0]
+                    host_order.update({host_name: i})
+                    logger = getLogger(host_name)
                     logger.addHandler(bfl.queue_handler)
                     logger.setLevel(log_level)
+                    bfl.badfish_handler.host = _host if output else None
                     fn = functools.partial(
-                        execute_badfish, _host.strip(), _args, logger
+                        execute_badfish,
+                        _host.strip(),
+                        _args,
+                        logger,
+                        bfl.queue_listener.handlers[0] if output else None,
                     )
                     tasks.append(fn)
         except IOError as ex:
@@ -2435,7 +2367,7 @@ def main(argv=None):
             bfl.logger.warning("There was something wrong executing Badfish")
             bfl.logger.debug(ex)
             result = False
-        if results:
+        if results and not output:
             result = True
             bfl.logger.info("RESULTS:")
             for res in results:
@@ -2451,7 +2383,7 @@ def main(argv=None):
     else:
         try:
             _host, result = loop.run_until_complete(
-                execute_badfish(host, _args, bfl.logger)
+                execute_badfish(host, _args, bfl.logger, bfl.queue_listener.handlers[0])
             )
         except KeyboardInterrupt:
             bfl.logger.warning("Badfish terminated")
@@ -2460,6 +2392,22 @@ def main(argv=None):
             bfl.logger.debug(ex)
             result = False
     bfl.queue_listener.stop()
+
+    if delta:
+        bfh_output = bfl.badfish_handler.diff()
+    else:
+        bfh_output = bfl.badfish_handler.output(
+            output if output else "normal", host_order
+        )
+    if _args["log"]:
+        og_stdout = sys.stdout
+        with open(_args["log"], "w") as f:
+            sys.stdout = f
+            print(bfh_output)
+            sys.stdout = og_stdout
+    else:
+        if bfh_output:
+            print(bfh_output, file=sys.stderr)
 
     if result:
         return 0
