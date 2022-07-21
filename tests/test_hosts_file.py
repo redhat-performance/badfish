@@ -24,7 +24,7 @@ class TestHostsFile(TestBase):
             len(badfish_mock.await_args_list) == 3
         ), "Amount of calls does not match amount of hosts in file"
         for call in badfish_mock.await_args_list:
-            _host, _args, _logger = call[0]
+            _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
 
             assert _args["host_list"] == self.mock_hosts_good_path
@@ -63,7 +63,7 @@ class TestHostsFile(TestBase):
             len(badfish_mock.await_args_list) == 3
         ), "Amount of calls does not match amount of hosts in file"
         for call in badfish_mock.await_args_list:
-            _host, _args, _logger = call[0]
+            _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
 
             assert _args["host_list"] == self.mock_hosts_garbled_path

@@ -43,6 +43,7 @@
          * [Toggle boot device](#toggle-boot-device)
          * [Variable number of retries](#variable-number-of-retries)
          * [Firmware inventory](#firmware-inventory)
+         * [Delta of firmware inventories](#delta-of-firmware-inventories)
          * [Clear Job Queue](#clear-job-queue)
          * [List Job Queue](#list-job-queue)
          * [Check Job Status](#check-job-status)
@@ -67,6 +68,7 @@
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
+         * [Formatted output](#formatted-output)
       * [iDRAC and Data Format](#idrac-and-data-format)
          * [Dell Foreman and PXE Interface](#dell-foreman-and-pxe-interface)
          * [Host type overrides](#host-type-overrides)
@@ -352,6 +354,12 @@ If you would like to get a detailed list of all the devices supported by iDRAC y
 badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
 ```
 
+### Delta of firmware inventories
+If you would like to get a delta between firmware inventories of two servers, you can do so with the `--delta` option. This option takes a second host address as its argument. Only the firmware that's on both servers and has different versions will get displayed.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory --delta mgmt-your-other-server.example.com
+```
+
 ### Clear Job Queue
 If you would like to clear all the jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--clear-jobs``` option which query for all active jobs in the iDRAC queue and will post a request to clear the queue.
 ```bash
@@ -513,6 +521,18 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_inte
 If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
+```
+
+### Formatted output
+If you would like to easier query some information listed by badfish, you can tell badfish to output in either JSON or YAML. Formatted output is also supported for bulk actions with `--host-list`. Supported commands that list some information are:
+- `--ls-*`
+- `--firmware-inventory`
+- `--get-bios-attribute` (also works with specified attribute by `--attribute` after)
+- `--check-boot`
+- `--check-virtual-media`
+- `--power-state`.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --output json/yaml --firmware-inventory
 ```
 
 ## iDRAC and Data Format
