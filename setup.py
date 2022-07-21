@@ -1,3 +1,5 @@
 import setuptools
 
-setuptools.setup()
+setuptools.setup(
+    packages=['src', 'src.badfish', 'src.badfish.helpers']
+)
