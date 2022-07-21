@@ -1,8 +1,13 @@
 name: Tox
 
 on:
+
+  pull_request:
+    types: [opened, edited]
+    branches: [development, master]
+
   push:
-    branches: [master, development]
+    branches: [development, master]
 
 jobs:
   build:
