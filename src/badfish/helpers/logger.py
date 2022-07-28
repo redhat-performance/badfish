@@ -134,7 +134,8 @@ class BadfishHandler(StreamHandler):
                 sorted_msg = [
                     x
                     for x in sorted(
-                        self.formatted_msg, key=lambda y: host_order[y.split()[0].strip("[]")]
+                        self.formatted_msg,
+                        key=lambda y: host_order[y.split()[0].strip("[]")],
                     )
                 ]
             else:
