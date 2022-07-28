@@ -1,4 +1,6 @@
 import json
+import sys
+
 import yaml
 
 try:
@@ -126,11 +128,13 @@ class BadfishHandler(StreamHandler):
                 Dumper=NoAliasDumper,
             )
         else:
-            if len(host_order) > 2:
+            if len(host_order) > 1:
+                logger_handle = self.formatted_msg[-1].split()[0].strip("[]")
+                host_order.update({logger_handle: sys.maxsize})
                 sorted_msg = [
                     x
                     for x in sorted(
-                        self.formatted_msg, key=lambda y: host_order[y.split()[0][1:-1]]
+                        self.formatted_msg, key=lambda y: host_order[y.split()[0].strip("[]")]
                     )
                 ]
             else:

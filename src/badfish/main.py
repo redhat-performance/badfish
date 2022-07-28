@@ -2330,7 +2330,7 @@ def main(argv=None):
 
     loop = asyncio.get_event_loop()
     tasks = []
-    host_order = {"src.badfish.helpers.logger": sys.maxsize}
+    host_order = {}
     if host_list:
         try:
             with open(host_list, "r") as _file:
