@@ -13,8 +13,8 @@ import warnings
 import yaml
 import tempfile
 
-from src.badfish.helpers.async_lru import alru_cache
-from src.badfish.helpers.logger import (
+from badfish.helpers.async_lru import alru_cache
+from badfish.helpers.logger import (
     BadfishLogger,
 )
 

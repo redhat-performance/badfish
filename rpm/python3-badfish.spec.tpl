@@ -38,7 +38,7 @@ BuildRequires:  zlib-devel
 %doc README.md
 %license LICENSE
 %{python3_sitelib}/%{project}-%{version}-py%{python3_version}.egg-info/
-%{python3_sitelib}/src/%{project}
+%{python3_sitelib}/%{project}
 %{_bindir}/%{project}
 
 %changelog

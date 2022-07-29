@@ -57,7 +57,7 @@ class BadfishHandler(StreamHandler):
                 self.output_dict.update({self.host: new_dict.copy()})
                 self.host = None
             else:
-                new_dict = yaml.safe_load(self.messages["src.badfish.helpers.logger"])
+                new_dict = yaml.safe_load(self.messages["badfish.helpers.logger"])
                 self.output_dict.update(new_dict.copy())
         except yaml.YAMLError:
             self.output_dict = {"unsupported_command": True}
