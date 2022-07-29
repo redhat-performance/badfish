@@ -155,7 +155,7 @@ NOTE: Badfish operates optionally against a YAML configuration file to toggle be
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
 
 ```python
-from badfish import badfish_factory
+from badfish.main import badfish_factory
 
 badfish = await badfish_factory(
     _host=_oob_mgmt,

@@ -862,14 +862,14 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
 KEYBOARD_INTERRUPT_HOST_LIST = (
-    "[src.badfish.helpers.logger] - WARNING  - Badfish terminated\n"
+    "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 )
-WRONG_BADFISH_EXECUTION_HOST_LIST = "[src.badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
+WRONG_BADFISH_EXECUTION_HOST_LIST = "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 SUCCESSFUL_HOST_LIST = (
-    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -879,9 +879,9 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[src.badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
