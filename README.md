@@ -54,7 +54,9 @@
          * [List Processors](#list-processors)
          * [List Serial Number or Service Tag](#list-serial-number-or-service-tag)
          * [Check Virtual Media](#check-virtual-media)
+         * [Mount Virtual Media](#mount-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
+         * [Boot to Virtual Media](#boot-to-virtual-media)
          * [Get SRIOV mode](#get-sriov-mode)
          * [Set SRIOV mode](#set-sriov-mode)
          * [Get BIOS attributes](#get-bios-attributes)
@@ -425,13 +427,23 @@ If you would like to check for any active virtual media you can run ```badfish``
 badfish -H mgmt-your-server.example.com -u root -p yourpass --check-virtual-media
 ```
 
+### Mount Virtual Media
+If you would like to mount an ISO from network you can run ```badfish``` with the ```--mount-virtual-media``` option which post a request for mounting the ISO virtual media (Virtual CD). Needs two arguments: the address and the path to the ISO.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --mount-virtual-media http://storage.example.com /folder/linux.iso
+```
+
 ### Unmount Virtual Media
 If you would like to unmount all active virtual media you can run ```badfish``` with the ```--unmount-virtual-media``` option which post a request for unmounting all active virtual devices.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --unmount-virtual-media
 ```
-NOTE:
-* This functionality is only available for SuperMicro devices.
+
+### Boot to Virtual Media
+If you would like to boot to virtual media (Virtual CD) you can run ```badfish``` with the ```--boot-to-virtual-media``` option which sets the onetime next boot device to virtual CD.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to-virtual-media
+```
 
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```

@@ -66,6 +66,7 @@ class Badfish:
         self.session_uri = None
         self.session_id = None
         self.token = None
+        self.vendor = None
 
     async def init(self):
         self.session_uri = await self.find_session_uri()
@@ -603,6 +604,9 @@ class Badfish:
         if response:
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
+
+            self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
+
             if "Managers" not in data:
                 raise BadfishException("Managers resource not found")
             else:
@@ -1353,115 +1357,214 @@ class Badfish:
         await self.reboot_server(graceful=False)
         return True
 
-    async def get_virtual_media_config_uri(self):
-        _url = "%s%s" % (self.host_uri, self.manager_resource)
-        _response = await self.get_request(_url)
-
-        try:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        except ValueError:
-            raise BadfishException("Not able to access Firmware inventory.")
-
-        vm_endpoint = data.get("VirtualMedia")
-        if vm_endpoint:
-            virtual_media = vm_endpoint.get("@odata.id")
-            if virtual_media:
-                vm_url = "%s%s" % (self.host_uri, virtual_media)
-                vm_response = await self.get_request(vm_url)
-                try:
-                    raw = await vm_response.text("utf-8", "ignore")
-                    vm_data = json.loads(raw.strip())
-
-                    oem = vm_data.get("Oem")
-                    if oem:
-                        sm = oem.get("Supermicro")
-                        if sm:
-                            vmc = sm.get("VirtualMediaConfig")
-                            if vmc:
-                                return vmc.get("@odata.id")
-
-                except ValueError:
-                    raise BadfishException(
-                        "Not able to check for supported virtual media unmount"
-                    )
-
-        return None
-
-    async def get_virtual_media(self):
-        _url = "%s%s" % (self.host_uri, self.manager_resource)
-        _response = await self.get_request(_url)
-
-        try:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        except ValueError:
-            raise BadfishException("Not able to access Firmware inventory.")
-
-        vm_endpoint = data.get("VirtualMedia")
-        vms = []
-        if vm_endpoint:
-            virtual_media = vm_endpoint.get("@odata.id")
-            if virtual_media:
-                vm_url = "%s%s" % (self.host_uri, virtual_media)
-                vm_response = await self.get_request(vm_url)
-                try:
-                    raw = await vm_response.text("utf-8", "ignore")
-                    vm_data = json.loads(raw.strip())
-
-                    if vm_data.get("Members"):
-                        for member in vm_data["Members"]:
-                            vms.append(member["@odata.id"])
-                    else:
-                        self.logger.warning("No active VirtualMedia found")
-                        return vms
-
-                except ValueError:
-                    raise BadfishException("Not able to access Firmware inventory.")
-            else:
-                raise BadfishException("No VirtualMedia endpoint found")
+    async def get_virtual_media_config(self):
+        vm_path = "/"
+        if self.vendor == "Supermicro":
+            vm_path += "VM1"
         else:
-            raise BadfishException("No VirtualMedia endpoint found")
+            vm_path += "VirtualMedia"
 
-        return vms
+        _uri = "%s%s%s" % (self.host_uri, self.manager_resource, vm_path)
+        _response = await self.get_request(_uri)
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Not able to access virtual media resource.")
+
+        if self.vendor == "Supermicro":
+            try:
+                vm_path = {
+                    "config": data["Oem"]
+                    .get("Supermicro")
+                    .get("VirtualMediaConfig")
+                    .get("@odata.id"),
+                    "count": data["Members@odata.count"],
+                    "members": [],
+                }
+                if vm_path["count"] > 0:
+                    for m in data["Members"]:
+                        vm_path["members"].append(m.get("@odata.id"))
+            except (ValueError, KeyError):
+                raise BadfishException("Not able to access virtual media config.")
+        else:
+            try:
+                vm_path = []
+                for m in data["Members"]:
+                    vm_path.append(m.get("@odata.id"))
+            except (ValueError, KeyError):
+                raise BadfishException("Not able to access virtual media config.")
+        return vm_path
 
     async def check_virtual_media(self):
-        vms = await self.get_virtual_media()
-        for vm in vms:
-            disc_url = "%s%s" % (self.host_uri, vm)
-            disc_response = await self.get_request(disc_url)
+        vm_config = await self.get_virtual_media_config()
+        if self.vendor == "Supermicro":
+            if vm_config.get("count") == 0:
+                self.logger.info("No virtual media mounted.")
+                return False
+            else:
+                vm_config = vm_config["members"]
+
+        inserted = False
+        for vm in vm_config:
+            _uri = "%s%s" % (self.host_uri, vm)
+            _response = await self.get_request(_uri)
             try:
-                raw = await disc_response.text("utf-8", "ignore")
-                disc_data = json.loads(raw.strip())
-                self.logger.info(f"{disc_data.get('Id')}:")
-                self.logger.info(f"    Name: {disc_data.get('Name')}")
-                self.logger.info(f"    ImageName: {disc_data.get('ImageName')}")
-                self.logger.info(f"    Inserted: {disc_data.get('Inserted')}")
+                raw = await _response.text("utf-8", "ignore")
+                _data = json.loads(raw.strip())
+                self.logger.info(f"{_data.get('Id')}:")
+                self.logger.info(f"    Name: {_data.get('Name')}")
+                self.logger.info(f"    ImageName: {_data.get('ImageName')}")
+                self.logger.info(f"    Inserted: {_data.get('Inserted')}")
+                if str(_data.get("Inserted")).lower() == "true" and "CD" in str(
+                    _data.get("Id")
+                ):
+                    inserted = True
             except ValueError:
                 raise BadfishException(
                     "There was something wrong getting values for VirtualMedia"
                 )
+        return inserted
 
+    async def mount_virtual_media(self, host, path):
+        vm_config = await self.get_virtual_media_config()
+        _headers = {"Content-Type": "application/json"}
+        if self.vendor == "Supermicro":
+            _payload = {"Host": host, "Path": path, "Username": "", "Password": ""}
+            _uri = "%s%s" % (self.host_uri, vm_config["config"])
+            _response = await self.patch_request(
+                _uri, payload=_payload, headers=_headers
+            )
+
+            _uri = "%s%s/Actions/IsoConfig.Mount" % (self.host_uri, vm_config["config"])
+            _response = await self.post_request(_uri, payload={}, headers=_headers)
+            if _response.status in [200, 202]:
+                self.logger.info("Image mounting operation was successful.")
+            else:
+                raise BadfishException(
+                    "There was something wrong trying to mount virtual media."
+                )
+        else:
+            vcd = [x for x in vm_config if "CD" in x][0]
+            _uri = "%s%s/Actions/VirtualMedia.InsertMedia" % (self.host_uri, vcd)
+            _payload = {"Image": host + path}
+            _response = await self.post_request(
+                _uri, payload=_payload, headers=_headers
+            )
+            status = _response.status
+            if status == 204:
+                self.logger.info("Image mounting operation was successful.")
+            elif status == 405:
+                self.logger.error(
+                    "Virtual media mounting is not allowed on this server."
+                )
+                return False
+            elif status == 500:
+                self.logger.error(
+                    "Couldn't mount virtual media, because there is virtual media mounted already."
+                )
+                return False
+            else:
+                raise BadfishException(
+                    "There was something wrong trying to mount virtual media."
+                )
         return True
 
     async def unmount_virtual_media(self):
+        vm_config = await self.get_virtual_media_config()
+        _headers = {"Content-Type": "application/json"}
+        if self.vendor == "Supermicro":
+            _uri = "%s%s/Actions/IsoConfig.UnMount" % (
+                self.host_uri,
+                vm_config["config"],
+            )
+            _response = await self.post_request(_uri, payload="{}", headers=_headers)
+            if _response.status in [200, 202]:
+                self.logger.info("Image unmount operation was successful.")
+            else:
+                raise BadfishException(
+                    "There was something wrong trying to unmount virtual media."
+                )
+            _payload = {"Host": "", "Path": "", "Username": "", "Password": ""}
+            _uri = "%s%s" % (self.host_uri, vm_config["config"])
+            _response = await self.patch_request(
+                _uri, payload=_payload, headers=_headers
+            )
+        else:
+            vcd = [x for x in vm_config if "CD" in x][0]
+            _uri = "%s%s/Actions/VirtualMedia.EjectMedia" % (self.host_uri, vcd)
+            _response = await self.post_request(_uri, payload={}, headers=_headers)
+            status = _response.status
+            if status == 204:
+                self.logger.info("Image unmount operation was successful.")
+            elif status == 405:
+                self.logger.error(
+                    "Virtual media unmounting is not allowed on this server."
+                )
+                return False
+            elif status == 500:
+                self.logger.error(
+                    "Couldn't unmount virtual media, because there isn't any virtual media mounted."
+                )
+                return False
+            else:
+                raise BadfishException(
+                    "There was something wrong trying to unmount virtual media."
+                )
+        return True
 
-        vmc = await self.get_virtual_media_config_uri()
-        if not vmc:
-            self.logger.warning("OOB management does not support Virtual Media unmount")
+    async def boot_to_virtual_media(self):
+        og_log = self.logger
+        self.logger = getLogger("Temp")
+        inserted = await self.check_virtual_media()
+        self.logger = og_log
+        if not inserted:
+            self.logger.error("No virtual CD is inserted.")
             return False
 
-        _vmc_url = "%s%s/Actions/IsoConfig.UnMount" % (self.host_uri, vmc)
-        _headers = {"content-type": "application/json"}
-        _payload = {}
-        disc_response = await self.post_request(_vmc_url, _payload, _headers)
-        if disc_response.status == 200:
-            self.logger.info("Successfully unmounted all VirtualMedia")
-        else:
-            raise BadfishException(
-                "There was something wrong unmounting the VirtualMedia"
-            )
+        _uri = "%s%s" % (self.host_uri, self.system_resource)
+        _headers = {"Content-Type": "application/json"}
+        if self.vendor == "Supermicro":
+            _payload = {"Boot": {"BootSourceOverrideEnabled": "Once"}}
 
+            _response = await self.get_request(_uri)
+            try:
+                raw = await _response.text("utf-8", "ignore")
+                _data = json.loads(raw.strip())
+                allowable_boot_targets = _data.get("Boot").get(
+                    "BootSourceOverrideTarget@Redfish.AllowableValues"
+                )
+            except ValueError:
+                raise BadfishException(
+                    "There was something wrong trying to boot to virtual media."
+                )
+            if "UsbCd" in allowable_boot_targets:
+                _payload.get("Boot").update({"BootSourceOverrideTarget": "UsbCd"})
+            else:
+                _payload.get("Boot").update({"BootSourceOverrideTarget": "Cd"})
+
+            _response = await self.patch_request(
+                _uri, headers=_headers, payload=_payload
+            )
+            if _response.status == 200:
+                self.logger.info(
+                    "Command passed to set next onetime boot device to virtual media."
+                )
+            else:
+                self.logger.error(
+                    "Command failed to set next onetime boot device to virtual media."
+                )
+                return False
+        else:
+            vcd_check = await self.check_device("Optical.iDRACVirtual.1-1")
+            if vcd_check:
+                await self.boot_to("Optical.iDRACVirtual.1-1")
+            else:
+                self.logger.error(
+                    "Command failed to set next onetime boot to virtual media. "
+                    "No virtual optical media boot device."
+                )
+                return False
         return True
 
     async def get_network_adapters(self):
@@ -1980,6 +2083,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     list_serial = _args["ls_serial"]
     check_virtual_media = _args["check_virtual_media"]
     unmount_virtual_media = _args["unmount_virtual_media"]
+    mount_virtual_media = _args["mount_virtual_media"]
+    boot_to_virtual_media = _args["boot_to_virtual_media"]
     get_sriov = _args["get_sriov"]
     enable_sriov = _args["enable_sriov"]
     disable_sriov = _args["disable_sriov"]
@@ -2055,8 +2160,14 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.list_serial()
         elif check_virtual_media:
             await badfish.check_virtual_media()
+        elif mount_virtual_media:
+            await badfish.mount_virtual_media(
+                mount_virtual_media[0], mount_virtual_media[1]
+            )
         elif unmount_virtual_media:
             await badfish.unmount_virtual_media()
+        elif boot_to_virtual_media:
+            await badfish.boot_to_virtual_media()
         elif get_sriov:
             sriov_mode = await badfish.get_sriov_mode()
             if sriov_mode:
@@ -2237,8 +2348,19 @@ def main(argv=None):
         action="store_true",
     )
     parser.add_argument(
+        "--mount-virtual-media",
+        help="Mount iso image to virtual CD. Takes two arguments: the address and path to the iso.",
+        default="",
+        nargs=2,
+    )
+    parser.add_argument(
         "--unmount-virtual-media",
         help="Unmount any mounted iso images",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--boot-to-virtual-media",
+        help="Boot to virtual media (Cd).",
         action="store_true",
     )
     parser.add_argument(
