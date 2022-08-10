@@ -428,9 +428,9 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --check-virtual-medi
 ```
 
 ### Mount Virtual Media
-If you would like to mount an ISO from network you can run ```badfish``` with the ```--mount-virtual-media``` option which post a request for mounting the ISO virtual media (Virtual CD). Needs two arguments: the address and the path to the ISO.
+If you would like to mount an ISO from network you can run ```badfish``` with the ```--mount-virtual-media``` option which post a request for mounting the ISO virtual media (Virtual CD). Full address to the ISO is needed as an argument.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --mount-virtual-media http://storage.example.com /folder/linux.iso
+badfish -H mgmt-your-server.example.com -u root -p yourpass --mount-virtual-media http://storage.example.com/folder/linux.iso
 ```
 
 ### Unmount Virtual Media

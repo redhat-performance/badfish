@@ -152,7 +152,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 204], "OK", True)
         self.set_mock_response(mock_delete, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_SUCCESS
 
@@ -165,7 +165,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 405], "OK", True)
         self.set_mock_response(mock_delete, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_NOT_ALLOWED
 
@@ -178,7 +178,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 500], "OK", True)
         self.set_mock_response(mock_delete, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_ALREADY_FILLED
 
@@ -191,7 +191,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 400], "OK", True)
         self.set_mock_response(mock_delete, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_SOMETHING_WRONG
 
@@ -206,7 +206,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.set_mock_response(mock_patch, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_SUCCESS
 
@@ -223,7 +223,7 @@ class TestMountVirtualMedia(TestBase):
         self.set_mock_response(mock_post, [200, 400], "OK", True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.set_mock_response(mock_patch, 200, "OK")
-        self.args = [self.option_arg, "http://storage.example.com", "/linux.iso"]
+        self.args = [self.option_arg, "http://storage.example.com/linux.iso"]
         _, err = self.badfish_call()
         assert err == VMEDIA_MOUNT_SOMETHING_WRONG
 

@@ -1285,11 +1285,12 @@ class Badfish:
                 raise BadfishException("There was something wrong getting values for VirtualMedia")
         return inserted
 
-    async def mount_virtual_media(self, host, path):
+    async def mount_virtual_media(self, path):
         vm_config = await self.get_virtual_media_config()
         _headers = {"Content-Type": "application/json"}
         if self.vendor == "Supermicro":
-            _payload = {"Host": host, "Path": path, "Username": "", "Password": ""}
+            split_path = str(path).split("/", 3)
+            _payload = {"Host": "/".join(split_path[:3]), "Path": "/" + split_path[-1], "Username": "", "Password": ""}
             _uri = "%s%s" % (self.host_uri, vm_config["config"])
             _response = await self.patch_request(_uri, payload=_payload, headers=_headers)
 
@@ -1302,7 +1303,7 @@ class Badfish:
         else:
             vcd = [x for x in vm_config if "CD" in x][0]
             _uri = "%s%s/Actions/VirtualMedia.InsertMedia" % (self.host_uri, vcd)
-            _payload = {"Image": host + path}
+            _payload = {"Image": path}
             _response = await self.post_request(_uri, payload=_payload, headers=_headers)
             status = _response.status
             if status == 204:
@@ -1977,7 +1978,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         elif check_virtual_media:
             await badfish.check_virtual_media()
         elif mount_virtual_media:
-            await badfish.mount_virtual_media(mount_virtual_media[0], mount_virtual_media[1])
+            await badfish.mount_virtual_media(mount_virtual_media)
         elif unmount_virtual_media:
             await badfish.unmount_virtual_media()
         elif boot_to_virtual_media:
@@ -2155,9 +2156,8 @@ def main(argv=None):
     )
     parser.add_argument(
         "--mount-virtual-media",
-        help="Mount iso image to virtual CD. Takes two arguments: the address and path to the iso.",
+        help="Mount iso image to virtual CD. Arguments should be the address/path to the iso.",
         default="",
-        nargs=2,
     )
     parser.add_argument(
         "--unmount-virtual-media",
