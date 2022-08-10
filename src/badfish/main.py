@@ -1291,8 +1291,12 @@ class Badfish:
         _headers = {"Content-Type": "application/json"}
         if self.vendor == "Supermicro":
             parsed_path = urlparse(path)
-            _payload = {"Host": f"{parsed_path.scheme}://{parsed_path.netloc}", "Path": parsed_path.path,
-                        "Username": "", "Password": ""}
+            _payload = {
+                "Host": f"{parsed_path.scheme}://{parsed_path.netloc}",
+                "Path": parsed_path.path,
+                "Username": "",
+                "Password": "",
+            }
             _uri = "%s%s" % (self.host_uri, vm_config["config"])
             _response = await self.patch_request(_uri, payload=_payload, headers=_headers)
 
