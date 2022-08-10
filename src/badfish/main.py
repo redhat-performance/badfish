@@ -12,6 +12,7 @@ import time
 import warnings
 import yaml
 import tempfile
+from urllib.parse import urlparse
 
 from badfish.helpers.async_lru import alru_cache
 from badfish.helpers.logger import (
@@ -1289,8 +1290,9 @@ class Badfish:
         vm_config = await self.get_virtual_media_config()
         _headers = {"Content-Type": "application/json"}
         if self.vendor == "Supermicro":
-            split_path = str(path).split("/", 3)
-            _payload = {"Host": "/".join(split_path[:3]), "Path": "/" + split_path[-1], "Username": "", "Password": ""}
+            parsed_path = urlparse(path)
+            _payload = {"Host": f"{parsed_path.scheme}://{parsed_path.netloc}", "Path": parsed_path.path,
+                        "Username": "", "Password": ""}
             _uri = "%s%s" % (self.host_uri, vm_config["config"])
             _response = await self.patch_request(_uri, payload=_payload, headers=_headers)
 
