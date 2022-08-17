@@ -73,9 +73,7 @@ def _open(wrapped):
     if not wrapped.closed:
         raise RuntimeError("alru_cache is not closed")
 
-    was_closed = (
-        wrapped.hits == wrapped.misses == len(wrapped.tasks) == len(wrapped._cache) == 0
-    )
+    was_closed = wrapped.hits == wrapped.misses == len(wrapped.tasks) == len(wrapped._cache) == 0
 
     if not was_closed:
         raise RuntimeError("alru_cache was not closed correctly")
