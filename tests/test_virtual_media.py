@@ -34,6 +34,20 @@ from tests.config import (
     VMEDIA_BOOT_TO_SM_FAIL,
     BOOT_SOURCE_OVERRIDE_TARGET_CD,
     BOOT_SOURCE_OVERRIDE_TARGET_USBCD,
+    VMEDIA_REMOTE_CHECK_RESP,
+    VMEDIA_REMOTE_CHECK_GOOD,
+    VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED,
+    VMEDIA_REMOTE_CHECK_FAIL,
+    VMEDIA_REMOTE_CHECK_ERROR,
+    VMEDIA_REMOTE_BOOT_TASK_RESP,
+    VMEDIA_REMOTE_BOOT_GOOD,
+    VMEDIA_REMOTE_BOOT_WRONG_PATH,
+    VMEDIA_REMOTE_BOOT_COMMAND_FAIL,
+    VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP,
+    VMEDIA_REMOTE_BOOT_TASK_FAIL,
+    VMEDIA_REMOTE_BOOT_SOMETHING_WRONG,
+    VMEDIA_REMOTE_DETACH_GOOD,
+    VMEDIA_REMOTE_DETACH_FAIL,
 )
 from tests.test_base import TestBase
 
@@ -214,9 +228,7 @@ class TestMountVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_mount_something_wrong_sm(
-        self, mock_get, mock_post, mock_delete, mock_patch
-    ):
+    def test_mount_something_wrong_sm(self, mock_get, mock_post, mock_delete, mock_patch):
         responses_get = [VMEDIA_GET_VM_CONFIG_RESP_SM]
         responses = INIT_RESP_SUPERMICRO + responses_get
         self.set_mock_response(mock_get, 200, responses)
@@ -302,9 +314,7 @@ class TestUnmountVirtualMedia(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_unmount_something_wrong_sm(
-        self, mock_get, mock_post, mock_delete, mock_patch
-    ):
+    def test_unmount_something_wrong_sm(self, mock_get, mock_post, mock_delete, mock_patch):
         responses_get = [VMEDIA_GET_VM_CONFIG_RESP_SM]
         responses = INIT_RESP_SUPERMICRO + responses_get
         self.set_mock_response(mock_get, 200, responses)
@@ -416,3 +426,193 @@ class TestBootToVirtualMedia(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == VMEDIA_BOOT_TO_SM_FAIL
+
+
+class TestCheckRemoteImage(TestBase):
+    option_arg = "--check-remote-image"
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_os_deployment_not_supported(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_check_good(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, VMEDIA_REMOTE_CHECK_RESP)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_CHECK_GOOD
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_check_fail(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 400], VMEDIA_REMOTE_CHECK_RESP, True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_CHECK_FAIL
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_check_error(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_CHECK_ERROR
+
+
+class TestBootRemoteImage(TestBase):
+    option_arg = "--boot-remote-image"
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_os_deployment_not_supported(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_good(self, mock_get, mock_post, mock_delete):
+        responses_get = [
+            BLANK_RESP,
+            VMEDIA_REMOTE_BOOT_TASK_RESP
+        ]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 202], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_BOOT_GOOD
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_wrong_path(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "wrong:path"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_BOOT_WRONG_PATH
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_command_fail(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 400], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_BOOT_COMMAND_FAIL
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_task_fail(self, mock_get, mock_post, mock_delete):
+        responses_get = [
+            BLANK_RESP,
+            VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP
+        ]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 202], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_BOOT_TASK_FAIL
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_something_wrong(self, mock_get, mock_post, mock_delete):
+        responses_get = [
+            BLANK_RESP,
+            BLANK_RESP
+        ]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 202], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_BOOT_SOMETHING_WRONG
+
+
+class TestDetachRemoteImage(TestBase):
+    option_arg = "--detach-remote-image"
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_detach_os_deployment_not_supported(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_detach_good(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_DETACH_GOOD
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_detach_fail(self, mock_get, mock_post, mock_delete):
+        responses_get = [BLANK_RESP]
+        responses = INIT_RESP + responses_get
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 400], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert err == VMEDIA_REMOTE_DETACH_FAIL
