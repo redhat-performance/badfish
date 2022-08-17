@@ -57,6 +57,9 @@
          * [Mount Virtual Media](#mount-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
          * [Boot to Virtual Media](#boot-to-virtual-media)
+         * [Check Remote Image](#check-remote-image)
+         * [Boot to Remote Image](#boot-to-remote-image)
+         * [Detach Remote Image](#detach-remote-image)
          * [Get SRIOV mode](#get-sriov-mode)
          * [Set SRIOV mode](#set-sriov-mode)
          * [Get BIOS attributes](#get-bios-attributes)
@@ -444,6 +447,30 @@ If you would like to boot to virtual media (Virtual CD) you can run ```badfish``
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to-virtual-media
 ```
+
+### Check Remote Image
+If you would like to check the attach status of a remote ISO in DellOSDeployment service you can run ```badfish``` with the ```--check-remote-image``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
+```
+NOTE:
+  * This is only supported on DELL devices.
+
+### Boot to Remote Image
+If you would like to boot to a remote ISO on NFS with DellOSDeployment service you can run ```badfish``` with the ```--boot-remote-image``` option which will attach the image and reboot the server to it. Expects the NFS path to the ISO as the argument.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
+```
+NOTE:
+  * This is only supported on DELL devices.
+
+### Detach Remote Image
+If you would like to detach an ISO from DellOSDeployment service you can run ```badfish``` with the ```--detach-remote-image``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-image
+```
+NOTE:
+  * This is only supported on DELL devices.
 
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```

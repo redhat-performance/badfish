@@ -1400,6 +1400,97 @@ class Badfish:
                 return False
         return True
 
+    async def check_os_deployment_support(self):
+        _uri = "%s/redfish/v1/Dell/Systems/System.Embedded.1/DellOSDeploymentService" % self.host_uri
+        _response = await self.get_request(_uri)
+        await _response.text("utf-8", "ignore")
+        if _response.status != 200:
+            self.logger.error(
+                "iDRAC version installed doesn't support DellOSDeploymentService needed for this feature."
+            )
+            return False
+        return True
+
+    async def check_remote_image(self):
+        if not await self.check_os_deployment_support():
+            return False
+        _uri = (
+            "%s/redfish/v1/Dell/Systems/System.Embedded.1/DellOSDeploymentService/Actions/DellOSDeploymentService."
+            "GetAttachStatus" % self.host_uri
+        )
+        _headers = {"Content-Type": "application/json"}
+        _response = await self.post_request(_uri, payload={}, headers=_headers)
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            if _response.status == 200:
+                self.logger.info("Current ISO attach status: %s" % data.get("ISOAttachStatus"))
+                if data.get("ISOAttachStatus") == "Attached":
+                    return True
+            else:
+                self.logger.error("Command failed to get attach status of the remote mounted ISO.")
+        except ValueError:
+            raise BadfishException("There was something wrong trying to check remote image attach status.")
+        return False
+
+    async def boot_remote_image(self, nfs_path):
+        if not await self.check_os_deployment_support():
+            return False
+        _uri = (
+            "%s/redfish/v1/Dell/Systems/System.Embedded.1/DellOSDeploymentService/Actions/DellOSDeploymentService"
+            ".BootToNetworkISO" % self.host_uri
+        )
+        _headers = {"Content-Type": "application/json"}
+        try:
+            split_path = str(nfs_path).split(":")
+            last_slash_pos = split_path[1].rindex("/") + 1
+            _payload = {
+                "ShareType": "NFS",
+                "IPAddress": split_path[0],
+                "ShareName": split_path[1][:last_slash_pos],
+                "ImageName": split_path[1][last_slash_pos:],
+            }
+            if len(_payload.get("ImageName")) == 0:
+                raise ValueError
+        except (ValueError, IndexError):
+            self.logger.error("Wrong NFS path format.")
+            return False
+        _response = await self.post_request(_uri, payload=_payload, headers=_headers)
+        if _response.status == 202:
+            self.logger.info("Command for booting to remote ISO was successful, job was created.")
+            try:
+                task_path = _response.headers.get("Location")
+                response = await self.get_request(f"{self.host_uri}{task_path}")
+                raw = await response.text("utf-8", "ignore")
+                data = json.loads(raw.strip())
+                if data.get("TaskStatus") == "OK":
+                    self.logger.info("OSDeployment task status is OK.")
+                else:
+                    self.logger.error("OSDeployment task failed and couldn't be completed.")
+                    return False
+            except (ValueError, AttributeError):
+                raise BadfishException("There was something wrong trying to check remote image attach status.")
+            return True
+        else:
+            self.logger.error("Command failed to boot to remote ISO. No job was created.")
+        return False
+
+    async def detach_remote_image(self):
+        if not await self.check_os_deployment_support():
+            return False
+        _uri = (
+            "%s/redfish/v1/Dell/Systems/System.Embedded.1/DellOSDeploymentService/Actions/DellOSDeploymentService"
+            ".DetachISOImage" % self.host_uri
+        )
+        _headers = {"Content-Type": "application/json"}
+        _response = await self.post_request(_uri, payload={}, headers=_headers)
+        if _response.status == 200:
+            self.logger.info("Command to detach remote ISO was successful.")
+            return True
+        else:
+            self.logger.error("Command failed to detach remote mounted ISO.")
+        return False
+
     async def get_network_adapters(self):
         _url = "%s%s/NetworkAdapters" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_url)
@@ -1908,6 +1999,9 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     unmount_virtual_media = _args["unmount_virtual_media"]
     mount_virtual_media = _args["mount_virtual_media"]
     boot_to_virtual_media = _args["boot_to_virtual_media"]
+    check_remote_image = _args["check_remote_image"]
+    boot_remote_image = _args["boot_remote_image"]
+    detach_remote_image = _args["detach_remote_image"]
     get_sriov = _args["get_sriov"]
     enable_sriov = _args["enable_sriov"]
     disable_sriov = _args["disable_sriov"]
@@ -1989,6 +2083,12 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.unmount_virtual_media()
         elif boot_to_virtual_media:
             await badfish.boot_to_virtual_media()
+        elif check_remote_image:
+            await badfish.check_remote_image()
+        elif boot_remote_image:
+            await badfish.boot_remote_image(boot_remote_image)
+        elif detach_remote_image:
+            await badfish.detach_remote_image()
         elif get_sriov:
             sriov_mode = await badfish.get_sriov_mode()
             if sriov_mode:
@@ -2173,6 +2273,21 @@ def main(argv=None):
     parser.add_argument(
         "--boot-to-virtual-media",
         help="Boot to virtual media (Cd).",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--check-remote-image",
+        help="Check the attach status of network ISO.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--boot-remote-image",
+        help="Boot to network ISO, through NFS, takes two arguments 'hostname:path' and name of the ISO 'linux.iso'.",
+        default="",
+    )
+    parser.add_argument(
+        "--detach-remote-image",
+        help="Remove attached network ISO.",
         action="store_true",
     )
     parser.add_argument(

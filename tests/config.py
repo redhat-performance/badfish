@@ -824,11 +824,91 @@ BOOT_SOURCE_OVERRIDE_TARGET_CD = """
     }
 }
 """
-
 VMEDIA_CHECK_DISC_VALUE_ERROR = (
     "- ERROR    - There was something wrong getting values for VirtualMedia\n"
 )
 VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
+
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED = (
+    "- ERROR    - iDRAC version installed doesn't support DellOSDeploymentService needed for this feature.\n"
+)
+VMEDIA_REMOTE_CHECK_RESP = """
+{
+    "@Message.ExtendedInfo": [{
+        "Message":"Successfully Completed Request",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":"Base.1.5.Success",
+        "RelatedProperties":[],
+        "RelatedProperties@odata.count":0,
+        "Resolution":"None"
+        ,"Severity":"OK"
+    }],
+    "DriversAttachStatus":"NotAttached",
+    "ISOAttachStatus":"Attached"
+}
+"""
+VMEDIA_REMOTE_CHECK_GOOD = "- INFO     - Current ISO attach status: Attached\n"
+VMEDIA_REMOTE_CHECK_FAIL = "- ERROR    - Command failed to get attach status of the remote mounted ISO.\n"
+VMEDIA_REMOTE_CHECK_ERROR = "- ERROR    - There was something wrong trying to check remote image attach status.\n"
+VMEDIA_REMOTE_BOOT_TASK_RESP = """
+{
+    "@odata.context":"/redfish/v1/$metadata#Task.Task",
+    "@odata.id":"/redfish/v1/TaskService/Tasks/OSDeployment",
+    "@odata.type":"#Task.v1_4_2.Task",
+    "Description":"Server Configuration and other Tasks running on iDRAC are listed here",
+    "EndTime":"",
+    "Id":"OSDeployment",
+    "Messages":[{
+        "Message":"",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":""
+    }],
+    "Messages@odata.count":1,
+    "Name":"BootToNetworkISO",
+    "PercentComplete":null,
+    "TaskState":"Running",
+    "TaskStatus":"OK"
+}
+"""
+VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP = """
+{
+    "@odata.context":"/redfish/v1/$metadata#Task.Task",
+    "@odata.id":"/redfish/v1/TaskService/Tasks/OSDeployment",
+    "@odata.type":"#Task.v1_4_2.Task",
+    "Description":"Server Configuration and other Tasks running on iDRAC are listed here",
+    "EndTime":"",
+    "Id":"OSDeployment",
+    "Messages":[{
+        "Message":"",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":""
+    }],
+    "Messages@odata.count":1,
+    "Name":"BootToNetworkISO",
+    "PercentComplete":null,
+    "TaskState":"Failed",
+    "TaskStatus":"Error"
+}
+"""
+VMEDIA_REMOTE_BOOT_GOOD = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- INFO     - OSDeployment task status is OK.\n"
+)
+VMEDIA_REMOTE_BOOT_WRONG_PATH = "- ERROR    - Wrong NFS path format.\n"
+VMEDIA_REMOTE_BOOT_COMMAND_FAIL = "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+VMEDIA_REMOTE_BOOT_TASK_FAIL = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- ERROR    - OSDeployment task failed and couldn't be completed.\n"
+)
+VMEDIA_REMOTE_BOOT_SOMETHING_WRONG = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- ERROR    - There was something wrong trying to check remote image attach status.\n"
+)
+VMEDIA_REMOTE_DETACH_GOOD = "- INFO     - Command to detach remote ISO was successful.\n"
+VMEDIA_REMOTE_DETACH_FAIL = "- ERROR    - Command failed to detach remote mounted ISO.\n"
 
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
