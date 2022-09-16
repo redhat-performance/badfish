@@ -54,7 +54,12 @@
          * [List Processors](#list-processors)
          * [List Serial Number or Service Tag](#list-serial-number-or-service-tag)
          * [Check Virtual Media](#check-virtual-media)
+         * [Mount Virtual Media](#mount-virtual-media)
          * [Unmount Virtual Media](#unmount-virtual-media)
+         * [Boot to Virtual Media](#boot-to-virtual-media)
+         * [Check Remote Image](#check-remote-image)
+         * [Boot to Remote Image](#boot-to-remote-image)
+         * [Detach Remote Image](#detach-remote-image)
          * [Get SRIOV mode](#get-sriov-mode)
          * [Set SRIOV mode](#set-sriov-mode)
          * [Get BIOS attributes](#get-bios-attributes)
@@ -155,7 +160,7 @@ NOTE: Badfish operates optionally against a YAML configuration file to toggle be
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
 
 ```python
-from badfish import badfish_factory
+from badfish.main import badfish_factory
 
 badfish = await badfish_factory(
     _host=_oob_mgmt,
@@ -182,8 +187,9 @@ podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PA
 ```
 NOTE:
 * If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
-* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml`
-* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish`
+* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml:z`
+* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish:z`
+* When mapping a volume to a container make sure to use the `:z` suffix for appropiate public shared labeling
 
 ### Via Virtualenv
 [Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
@@ -425,13 +431,47 @@ If you would like to check for any active virtual media you can run ```badfish``
 badfish -H mgmt-your-server.example.com -u root -p yourpass --check-virtual-media
 ```
 
+### Mount Virtual Media
+If you would like to mount an ISO from network you can run ```badfish``` with the ```--mount-virtual-media``` option which post a request for mounting the ISO virtual media (Virtual CD). Full address to the ISO is needed as an argument.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --mount-virtual-media http://storage.example.com/folder/linux.iso
+```
+
 ### Unmount Virtual Media
 If you would like to unmount all active virtual media you can run ```badfish``` with the ```--unmount-virtual-media``` option which post a request for unmounting all active virtual devices.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --unmount-virtual-media
 ```
+
+### Boot to Virtual Media
+If you would like to boot to virtual media (Virtual CD) you can run ```badfish``` with the ```--boot-to-virtual-media``` option which sets the onetime next boot device to virtual CD.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to-virtual-media
+```
+
+### Check Remote Image
+If you would like to check the attach status of a remote ISO in DellOSDeployment service you can run ```badfish``` with the ```--check-remote-image``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
+```
 NOTE:
-* This functionality is only available for SuperMicro devices.
+  * This is only supported on DELL devices.
+
+### Boot to Remote Image
+If you would like to boot to a remote ISO on NFS with DellOSDeployment service you can run ```badfish``` with the ```--boot-remote-image``` option which will attach the image and reboot the server to it. Expects the NFS path to the ISO as the argument.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
+```
+NOTE:
+  * This is only supported on DELL devices.
+
+### Detach Remote Image
+If you would like to detach an ISO from DellOSDeployment service you can run ```badfish``` with the ```--detach-remote-image``` option.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-image
+```
+NOTE:
+  * This is only supported on DELL devices.
 
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```

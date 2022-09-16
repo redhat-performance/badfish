@@ -1,5 +1,5 @@
 import setuptools
 
 setuptools.setup(
-    packages=['src', 'src.badfish', 'src.badfish.helpers']
+    version="1.0.2"
 )

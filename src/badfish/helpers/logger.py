@@ -57,7 +57,7 @@ class BadfishHandler(StreamHandler):
                 self.output_dict.update({self.host: new_dict.copy()})
                 self.host = None
             else:
-                new_dict = yaml.safe_load(self.messages["src.badfish.helpers.logger"])
+                new_dict = yaml.safe_load(self.messages["badfish.helpers.logger"])
                 self.output_dict.update(new_dict.copy())
         except yaml.YAMLError:
             self.output_dict = {"unsupported_command": True}
@@ -97,22 +97,16 @@ class BadfishHandler(StreamHandler):
             if diff_dict[host_first] == {}:
                 return "{}"
             output = ""
-            formatted = json.dumps(
-                diff_dict[host_first], indent=4, sort_keys=False, default=str
-            )
+            formatted = json.dumps(diff_dict[host_first], indent=4, sort_keys=False, default=str)
             len_first = (max(len(line) for line in formatted.splitlines())) + 10
             output += f"{host_first}:".ljust(len_first)
             output += f"{host_second}:\n"
             for i, j in zip(diff_dict[host_first], diff_dict[host_second]):
                 output += f"{i}".ljust(len_first)
                 output += f"{j}\n"
-                output += f"\t- Name: {(diff_dict[host_first][i])['Name']}".ljust(
-                    len_first
-                )
+                output += f"\t- Name: {(diff_dict[host_first][i])['Name']}".ljust(len_first)
                 output += f"\t- Name: {(diff_dict[host_second][j])['Name']}\n"
-                output += f"\t- Version: {(diff_dict[host_first][i])['Version']}".ljust(
-                    len_first
-                )
+                output += f"\t- Version: {(diff_dict[host_first][i])['Version']}".ljust(len_first)
                 output += f"\t- Version: {(diff_dict[host_second][j])['Version']}\n"
             return output
 
@@ -151,9 +145,7 @@ class BadfishLogger:
 
         _host_name_tag = "[%(name)s] " if self.multi_host else ""
         _format_str = f"{_host_name_tag}- %(levelname)-8s - %(message)s"
-        _file_format_str = (
-            f"%(asctime)-12s: {_host_name_tag}- %(levelname)-8s - %(message)s"
-        )
+        _file_format_str = f"%(asctime)-12s: {_host_name_tag}- %(levelname)-8s - %(message)s"
 
         self.badfish_handler = BadfishHandler(True if output else False)
         self.badfish_handler.setFormatter(Formatter(_format_str))
@@ -173,6 +165,4 @@ class BadfishLogger:
             self.file_handler = FileHandler(self.log_file)
             self.file_handler.setFormatter(Formatter(_file_format_str))
             self.file_handler.setLevel(self.log_level)
-            self.queue_listener.handlers = self.queue_listener.handlers + (
-                self.file_handler,
-            )
+            self.queue_listener.handlers = self.queue_listener.handlers + (self.file_handler,)

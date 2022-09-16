@@ -27,6 +27,10 @@ DEVICE_NIC_1 = {
     "hash": "bfa8fe2210d216298c7c53aedfc7e21b",
 }
 DEVICE_NIC_2 = {"name": "NIC.Slot.2-1-1", "hash": "135ac45c488549c04a21f1c199c2044a"}
+DEVICE_OPTICAL_1 = {
+    "name": "Optical.iDRACVirtual.1-1",
+    "hash": "ak3sjf78u38i2hi29ujudh298duoijd28",
+}
 
 BOOT_SEQ_RESPONSE_DIRECTOR = [
     render_device_dict(0, DEVICE_NIC_1),
@@ -45,6 +49,12 @@ BOOT_SEQ_RESPONSE_NO_MATCH = [
 ]
 BOOT_SEQ_RESPONSE_FOREMAN_SHORTER = [
     render_device_dict(0, DEVICE_NIC_1),
+]
+BOOT_SEQ_RESPONSE_OPTICAL = [
+    render_device_dict(0, DEVICE_NIC_1),
+    render_device_dict(1, DEVICE_HDD_1),
+    render_device_dict(2, DEVICE_NIC_2),
+    render_device_dict(3, DEVICE_OPTICAL_1),
 ]
 
 RESPONSE_WITHOUT = (
@@ -221,7 +231,11 @@ RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces
 
 ROOT_RESP = (
     '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}, '
-    '"RedfishVersion": "1.0.2"}'
+    '"RedfishVersion": "1.0.2","Oem":{"Dell":{"ServiceTag": "T35T7A6"}}}'
+)
+ROOT_RESP_SUPERMICRO = (
+    '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}, '
+    '"RedfishVersion": "1.0.2","Oem":{"Supermicro":{}}}'
 )
 SYS_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}]}'
 MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
@@ -234,6 +248,13 @@ RESET_TYPE_NG_RESP = (
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
 )
 INIT_RESP = [ROOT_RESP, ROOT_RESP, SYS_RESP, ROOT_RESP, MAN_RESP]
+INIT_RESP_SUPERMICRO = [
+    ROOT_RESP_SUPERMICRO,
+    ROOT_RESP_SUPERMICRO,
+    SYS_RESP,
+    ROOT_RESP_SUPERMICRO,
+    MAN_RESP,
+]
 
 RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
     f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
@@ -647,16 +668,71 @@ SCREENSHOT_GIF_FALSE_OK = (
     "- ERROR    - Error reading response from host.\n"
 )
 
-VMEDIA_GET_VM_RESP = '{"VirtualMedia": {"@odata.id": "/redfish/v1/Managers/1/VM1"}}'
-VMEDIA_GET_MEMBERS_RESP = """
+VMEDIA_CONFIG_NO_RESOURCE = "- ERROR    - Not able to access virtual media resource.\n"
+VMEDIA_CONFIG_NO_CONFIG = "- ERROR    - Not able to access virtual media config.\n"
+VMEDIA_GET_VM_CONFIG_RESP_DELL = """
+{
+    "@odata.context":"/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia",
+    "@odata.type":"#VirtualMediaCollection.VirtualMediaCollection",
+    "Description":"iDRAC Virtual Media Services Settings",
+    "Members":[
+        {"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk"},
+        {"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD"}
+    ],
+    "Members@odata.count":2,
+    "Name":"Virtual Media Services"
+}
+"""
+VMEDIA_GET_VM_CONFIG_RESP_SM = """
+{
+    "@odata.context":"/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.type":"#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id":"/redfish/v1/Managers/1/VM1",
+    "Name":"Virtual Media Collection",
+    "Description":"Collection of Virtual Media for this System",
+    "Members@odata.count":0,
+    "Oem":{
+        "Supermicro":{
+            "@odata.type":"#SmcVirtualMediaExtensions.v1_0_0.VirtualMediaCollection",
+            "VirtualMediaConfig":{
+                "@odata.id":"/redfish/v1/Managers/1/VM1/CfgCD"
+            }
+        }
+    }
+}
+"""
+VMEDIA_GET_VM_CONFIG_RESP_SM_WITH_MEMBERS = """
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id": "/redfish/v1/Managers/1/VM1",
+    "Name": "Virtual Media Collection",
+    "Description": "Collection of Virtual Media for this System",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/1/VM1/CD1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Oem": {
+        "Supermicro": {
+            "@odata.type": "#SmcVirtualMediaExtensions.v1_0_0.VirtualMediaCollection",
+            "VirtualMediaConfig": {
+                "@odata.id": "/redfish/v1/Managers/1/VM1/CfgCD"
+            }
+        }
+    }
+}
+"""
+VMEDIA_GET_VM_CONFIG_EMPTY_RESP_SM = "- INFO     - No virtual media mounted.\n"
+VMEDIA_GET_MEMBERS_RESP_DELL = """
 {"Members": [
     {"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk"},
     {"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD"}
   ]
 }
 """
-VMEDIA_GET_ENDPOINT_FALSE = '{"VirtualMedia":false}'
-VMEDIA_GET_ENDPOINT_EMPTY = '{"VirtualMedia": {"@odata.id":false}}'
 VMEDIA_MEMBER_RM_DISK_RESP = """
 {
   "Id":"RemovableDisk",
@@ -673,7 +749,7 @@ VMEDIA_MEMBER_CD_RESP = """
   "Name":"Virtual CD"
 }
 """
-VMEDIA_CHECK_GOOD = """\
+VMEDIA_CHECK_GOOD_DELL = """\
 - INFO     - RemovableDisk:\n\
 - INFO     -     Name: Virtual Removable Disk\n\
 - INFO     -     ImageName: None\n\
@@ -683,33 +759,156 @@ VMEDIA_CHECK_GOOD = """\
 - INFO     -     ImageName: TestImage\n\
 - INFO     -     Inserted: True\n\
 """
+VMEDIA_CHECK_GOOD_SM = """\
+- INFO     - CD:\n\
+- INFO     -     Name: Virtual CD\n\
+- INFO     -     ImageName: TestImage\n\
+- INFO     -     Inserted: True\n\
+"""
+VMEDIA_GET_ENDPOINT_FALSE = '{"VirtualMedia":false}'
+VMEDIA_GET_ENDPOINT_EMPTY = '{"VirtualMedia": {"@odata.id":false}}'
 VMEDIA_CHECK_EMPTY = """\
 - WARNING  - No active VirtualMedia found\n\
 """
-VMEDIA_GET_CONF_RESP = """
-{"Oem":{
-    "Supermicro":{
-      "@odata.type": "#SmcVirtualMediaExtensions.v1_0_0.VirtualMediaCollection",
-      "VirtualMediaConfig": {"@odata.id": "/redfish/v1/Managers/1/VM1/CfgCD"}
+
+VMEDIA_MOUNT_SUCCESS = "- INFO     - Image mounting operation was successful.\n"
+VMEDIA_MOUNT_NOT_ALLOWED = (
+    "- ERROR    - Virtual media mounting is not allowed on this server.\n"
+)
+VMEDIA_MOUNT_ALREADY_FILLED = "- ERROR    - Couldn't mount virtual media, because there is virtual media mounted already.\n"
+VMEDIA_MOUNT_SOMETHING_WRONG = (
+    "- ERROR    - There was something wrong trying to mount virtual media.\n"
+)
+
+VMEDIA_UNMOUNT_SUCCESS = "- INFO     - Image unmount operation was successful.\n"
+VMEDIA_UNMOUNT_NOT_ALLOWED = (
+    "- ERROR    - Virtual media unmounting is not allowed on this server.\n"
+)
+VMEDIA_UNMOUNT_EMPTY = "- ERROR    - Couldn't unmount virtual media, because there isn't any virtual media mounted.\n"
+VMEDIA_UNMOUNT_SOMETHING_WRONG = (
+    "- ERROR    - There was something wrong trying to unmount virtual media.\n"
+)
+
+VMEDIA_BOOT_TO_NO_MEDIA = "- ERROR    - No virtual CD is inserted.\n"
+VMEDIA_BOOT_TO_MISSING = (
+    "- ERROR    - Device Optical.iDRACVirtual.1-1 does not match any of the "
+    f"available boot devices for host {MOCK_HOST}\n"
+    "- ERROR    - Command failed to set next onetime boot to virtual media. No virtual optical media boot device.\n"
+)
+VMEDIA_BOOT_TO_SM_PASS = (
+    "- INFO     - Command passed to set next onetime boot device to virtual media.\n"
+)
+VMEDIA_BOOT_TO_SM_FAIL = (
+    "- ERROR    - Command failed to set next onetime boot device to virtual media.\n"
+)
+BOOT_SOURCE_OVERRIDE_TARGET_USBCD = """
+{
+    "Boot": {
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None", "Pxe", "Hdd", "Diags", "CD/DVD",
+            "BiosSetup", "FloppyRemovableMedia",
+            "UsbKey", "UsbHdd", "UsbFloppy", "UsbCd",
+            "UefiUsbKey", "UefiCd", "UefiHdd",
+            "UefiUsbHdd", "UefiUsbCd"
+        ]
     }
-  }
 }
 """
-VMEDIA_UNMOUNT_OK = "- INFO     - Successfully unmounted all VirtualMedia\n"
-VMEDIA_UNMOUNT_UNSUPPORTED = (
-    "- WARNING  - OOB management does not support Virtual Media unmount\n"
-)
-VMEDIA_FIRMWARE_ERROR = "- ERROR    - Not able to access Firmware inventory.\n"
-VMEDIA_CONFIG_NO_MEDIA = (
-    "- ERROR    - Not able to check for supported virtual media unmount\n"
-)
-VMEDIA_UNMOUNT_WENT_WRONG = (
-    "- ERROR    - There was something wrong unmounting the VirtualMedia\n"
-)
+BOOT_SOURCE_OVERRIDE_TARGET_CD = """
+{
+    "Boot": {
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None", "Pxe", "Floppy", "Cd",
+            "Usb", "Hdd", "BiosSetup"
+        ]
+    }
+}
+"""
 VMEDIA_CHECK_DISC_VALUE_ERROR = (
     "- ERROR    - There was something wrong getting values for VirtualMedia\n"
 )
 VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
+
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED = (
+    "- ERROR    - iDRAC version installed doesn't support DellOSDeploymentService needed for this feature.\n"
+)
+VMEDIA_REMOTE_CHECK_RESP = """
+{
+    "@Message.ExtendedInfo": [{
+        "Message":"Successfully Completed Request",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":"Base.1.5.Success",
+        "RelatedProperties":[],
+        "RelatedProperties@odata.count":0,
+        "Resolution":"None"
+        ,"Severity":"OK"
+    }],
+    "DriversAttachStatus":"NotAttached",
+    "ISOAttachStatus":"Attached"
+}
+"""
+VMEDIA_REMOTE_CHECK_GOOD = "- INFO     - Current ISO attach status: Attached\n"
+VMEDIA_REMOTE_CHECK_FAIL = "- ERROR    - Command failed to get attach status of the remote mounted ISO.\n"
+VMEDIA_REMOTE_CHECK_ERROR = "- ERROR    - There was something wrong trying to check remote image attach status.\n"
+VMEDIA_REMOTE_BOOT_TASK_RESP = """
+{
+    "@odata.context":"/redfish/v1/$metadata#Task.Task",
+    "@odata.id":"/redfish/v1/TaskService/Tasks/OSDeployment",
+    "@odata.type":"#Task.v1_4_2.Task",
+    "Description":"Server Configuration and other Tasks running on iDRAC are listed here",
+    "EndTime":"",
+    "Id":"OSDeployment",
+    "Messages":[{
+        "Message":"",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":""
+    }],
+    "Messages@odata.count":1,
+    "Name":"BootToNetworkISO",
+    "PercentComplete":null,
+    "TaskState":"Running",
+    "TaskStatus":"OK"
+}
+"""
+VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP = """
+{
+    "@odata.context":"/redfish/v1/$metadata#Task.Task",
+    "@odata.id":"/redfish/v1/TaskService/Tasks/OSDeployment",
+    "@odata.type":"#Task.v1_4_2.Task",
+    "Description":"Server Configuration and other Tasks running on iDRAC are listed here",
+    "EndTime":"",
+    "Id":"OSDeployment",
+    "Messages":[{
+        "Message":"",
+        "MessageArgs":[],
+        "MessageArgs@odata.count":0,
+        "MessageId":""
+    }],
+    "Messages@odata.count":1,
+    "Name":"BootToNetworkISO",
+    "PercentComplete":null,
+    "TaskState":"Failed",
+    "TaskStatus":"Error"
+}
+"""
+VMEDIA_REMOTE_BOOT_GOOD = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- INFO     - OSDeployment task status is OK.\n"
+)
+VMEDIA_REMOTE_BOOT_WRONG_PATH = "- ERROR    - Wrong NFS path format.\n"
+VMEDIA_REMOTE_BOOT_COMMAND_FAIL = "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+VMEDIA_REMOTE_BOOT_TASK_FAIL = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- ERROR    - OSDeployment task failed and couldn't be completed.\n"
+)
+VMEDIA_REMOTE_BOOT_SOMETHING_WRONG = (
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- ERROR    - There was something wrong trying to check remote image attach status.\n"
+)
+VMEDIA_REMOTE_DETACH_GOOD = "- INFO     - Command to detach remote ISO was successful.\n"
+VMEDIA_REMOTE_DETACH_FAIL = "- ERROR    - Command failed to detach remote mounted ISO.\n"
 
 BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Command passed to set BIOS password.
@@ -862,14 +1061,14 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
 KEYBOARD_INTERRUPT_HOST_LIST = (
-    "[src.badfish.helpers.logger] - WARNING  - Badfish terminated\n"
+    "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 )
-WRONG_BADFISH_EXECUTION_HOST_LIST = "[src.badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
+WRONG_BADFISH_EXECUTION_HOST_LIST = "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 SUCCESSFUL_HOST_LIST = (
-    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -879,9 +1078,9 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[src.badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
