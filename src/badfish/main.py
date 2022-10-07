@@ -74,6 +74,7 @@ class Badfish:
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
 
+
     @staticmethod
     def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
         ratio = float(value) / end_value
@@ -625,6 +626,22 @@ class Badfish:
             await self.send_reset("On")
 
         return data["PowerState"]
+
+    async def get_power_consumed_watts(self):
+        _uri = "%s%s/Chassis/%s/Power" % (self.host_uri, self.redfish_uri, self.system_resource.split("/")[-1])
+        _response = await self.get_request(_uri)
+
+        if _response.status == 404:
+            self.logger.error("Operation not supported by vendor.")
+            return False
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Could not retrieve current power value.")
+        self.logger.info(f"Current watts consumed: {data['PowerControl'][0]['PowerConsumedWatts']}")
+        return
+
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
         if interfaces_path:
@@ -1983,6 +2000,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     power_on = _args["power_on"]
     power_off = _args["power_off"]
     power_cycle = _args["power_cycle"]
+    power_consumed_watts = _args["get_power_consumed"]
     rac_reset = _args["racreset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
@@ -2067,6 +2085,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.reboot_server(graceful=False)
         elif reboot_only:
             await badfish.reboot_server()
+        elif power_consumed_watts:
+            await badfish.get_power_consumed_watts()
         elif list_interfaces:
             await badfish.list_interfaces()
         elif list_processors:
@@ -2194,6 +2214,11 @@ def main(argv=None):
         "--power-off",
         help="Power off host",
         action="store_true",
+    )
+    parser.add_argument(
+        "--get-power-consumed",
+        help="Get current consumed watts on host(s)",
+        action = "store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument(
