@@ -38,6 +38,7 @@
          * [Power State Control](#power-state-control)
          * [Check Power State](#check-power-state)
          * [Resetting iDRAC](#resetting-idrac)
+         * [Resetting BMC](#resetting-bmc)
          * [BIOS factory reset](#bios-factory-reset)
          * [Check current boot order](#check-current-boot-order)
          * [Toggle boot device](#toggle-boot-device)
@@ -326,6 +327,16 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
+NOTE:
+* Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
+
+### Resetting BMC
+For the replacement of `ipmitool bmc reset` or `ipmiutil reset`, the optional argument `--bmc-reset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the BMC itself.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --bmc-reset
+```
+NOTE:
+* Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
 
 ### BIOS factory reset
 You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
