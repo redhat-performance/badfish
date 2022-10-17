@@ -74,7 +74,6 @@ class Badfish:
         self.manager_resource = await self.find_managers_resource()
         self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
 
-
     @staticmethod
     def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
         ratio = float(value) / end_value
@@ -644,7 +643,6 @@ class Badfish:
             raise BadfishException("Could not retrieve current power value.")
         self.logger.info(f"Current watts consumed: {data['PowerControl'][0]['PowerConsumedWatts']}")
         return
-
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
         if interfaces_path:
@@ -2256,7 +2254,7 @@ def main(argv=None):
     parser.add_argument(
         "--get-power-consumed",
         help="Get current consumed watts on host(s)",
-        action = "store_true",
+        action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
     parser.add_argument("--bmc-reset", help="Flag for BMC reset", action="store_true")
