@@ -380,7 +380,7 @@ class Badfish:
         jobs = [job.strip("}").strip('"').strip("'") for job in job_queue]
         return jobs
 
-    async def get_reset_types(self, manager=False):
+    async def get_reset_types(self, manager=False, bmc=False):
         if manager:
             resource = self.manager_resource
             endpoint = "#Manager.Reset"
@@ -402,7 +402,10 @@ class Badfish:
                 if reset:
                     reset_types = reset.get("ResetType@Redfish.AllowableValues", [])
                     if not reset_types:
-                        self.logger.warning("Could not get allowable reset types")
+                        if bmc:
+                            reset_types = ["GracefulRestart", "ForceRestart"]
+                        else:
+                            self.logger.warning("Could not get allowable reset types")
         return reset_types
 
     async def read_yaml(self, _yaml_file):
@@ -982,6 +985,9 @@ class Badfish:
         return True
 
     async def reset_idrac(self):
+        if self.vendor != "Dell":
+            self.logger.warning("Vendor isn't a Dell, if you are trying this on a Supermicro, use --bmc-reset instead.")
+            return False
         self.logger.debug("Running reset iDRAC.")
         _reset_types = await self.get_reset_types(manager=True)
         reset_type = "ForceRestart"
@@ -1005,6 +1011,35 @@ class Badfish:
             raise BadfishException("Status code %s returned, error is: \n%s." % (status_code, data))
 
         self.logger.info("iDRAC will now reset and be back online within a few minutes.")
+        return True
+
+    async def reset_bmc(self):
+        if self.vendor != "Supermicro":
+            self.logger.warning("Vendor isn't a Supermicro, if you are trying this on a Dell, use --racreset instead.")
+            return False
+        self.logger.debug("Running reset BMC.")
+        _reset_types = await self.get_reset_types(manager=True, bmc=True)
+        reset_type = "GracefulRestart"
+        if reset_type not in _reset_types:
+            for rt in _reset_types:
+                if "restart" in rt.lower():
+                    reset_type = rt
+        _url = "%s%s/Actions/Manager.Reset/" % (self.host_uri, self.manager_resource)
+        _payload = {"ResetType": reset_type}
+        _headers = {"content-type": "application/json"}
+        self.logger.debug("url: %s" % _url)
+        self.logger.debug("payload: %s" % _payload)
+        self.logger.debug("headers: %s" % _headers)
+        _response = await self.post_request(_url, _payload, _headers)
+
+        status_code = _response.status
+        if status_code == 200:
+            self.logger.info("Status code %s returned for POST command to reset BMC." % status_code)
+        else:
+            data = await _response.text("utf-8", "ignore")
+            raise BadfishException("Status code %s returned, error is: \n%s." % (status_code, data))
+
+        self.logger.info("BMC will now reset and be back online within a few minutes.")
         return True
 
     async def reset_bios(self):
@@ -2002,6 +2037,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     power_cycle = _args["power_cycle"]
     power_consumed_watts = _args["get_power_consumed"]
     rac_reset = _args["racreset"]
+    bmc_reset = _args["bmc_reset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
     toggle_boot_device = _args["toggle_boot_device"]
@@ -2071,6 +2107,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif rac_reset:
             await badfish.reset_idrac()
+        elif bmc_reset:
+            await badfish.reset_bmc()
         elif factory_reset:
             await badfish.reset_bios()
         elif power_state:
@@ -2221,6 +2259,7 @@ def main(argv=None):
         action = "store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--bmc-reset", help="Flag for BMC reset", action="store_true")
     parser.add_argument(
         "--factory-reset",
         help="Reset BIOS to default factory settings",

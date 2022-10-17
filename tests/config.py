@@ -171,11 +171,14 @@ RESPONSE_POWER_OFF_NONE = (
 
 # test_reset_%s
 RESPONSE_RESET = (
-    "- INFO     - Status code 204 returned for POST command to reset %s.\n"
+    "- INFO     - Status code %s returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
 RESPONSE_RESET_FAIL = (
     "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
+)
+RESPONSE_RESET_WRONG_VENDOR = (
+    "- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
 )
 
 # test_change_boot
@@ -242,6 +245,9 @@ MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
 RESET_TYPE_RESP = (
     '{"Actions":{"#Manager.Reset":{"ResetType@Redfish.AllowableValues":["GracefulRestart"],'
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
+)
+RESET_TYPE_RESP_NO_ALLOWABLE_VALUES = (
+    '{"Actions":{"#Manager.Reset":{"target":"/redfish/v1/Managers/1/Actions/Manager.Reset"}}} '
 )
 RESET_TYPE_NG_RESP = (
     '{"Actions":{"#ComputerSystem.Reset":{"ResetType@Redfish.AllowableValues":["RestartNow"],'
