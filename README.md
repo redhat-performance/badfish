@@ -289,9 +289,11 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_inte
 **Note** `--boot-to`, `--boot-to-type`, and `--boot-to-mac` require you to manually perform a reboot action, these simply just batch what the system will boot to on the next boot.  For this you can use either `--power-cycle` or `--reboot-only`.
 
 ### Forcing a one-time boot to PXE
-To force systems to perform a one-time boot to PXE, simply pass the ```--pxe``` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.
+To force systems to perform a one-time boot to PXE, simply pass the `--pxe` flag to any of the commands above, by default it will pxe off the first available device for PXE booting.  This is equivalent to the ipmitool command `chassis bootdev pxe options=persistent` and should be used with SuperMicro/HPE systems or non-Dell systems that support a minimal IPMI 2.0 specification.
+
+For Dell systems please use either  `--boot-to`, `--boot-to-mac` or `--boot-to-type` for temporary PXE to a specific interface or change the boot order permanently to achieve your desired effect.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --pxe
+badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --pxe
 ```
 
 ### Rebooting a system
