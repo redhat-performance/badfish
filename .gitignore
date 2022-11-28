@@ -109,3 +109,6 @@ venv.bak/
 
 # PyCharm
 .idea/
+
+# SCP Exports folder (Testing purpose)
+tests/exports/

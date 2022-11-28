@@ -2,6 +2,8 @@
 import asyncio
 import base64
 import functools
+import random
+
 import aiohttp
 import json
 import argparse
@@ -12,6 +14,7 @@ import time
 import warnings
 import yaml
 import tempfile
+from datetime import datetime
 from urllib.parse import urlparse
 
 from badfish.helpers.async_lru import alru_cache
@@ -109,7 +112,7 @@ class Badfish:
             raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
-    async def get_request(self, uri, _continue=False, _get_token=False):
+    async def get_request(self, uri, _continue=False, _get_token=False, no_cache=None):
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
@@ -134,6 +137,8 @@ class Badfish:
                 return
             else:
                 self.logger.debug(ex)
+                if no_cache:
+                    self.logger.debug(f"{no_cache}")
                 raise BadfishException("Failed to communicate with server.")
         return _response
 
@@ -2002,6 +2007,170 @@ class Badfish:
             raise BadfishException(f"Failed to delete X-Auth-Token for {self.host}")
         return
 
+    @staticmethod
+    def get_now():
+        return datetime.now()
+
+    async def get_scp_targets(self, op):
+        uri = "%s%s" % (self.host_uri, self.manager_resource)
+        response = await self.get_request(uri)
+        try:
+            raw = await response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            _ = response.status
+            filtered_data = [
+                val for key, val in data.get("Actions").get("Oem").items() if key.endswith(f"{op}SystemConfiguration")
+            ]
+            if filtered_data:
+                if filtered_data[0].get("ShareParameters").get("Target@Redfish.AllowableValues"):
+                    self.logger.info(f"The allowable SCP {op} targets are:")
+                    for i in filtered_data[0].get("ShareParameters").get("Target@Redfish.AllowableValues"):
+                        self.logger.info(i)
+                    return True
+                else:
+                    self.logger.error(
+                        f"Couldn't find a list of possible targets, but {op} with SCP " f"should be allowed."
+                    )
+            else:
+                self.logger.error(f"iDRAC on this system doesn't seem to support SCP {op}.")
+        except (ValueError, AttributeError, TypeError):
+            raise BadfishException(f"There was something wrong trying to get targets for SCP {op}.")
+        return False
+
+    async def export_scp(self, file_path, targets="ALL", include_read_only=False):
+        uri = "%s%s/Actions/Oem/EID_674_Manager.ExportSystemConfiguration" % (self.host_uri, self.manager_resource)
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "ExportFormat": "JSON",
+            "ExportUse": "Default",
+            "IncludeInExport": ("Default" if not include_read_only else "IncludeReadOnly"),
+            "ShareParameters": {"Target": targets},
+        }
+        response = await self.post_request(uri, payload, headers)
+        if response.status != 202:
+            self.logger.error("Command failed to export system configuration.")
+            return False
+        try:
+            job_id = response.headers["Location"].split("/")[-1]
+        except (ValueError, AttributeError, KeyError):
+            self.logger.error("Failed to find a job ID in headers of the response.")
+            return False
+        self.logger.info(f"Job for exporting server configuration, successfully created. Job ID: {job_id}")
+        start_time = self.get_now()
+        percentage = 0
+        while True:
+            ct = self.get_now() - start_time
+            uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
+            response = await self.get_request(uri, no_cache=random.random())
+            raw = await response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            if "SystemConfiguration" in data:
+                now = self.get_now()
+                filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
+                open_file = open(filename, "w")
+                open_file.write(json.dumps(data, indent=4))
+                open_file.close()
+                self.logger.info("SCP export went through successfully.")
+                self.logger.info("Exported system configuration to file: %s" % filename)
+                break
+            if response.status in [200, 202]:
+                await asyncio.sleep(1)
+            else:
+                self.logger.error("Unable to get detail for the job, command failed.")
+                return False
+            if str(ct)[0:7] >= "0:05:00":
+                self.logger.error("Job has been timed out, took longer than 5 minutes, command failed.")
+                return False
+            else:
+                try:
+                    if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
+                        percentage = int(data["Oem"]["Dell"]["PercentComplete"])
+                        self.logger.info(
+                            "%s, percent complete: %s"
+                            % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
+                        )
+                    await asyncio.sleep(1)
+                except (ValueError, AttributeError, KeyError):
+                    self.logger.info("Unable to get job status message, trying again.")
+                    await asyncio.sleep(1)
+                continue
+        return True
+
+    async def import_scp(self, file_path, targets="ALL"):
+        try:
+            open_file = open(file_path, "r")
+        except IOError:
+            self.logger.error("File doesn't exist or couldn't be opened.")
+            return False
+        modify_file = open_file.read()
+        power_state = await self.get_power_state()
+        uri = "%s%s/Actions/Oem/EID_674_Manager.ImportSystemConfiguration" % (self.host_uri, self.manager_resource)
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "ImportBuffer": modify_file,
+            "ShutdownType": "Graceful",
+            "HostPowerState": power_state,
+            "ShareParameters": {"Target": targets},
+        }
+
+        response = await self.post_request(uri, payload, headers)
+        if response.status != 202:
+            self.logger.error("Command failed to import system configuration.")
+            return False
+        try:
+            job_id = response.headers["Location"].split("/")[-1]
+        except (ValueError, AttributeError, KeyError):
+            self.logger.error("Failed to find a job ID in headers of the response.")
+            return False
+        self.logger.info(f"Job for importing server configuration, successfully created. Job ID: {job_id}")
+        start_time = self.get_now()
+        percentage = 0
+        fail_states = ["Failed", "CompletedWithErrors"]
+        while True:
+            ct = self.get_now() - start_time
+            uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
+            response = await self.get_request(uri, no_cache=random.random())
+            raw = await response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            if response.status in [200, 202]:
+                await asyncio.sleep(1)
+            else:
+                self.logger.error("Unable to get detail for the job, command failed.")
+                return False
+            if str(ct)[0:7] >= "0:15:00":
+                self.logger.error("Job has been timed out, took longer than 5 minutes, command failed.")
+                return False
+            if "Oem" not in data:
+                self.logger.info("Unable to locate OEM data in JSON response, trying again.")
+                await asyncio.sleep(3)
+                continue
+            try:
+                if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
+                    percentage = int(data["Oem"]["Dell"]["PercentComplete"])
+                    self.logger.info(
+                        "%s, percent complete: %s"
+                        % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
+                    )
+                await asyncio.sleep(1)
+                if percentage != 100:
+                    continue
+            except (ValueError, AttributeError, KeyError):
+                self.logger.info("Unable to get job status message, trying again.")
+                await asyncio.sleep(3)
+                continue
+            try:
+                if data["Oem"]["Dell"]["JobState"] in fail_states:
+                    self.logger.error(f"Command failed, job status = {data['Oem']['Dell']['JobState']}")
+                    return False
+                elif data["Oem"]["Dell"]["JobState"] == "Completed":
+                    self.logger.info("Command passed, job successfully marked as completed. Going to reboot.")
+                    break
+            except (ValueError, AttributeError, KeyError):
+                self.logger.info("Unable to get job status, trying again")
+                await asyncio.sleep(3)
+                continue
+        return True
+
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args["u"]
@@ -2052,7 +2221,11 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     screenshot = _args["screenshot"]
     retries = int(_args["retries"])
     output = _args["output"]
-
+    get_scp_targets = _args["get_scp_targets"]
+    scp_targets = _args["scp_targets"]
+    scp_include_read_only = _args["scp_include_read_only"]
+    export_scp = _args["export_scp"]
+    import_scp = _args["import_scp"]
     result = True
 
     try:
@@ -2151,6 +2324,18 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.remove_bios_password(old_password)
         elif screenshot:
             await badfish.take_screenshot()
+        elif get_scp_targets:
+            await badfish.get_scp_targets(get_scp_targets)
+        elif export_scp:
+            if scp_targets:
+                await badfish.export_scp(export_scp, scp_targets, scp_include_read_only)
+            else:
+                await badfish.export_scp(export_scp, include_read_only=scp_include_read_only)
+        elif import_scp:
+            if scp_targets:
+                await badfish.import_scp(import_scp, scp_targets)
+            else:
+                await badfish.import_scp(import_scp)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2396,6 +2581,34 @@ def main(argv=None):
         help="Number of retries for executing actions.",
         default=RETRIES,
     )
+    parser.add_argument(
+        "--get-scp-targets",
+        help="Get allowable target values to export or import with iDRAC SCP. Choices=['Export', 'Import']",
+        choices=["Export", "Import"],
+        default="",
+    )
+    parser.add_argument(
+        "--scp-targets",
+        help="Comma separated targets which configs should be exported with iDRAC SCP.",
+        default="",
+    )
+    parser.add_argument(
+        "--scp-include-read-only",
+        help="Flag for including read only attributes in SCP export.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--export-scp",
+        help="Export system config using iDRAC SCP, argument specifies where file should be saved.",
+        default="",
+    )
+    parser.add_argument(
+        "--import-scp",
+        help="Import system config using iDRAC SCP, argument specifies which JSON file contains config that should be "
+        "imported.",
+        default="",
+    )
+
     _args = vars(parser.parse_args(argv))
 
     log_level = DEBUG if _args["verbose"] else INFO
