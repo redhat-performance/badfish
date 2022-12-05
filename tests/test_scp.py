@@ -30,7 +30,7 @@ from tests.config import (
 from tests.test_base import TestBase
 
 
-def fixed_datetime(ignore):
+def fixed_datetime():
     fixed_datetime.counter = getattr(fixed_datetime, 'counter', 0) + 1
     if fixed_datetime.counter < 5:
         return datetime.now()
@@ -164,7 +164,7 @@ class TestExportSCP(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_EXPORT_SCP_NO_LOCATION
 
-    @patch("src.badfish.main.Badfish.get_now", fixed_datetime)
+    @patch("src.badfish.main.get_now", fixed_datetime)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
@@ -182,8 +182,6 @@ class TestExportSCP(TestBase):
         assert err == RESPONSE_EXPORT_SCP_TIME_OUT
 
 
-# PASSES
-# valid pass
 class TestImportSCP(TestBase):
     option_arg = "--import-scp"
 
@@ -261,7 +259,7 @@ class TestImportSCP(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_EXPORT_SCP_NO_LOCATION
 
-    @patch("src.badfish.main.Badfish.get_now", fixed_datetime)
+    @patch("src.badfish.main.get_now", fixed_datetime)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
@@ -303,5 +301,3 @@ class TestImportSCP(TestBase):
         self.args = [self.option_arg, self.example_path]
         _, err = self.badfish_call()
         assert err == RESPONSE_IMPORT_SCP_FAIL_STATE
-
-

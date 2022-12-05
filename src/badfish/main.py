@@ -13,9 +13,9 @@ import time
 import warnings
 import yaml
 import tempfile
-from datetime import datetime
 from urllib.parse import urlparse
 
+from badfish.helpers import get_now
 from badfish.helpers.async_lru import alru_cache
 from badfish.helpers.logger import (
     BadfishLogger,
@@ -2007,10 +2007,6 @@ class Badfish:
             raise BadfishException(f"Failed to delete X-Auth-Token for {self.host}")
         return
 
-    @staticmethod
-    def get_now():
-        return datetime.now()
-
     async def get_scp_targets(self, op):
         uri = "%s%s" % (self.host_uri, self.manager_resource)
         response = await self.get_request(uri)
@@ -2056,16 +2052,16 @@ class Badfish:
             self.logger.error("Failed to find a job ID in headers of the response.")
             return False
         self.logger.info(f"Job for exporting server configuration, successfully created. Job ID: {job_id}")
-        start_time = self.get_now()
+        start_time = get_now()
         percentage = 0
         while True:
-            ct = self.get_now() - start_time
+            ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
             response = await self.get_raw(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "SystemConfiguration" in data:
-                now = self.get_now()
+                now = get_now()
                 filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
                 open_file = open(filename, "w")
                 open_file.write(json.dumps(data, indent=4))
@@ -2123,11 +2119,11 @@ class Badfish:
             self.logger.error("Failed to find a job ID in headers of the response.")
             return False
         self.logger.info(f"Job for importing server configuration, successfully created. Job ID: {job_id}")
-        start_time = self.get_now()
+        start_time = get_now()
         percentage = 0
         fail_states = ["Failed", "CompletedWithErrors"]
         while True:
-            ct = self.get_now() - start_time
+            ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
             response = await self.get_raw(uri)
             raw = await response.text("utf-8", "ignore")
