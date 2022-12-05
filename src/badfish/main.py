@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import functools
-import random
 
 import aiohttp
 import json
@@ -112,7 +111,10 @@ class Badfish:
             raise BadfishException(detail_message)
 
     @alru_cache(maxsize=64)
-    async def get_request(self, uri, _continue=False, _get_token=False, no_cache=None):
+    async def get_request(self, uri, _continue=False, _get_token=False):
+        return await self.get_raw(uri, _continue, _get_token)
+
+    async def get_raw(self, uri, _continue=False, _get_token=False):
         try:
             async with self.semaphore:
                 async with aiohttp.ClientSession() as session:
@@ -137,8 +139,6 @@ class Badfish:
                 return
             else:
                 self.logger.debug(ex)
-                if no_cache:
-                    self.logger.debug(f"{no_cache}")
                 raise BadfishException("Failed to communicate with server.")
         return _response
 
@@ -2061,7 +2061,7 @@ class Badfish:
         while True:
             ct = self.get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_request(uri, no_cache=random.random())
+            response = await self.get_raw(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "SystemConfiguration" in data:
@@ -2129,7 +2129,7 @@ class Badfish:
         while True:
             ct = self.get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_request(uri, no_cache=random.random())
+            response = await self.get_raw(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if response.status in [200, 202]:
