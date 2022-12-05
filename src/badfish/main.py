@@ -2323,15 +2323,9 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         elif get_scp_targets:
             await badfish.get_scp_targets(get_scp_targets)
         elif export_scp:
-            if scp_targets:
-                await badfish.export_scp(export_scp, scp_targets, scp_include_read_only)
-            else:
-                await badfish.export_scp(export_scp, include_read_only=scp_include_read_only)
+            await badfish.export_scp(export_scp, scp_targets, scp_include_read_only)
         elif import_scp:
-            if scp_targets:
-                await badfish.import_scp(import_scp, scp_targets)
-            else:
-                await badfish.import_scp(import_scp)
+            await badfish.import_scp(import_scp, scp_targets)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2586,7 +2580,7 @@ def main(argv=None):
     parser.add_argument(
         "--scp-targets",
         help="Comma separated targets which configs should be exported with iDRAC SCP.",
-        default="",
+        default="ALL",
     )
     parser.add_argument(
         "--scp-include-read-only",
