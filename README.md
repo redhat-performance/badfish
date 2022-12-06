@@ -71,6 +71,9 @@
             * [Setting UEFI mode](#setting-uefi-mode)
             * [Setting BIOS mode](#setting-bios-mode)
          * [Get server screenshot](#get-server-screenshot)
+         * [Targets for server configuration profile](#targets-for-server-configuration-profile)
+         * [Export server configuration profile](#export-server-configuration-profile)
+         * [Import server configuration profile](#import-server-configuration-profile)
          * [Bulk actions via text file with list of hosts](#bulk-actions-via-text-file-with-list-of-hosts)
          * [Verbose Output](#verbose-output)
          * [Log to File](#log-to-file)
@@ -556,6 +559,31 @@ If you would like to get a screenshot with the current state of the server you c
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --screenshot
 ```
+
+### Targets for server configuration profile
+If you want to get a list of allowed targets for SCP export or import you can get that with the `--get-scp-targets` command, takes either `Export` or `Import` as an argument.
+```
+badfish -H mgmt-your-server.example.com -u root -p yourpass --get-scp-targets (Export | Import)
+```
+NOTE:
+  * This is only supported on Dell devices.
+
+
+### Export server configuration profile
+If you would like to export a SCP as a JSON file for either some specific targets or all of them, you can run badfish with `--export-scp` and specify a path where the config should be saved to with its argument. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Read only arguments can be included with the `--scp-include-read-only` flag.
+```
+badfish -H mgmt-your-server.example.com -u root -p yourpass --export-scp "./" --scp-targets IDRAC,BIOS --scp-include-read-only
+```
+NOTE:
+  * This is only supported on Dell devices.
+
+### Import server configuration profile
+If you would like to import a SCP in a JSON file for either some specific targets or all of them, you can run badfish with `--import-scp`. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Command will reboot the server and return it to a state at the launch start of import.
+```
+badfish -H mgmt-your-server.example.com -u root -p yourpass --import-scp "./example_export.json" --scp-targets IDRAC,BIOS
+```
+NOTE:
+  * This is only supported on Dell devices.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
