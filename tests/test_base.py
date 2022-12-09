@@ -18,7 +18,7 @@ class TestBase(AioHTTPTestCase):
         return web.Application()
 
     @staticmethod
-    def set_mock_response(mock, status, responses, post=False):
+    def set_mock_response(mock, status, responses, post=False, headers=None):
         mock.return_value.__aenter__.return_value.name = responses
         if type(status) == list:
             status_mock = MagicMock()
@@ -39,6 +39,8 @@ class TestBase(AioHTTPTestCase):
             mock.return_value.__aenter__.return_value.text = CoroutineMock(
                 return_value=responses
             )
+        if headers is not None:
+            mock.return_value.__aenter__.return_value.headers = headers
 
     @pytest.fixture(autouse=True)
     def inject_capsys(self, capsys):
