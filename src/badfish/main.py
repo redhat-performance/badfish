@@ -645,7 +645,7 @@ class Badfish:
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
         except ValueError:
-            raise BadfishException("Could not retrieve current power value.")
+            raise BadfishException("Power value outside operating range.")
         self.logger.info(f"Current watts consumed: {data['PowerControl'][0]['PowerConsumedWatts']}")
         return
 
