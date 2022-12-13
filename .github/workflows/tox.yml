@@ -1,7 +1,6 @@
 name: Tox
 
 on:
-
   pull_request:
     types: [opened, edited]
     branches: [development, master]
@@ -11,8 +10,7 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python: ["3.6", "3.7", "3.8", "3.9", "3.10"]

@@ -168,14 +168,21 @@ RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears 
 RESPONSE_POWER_OFF_NONE = (
     "- WARNING  - Power state appears to be already set to 'off'.\n"
 )
-
+# test_power_consumed_watts
+POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
+RESPONSE_POWER_CONSUMED_OK = '- INFO     - Current watts consumed: 69\n'
+RESPONSE_POWER_CONSUMED_404 = '- ERROR    - Operation not supported by vendor.\n'
+RESPONSE_POWER_CONSUMED_VAL_ERR = '- ERROR    - Power value outside operating range.\n'
 # test_reset_%s
 RESPONSE_RESET = (
-    "- INFO     - Status code 204 returned for POST command to reset %s.\n"
+    "- INFO     - Status code %s returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
 RESPONSE_RESET_FAIL = (
     "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
+)
+RESPONSE_RESET_WRONG_VENDOR = (
+    "- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
 )
 
 # test_change_boot
@@ -242,6 +249,9 @@ MAN_RESP = '{"Members":[{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1"}]}'
 RESET_TYPE_RESP = (
     '{"Actions":{"#Manager.Reset":{"ResetType@Redfish.AllowableValues":["GracefulRestart"],'
     '"target":"/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Manager.Reset"}}} '
+)
+RESET_TYPE_RESP_NO_ALLOWABLE_VALUES = (
+    '{"Actions":{"#Manager.Reset":{"target":"/redfish/v1/Managers/1/Actions/Manager.Reset"}}} '
 )
 RESET_TYPE_NG_RESP = (
     '{"Actions":{"#ComputerSystem.Reset":{"ResetType@Redfish.AllowableValues":["RestartNow"],'
@@ -1084,3 +1094,132 @@ HOST_LIST_EXTRAS = (
     "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
 HOST_FILE_ERROR = "[badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
+
+# TEST SCP REQUESTS
+SCP_GET_TARGETS_ACTIONS_OEM_WITH_ALLOWABLES = """
+{
+  "Actions": {
+    "Oem": {
+      "OemManager.v1_0_0#OemManager.ExportSystemConfiguration": {
+        "ShareParameters": {
+          "Target@Redfish.AllowableValues": [
+            "ALL",
+            "IDRAC",
+            "BIOS",
+            "NIC",
+            "RAID"
+          ]
+        },
+        "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration"
+      }
+    }
+  }
+}
+"""
+SCP_GET_TARGETS_ACTIONS_OEM_WITHOUT_ALLOWABLES = """
+{
+  "Actions": {
+    "Oem": {
+      "OemManager.v1_0_0#OemManager.ExportSystemConfiguration": {
+        "ShareParameters": {
+        },
+        "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ExportSystemConfiguration"
+      }
+    }
+  }
+}
+"""
+SCP_GET_TARGETS_ACTIONS_OEM_UNSUPPORTED = """
+{
+  "Actions": {
+    "Oem": {}
+  }
+}
+"""
+SCP_MESSAGE_PERCENTAGE = """\
+{
+    "Oem": {
+        "Dell": {
+            "Message": "%sporting Server Configuration Profile.",
+            "PercentComplete": %d
+        }
+    }
+}
+"""
+SCP_MESSAGE_PERCENTAGE_STATE = """\
+{
+    "Oem": {
+        "Dell": {
+            "Message": "%s",
+            "PercentComplete": %d,
+            "JobState": "%s"
+        }
+    }
+}
+"""
+
+# TEST SCP RESPONSES
+RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = """\
+- INFO     - The allowable SCP Export targets are:
+- INFO     - ALL
+- INFO     - IDRAC
+- INFO     - BIOS
+- INFO     - NIC
+- INFO     - RAID
+"""
+RESPONSE_GET_SCP_TARGETS_WITHOUT_ALLOWABLES_ERR = (
+    "- ERROR    - Couldn't find a list of possible targets, but Export with SCP should be allowed.\n"
+)
+RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = "- ERROR    - iDRAC on this system doesn't seem to support SCP Export.\n"
+RESPONSE_GET_SCP_TARGETS_WRONG = "- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
+
+RESPONSE_EXPORT_SCP_PASS = f"""\
+- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Exporting Server Configuration Profile., percent complete: 15
+- INFO     - Exporting Server Configuration Profile., percent complete: 30
+- INFO     - Exporting Server Configuration Profile., percent complete: 45
+- INFO     - Exporting Server Configuration Profile., percent complete: 60
+- INFO     - Exporting Server Configuration Profile., percent complete: 75
+- INFO     - Exporting Server Configuration Profile., percent complete: 90
+- INFO     - Exporting Server Configuration Profile., percent complete: 99
+- INFO     - SCP export went through successfully.
+- INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
+"""
+RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration.\n"
+RESPONSE_EXPORT_SCP_NO_LOCATION = "- ERROR    - Failed to find a job ID in headers of the response.\n"
+RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
+- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Unable to get job status message, trying again.
+- INFO     - Exporting Server Configuration Profile., percent complete: 1
+- ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
+"""
+RESPONSE_IMPORT_SCP_INVALID_FILEPATH = "- ERROR    - File doesn't exist or couldn't be opened.\n"
+RESPONSE_IMPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to import system configuration.\n"
+RESPONSE_IMPORT_SCP_TIME_OUT = f"""\
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Unable to locate OEM data in JSON response, trying again.
+- INFO     - Unable to get job status message, trying again.
+- INFO     - Importing Server Configuration Profile., percent complete: 1
+- ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
+"""
+RESPONSE_IMPORT_SCP_FAIL_STATE = f"""\
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Importing Server Configuration Profile., percent complete: 20
+- INFO     - Importing Server Configuration Profile., percent complete: 40
+- INFO     - Importing Server Configuration Profile., percent complete: 60
+- INFO     - Unable to complete the Import operation., percent complete: 100
+- ERROR    - Command failed, job status = Failed
+"""
+
+RESPONSE_IMPORT_SCP_PASS = f"""\
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Importing Server Configuration Profile., percent complete: 15
+- INFO     - Importing Server Configuration Profile., percent complete: 30
+- INFO     - Importing Server Configuration Profile., percent complete: 45
+- INFO     - Importing Server Configuration Profile., percent complete: 60
+- INFO     - Importing Server Configuration Profile., percent complete: 75
+- INFO     - Importing Server Configuration Profile., percent complete: 90
+- INFO     - Importing Server Configuration Profile., percent complete: 99
+- INFO     - Successfully imported and applied Server Configuration Profile., percent complete: 100
+- INFO     - Command passed, job successfully marked as completed. Going to reboot.
+"""

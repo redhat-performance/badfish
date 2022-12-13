@@ -1,0 +1,25 @@
+{
+    "SystemConfiguration": {
+        "Comments": [
+            {
+                "Comment": "Export type is Normal,JSON"
+            }
+        ],
+        "Model": "PowerEdge R690",
+        "ServiceTag": "42XYZ693",
+        "TimeStamp": "Mon Feb 31 00:07:00 2040",
+        "Components": [
+            {
+                "FQDD": "SomeComponent",
+                "Attributes": [
+                    {
+                        "Name": "AttributeName",
+                        "Value": "10",
+                        "Set On Import": "False",
+                        "Comment": "Read and Write"
+                    }
+                ]
+            }
+        ]
+    }
+}
