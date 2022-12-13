@@ -168,7 +168,11 @@ RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears 
 RESPONSE_POWER_OFF_NONE = (
     "- WARNING  - Power state appears to be already set to 'off'.\n"
 )
-
+# test_power_consumed_watts
+POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
+RESPONSE_POWER_CONSUMED_OK = '- INFO     - Current watts consumed: 69\n'
+RESPONSE_POWER_CONSUMED_404 = '- ERROR    - Operation not supported by vendor.\n'
+RESPONSE_POWER_CONSUMED_VAL_ERR = '- ERROR    - Power value outside operating range.\n'
 # test_reset_%s
 RESPONSE_RESET = (
     "- INFO     - Status code %s returned for POST command to reset %s.\n"

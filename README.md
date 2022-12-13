@@ -37,6 +37,7 @@
          * [Power Cycling a System](#power-cycling-a-system)
          * [Power State Control](#power-state-control)
          * [Check Power State](#check-power-state)
+         * [Get Power Consumed](#power-consumed-watts)
          * [Resetting iDRAC](#resetting-idrac)
          * [Resetting BMC](#resetting-bmc)
          * [BIOS factory reset](#bios-factory-reset)
@@ -99,6 +100,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Perform one-time boot to a specific interface, mac address or device listed for PXE booting
 * Enforce a custom interface boot order
 * Check current boot order
+* Display current power consumption (watts)
 * Reboot host
 * Reset iDRAC
 * Clear iDRAC job queue
@@ -325,6 +327,16 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --power-state
 Partial Output:
 ```
 - INFO     - Power state for mgmt-your-server.example.com: On
+```
+
+### Power Consumed Watts
+This displays the current power usage for Dell / Supermicro server(s).
+```bash
+badfish -H mgmt-your-server.example.com -u root -p --power_consumed_watts'
+```
+Partial Output:
+```
+- INFO     - Current watts consumed: 213
 ```
 
 ### Resetting iDRAC
