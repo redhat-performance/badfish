@@ -60,6 +60,12 @@ uefi_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-
 director_f18_r640_interfaces: NIC.Slot.3-2,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
 foreman_f18_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
 
+# Custom Rack E27 and E28 for Dell R750
+director_e27_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+director_e28_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+foreman_e27_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+foreman_e28_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+
 ## Custom F04 specific overrides (examples)
 ## h34 (should resemble other r640 hosts)
 #director_f04_h34_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1

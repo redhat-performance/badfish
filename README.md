@@ -37,7 +37,7 @@
          * [Power Cycling a System](#power-cycling-a-system)
          * [Power State Control](#power-state-control)
          * [Check Power State](#check-power-state)
-         * [Get Power Consumed](#power-consumed-watts)
+         * [Get Power Consumed](#get-power-consumed)
          * [Resetting iDRAC](#resetting-idrac)
          * [Resetting BMC](#resetting-bmc)
          * [BIOS factory reset](#bios-factory-reset)
@@ -329,10 +329,10 @@ Partial Output:
 - INFO     - Power state for mgmt-your-server.example.com: On
 ```
 
-### Power Consumed Watts
+### Get Power Consumed
 This displays the current power usage for Dell / Supermicro server(s).
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p --power_consumed_watts'
+badfish -H mgmt-your-server.example.com -u root -p --power-consumed-watts
 ```
 Partial Output:
 ```
