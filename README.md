@@ -332,7 +332,7 @@ Partial Output:
 ### Get Power Consumed
 This displays the current power usage for Dell / Supermicro server(s).
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p --power-consumed-watts
+badfish -H mgmt-your-server.example.com -u root -p --get-power-consumed
 ```
 Partial Output:
 ```
