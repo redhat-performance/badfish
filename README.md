@@ -141,6 +141,7 @@ Active releases:
 ### Badfish Standalone CLI
 ```bash
 git clone https://github.com/redhat-performance/badfish && cd badfish
+python -m pip install --upgrade build
 python -m build
 python -m pip install dist/badfish-1.0.2.tar.gz
 ```
