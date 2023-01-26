@@ -1,0 +1,5 @@
+- name: Workflow Webhook Action
+  uses: distributhor/workflow-webhook@v3.0.2
+  env:
+    webhook_url: ${{ secrets.WEBHOOK }}
+    webhook_secret: ${{ secrets.WEBHOOK }}
