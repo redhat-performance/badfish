@@ -1,4 +1,5 @@
 name: Issue Creation Tracker
+
 on:
   issues:
     types: [opened]
