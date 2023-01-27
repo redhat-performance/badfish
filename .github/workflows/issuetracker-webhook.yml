@@ -1,9 +1,7 @@
 name: Issue Creation Tracker
-
 on:
   issues:
-    types:
-      - opened
+    types: [opened]
 
 jobs:
   build:
