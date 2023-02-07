@@ -18,4 +18,4 @@ jobs:
         run: |
             curl --location --request POST '${{ secrets.WEBHOOK }}' \
             --header 'Content-Type: application/json; charset=UTF-8' \
-            --data "{'text': '[${{ github.event.issue.number }}] ${{ github.event.issue.title }} (${{ github.event.issue.user.login }})'}"
+            --data "{'text': '[${{ github.event.issue.number }}] ${{ github.event.issue.html_url }} ${{ github.event.issue.title }} (${{ github.event.issue.user.login }})'}"
