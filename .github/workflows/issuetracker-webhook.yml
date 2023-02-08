@@ -1,0 +1,21 @@
+name: Issue Creation Tracker
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git Issue Details
+        run: |
+          echo "Issue creator: ${{ github.event.issue.user.login }}"
+          echo "Issue title: ${{ github.event.issue.title }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Issue url: ${{ github.event.issue.html_url }}"
+      - name: Google Chat Notification
+        run: |
+            curl --location --request POST '${{ secrets.WEBHOOK }}' \
+            --header 'Content-Type: application/json; charset=UTF-8' \
+            --data "{'text': '[${{ github.event.issue.number }}] ${{ github.event.issue.html_url }} ${{ github.event.issue.title }} (${{ github.event.issue.user.login }})'}"
