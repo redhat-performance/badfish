@@ -100,7 +100,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Perform one-time boot to a specific interface, mac address or device listed for PXE booting
 * Enforce a custom interface boot order
 * Check current boot order
-* Display current power consumption (watts)
+* Display current power consumption in watts
 * Reboot host
 * Reset iDRAC
 * Clear iDRAC job queue
