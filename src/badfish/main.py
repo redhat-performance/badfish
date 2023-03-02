@@ -1732,7 +1732,6 @@ class Badfish:
         return values
 
     async def get_processor_details(self):
-
         _url = "%s%s/Processors" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_url)
 
@@ -1810,7 +1809,6 @@ class Badfish:
         return values
 
     async def get_memory_details(self):
-
         _url = "%s%s/Memory" % (self.host_uri, self.system_resource)
         _response = await self.get_request(_url)
 
