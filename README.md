@@ -103,7 +103,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Display current power consumption in watts
 * Reboot host
 * Reset iDRAC
-* Clear iDRAC job queue
+* View, check and clear iDRAC jobs
 * Revert to factory settings
 * Check/set SRIOV
 * Take a remote screenshot of server KVM console activity (Dell only).
