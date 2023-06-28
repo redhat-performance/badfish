@@ -194,9 +194,9 @@ podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PA
 ```
 NOTE:
 * If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
-* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml:z`
-* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish:z`
-* When mapping a volume to a container make sure to use the `:z` suffix for appropiate public shared labeling
+* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml:Z`
+* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish:Z`
+* When mapping a volume to a container make sure to use the `:Z` suffix for appropiate labeling
 
 ### Via Virtualenv
 [Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
