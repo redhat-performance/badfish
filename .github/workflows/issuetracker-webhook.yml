@@ -1,18 +1,20 @@
-name: Issue Creation Tracker
+name: issue-announce
 on:
   issues:
     types: [opened]
-
+permissions:
+  issues: read
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+        ISSUE_TITLE: "${{ github.event.issue.title }}"
     steps:
       - name: Git Issue Details
         run: |
-          export issue_title=$(echo "${{ github.event.issue.title }}" | sed -e "s/'//g" -e 's/"//g')
+          export issue_title=$(echo "$ISSUE_TITLE" | sed -e "s/'//g" -e 's/"//g')
           echo "Issue creator: ${{ github.event.issue.user.login }}"
-          echo "Issue title: ${{ github.event.issue.title }}"
+          echo "Issue title: $ISSUE_TITLE"
           echo "Issue number: ${{ github.event.issue.number }}"
           echo "Issue url: ${{ github.event.issue.html_url }}"
           echo "Using issue_title: $issue_title"
