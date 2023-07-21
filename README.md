@@ -134,13 +134,8 @@ Active releases:
 - CentOS-stream 8 and 9
 - Rocky / Alma Linux 8 and 9
 - EPEL for CentOS 8 and 9
-- Fedora 33
-- Fedora 34
-- Fedora 35
-- Fedora 36
-- Fedora 37
-- Fedora 38
-- Fedora Rawhide
+- All current Fedora releases
+- Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/)
 
 ### Badfish Standalone CLI
 ```bash
