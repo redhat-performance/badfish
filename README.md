@@ -131,9 +131,9 @@ dnf install python3-badfish -y
 ```
 
 Active releases:
-- CentOS-stream 8 and 9
-- Rocky / Alma Linux 8 and 9
-- EPEL for CentOS 8 and 9
+- CentOS Stream 8 and 9
+- Rocky & Alma Linux 8 and 9
+- EPEL 8 and 9
 - All current Fedora releases
 - Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/)
 
