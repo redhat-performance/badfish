@@ -269,7 +269,7 @@ class Badfish:
         data = await self.get_bios_attributes_registry()
         attribute_value = await self.get_bios_attribute(attribute)
         for entry in data["RegistryEntries"]["Attributes"]:
-            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+            entries = [low_entry.lower() for low_entry in entry.values() if isinstance(low_entry, str)]
             if attribute.lower() in entries:
                 for values in entry.items():
                     if values[0] == "CurrentValue":
@@ -300,7 +300,7 @@ class Badfish:
         try:
             bios_attribute = data["Attributes"][attribute]
             return bios_attribute
-        except KeyError:
+        except (KeyError, TypeError):
             self.logger.warning("Could not retrieve Bios Attributes.")
             return None
 
@@ -308,7 +308,7 @@ class Badfish:
         data = await self.get_bios_attributes_registry()
         accepted = False
         for entry in data["RegistryEntries"]["Attributes"]:
-            entries = [low_entry.lower() for low_entry in entry.values() if type(low_entry) == str]
+            entries = [low_entry.lower() for low_entry in entry.values() if isinstance(low_entry, str)]
             _warnings = []
             _not_found = []
             _remove = []
@@ -1073,7 +1073,6 @@ class Badfish:
         if device_check:
             await self.clear_job_queue()
             await self.send_one_time_boot(device)
-            await self.create_bios_config_job(self.bios_uri)
         else:
             return False
         return True
@@ -1297,14 +1296,18 @@ class Badfish:
         if self.vendor == "Supermicro":
             try:
                 vm_path = {
-                    "config": data["Oem"].get("Supermicro").get("VirtualMediaConfig").get("@odata.id"),
+                    "config": "",
                     "count": data["Members@odata.count"],
                     "members": [],
                 }
+                if data["Oem"].get("Supermicro"):
+                    vm_path.update({"config": data["Oem"].get("Supermicro").get("VirtualMediaConfig").get("@odata.id")})
+                else:
+                    vm_path.update({"config": data["Oem"].get("VirtualMediaConfig").get("@odata.id")})
                 if vm_path["count"] > 0:
                     for m in data["Members"]:
                         vm_path["members"].append(m.get("@odata.id"))
-            except (ValueError, KeyError):
+            except (ValueError, KeyError, TypeError):
                 raise BadfishException("Not able to access virtual media config.")
         else:
             try:
