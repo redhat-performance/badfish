@@ -112,3 +112,4 @@ venv.bak/
 
 # SCP Exports folder (Testing purpose)
 tests/exports/
+exports/
