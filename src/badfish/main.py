@@ -202,9 +202,12 @@ class Badfish:
 
         host_name_split = self.host.split(".")[0].split("-")
         host_model = host_name_split[-1]
-        host_blade = host_name_split[-2]
-        uloc = host_name_split[-3]
-        rack = host_name_split[-4]
+        rack = host_name_split[1]
+        uloc = host_name_split[2]
+
+        host_blade = "000"
+        if len(host_name_split) > 4:
+            host_blade = host_name_split[3]
 
         prefix = [host_type, rack, uloc]
 
