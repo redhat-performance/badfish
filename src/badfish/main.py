@@ -1071,11 +1071,13 @@ class Badfish:
         self.logger.info("BIOS will now reset and be back online within a few minutes.")
         return True
 
-    async def boot_to(self, device):
+    async def boot_to(self, device, skip_job=False):
         device_check = await self.check_device(device)
         if device_check:
             await self.clear_job_queue()
             await self.send_one_time_boot(device)
+            if not skip_job:
+                await self.create_bios_config_job(self.bios_uri)
         else:
             return False
         return True
@@ -1453,7 +1455,7 @@ class Badfish:
         else:
             vcd_check = await self.check_device("Optical.iDRACVirtual.1-1")
             if vcd_check:
-                await self.boot_to("Optical.iDRACVirtual.1-1")
+                await self.boot_to("Optical.iDRACVirtual.1-1", True)
             else:
                 self.logger.error(
                     "Command failed to set next onetime boot to virtual media. " "No virtual optical media boot device."
