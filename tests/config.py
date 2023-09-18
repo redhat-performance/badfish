@@ -118,6 +118,8 @@ RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST = (
     "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
     "- INFO     - Polling for host state: On\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
+    "- ERROR    - POST command failed to create BIOS config job, status code is 400.\n"
+    "- ERROR    - {'JobID': 'JID_498218641680'}\n"
 )
 RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"

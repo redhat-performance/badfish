@@ -1,6 +1,7 @@
-from unittest import IsolatedAsyncioTestCase
+import pytest
 from src.badfish.main import Badfish
 from tests.config import INTERFACES_PATH
+from tests.test_base import TestBase
 
 E26_EXPECTED_INTERFACES = {
     "director": "NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1",
@@ -23,7 +24,8 @@ FC640_B02_INTERFACES = {
 }
 
 
-class TestGetInterfaceByType(IsolatedAsyncioTestCase):
+class TestGetInterfaceByType(TestBase):
+    @pytest.mark.asyncio
     async def test_get_interface_by_type(self):
         for host, expected in [
             ("mgmt-e26-h01-r750", E26_EXPECTED_INTERFACES),
