@@ -65,6 +65,8 @@ director_e27_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.S
 director_e28_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
 foreman_e27_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
 foreman_e28_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+uefi_e27_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
+uefi_e28_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
 
 ## Custom F04 specific overrides (examples)
 ## h34 (should resemble other r640 hosts)
