@@ -20,7 +20,7 @@ jobs:
           echo "Using issue_title: $issue_title"
       - name: Google Chat Notification
         run: |
-            export issue_title=$(echo "${{ github.event.issue.title }}" | sed -e "s/'//g" -e 's/"//g')
+            export issue_title=$(echo "$ISSUE_TITLE" | sed -e "s/'//g" -e 's/"//g')
             curl --location --request POST '${{ secrets.WEBHOOK }}' \
             --header 'Content-Type: application/json; charset=UTF-8' \
             --data "{'text': '[${{ github.event.issue.number }}] ${{ github.event.issue.html_url }} $issue_title (${{ github.event.issue.user.login }})'}"
