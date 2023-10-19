@@ -113,6 +113,7 @@ class TestExportSCP(TestBase):
     tests_dir = os.path.dirname(__file__)
     example_path = os.path.join(tests_dir, "fixtures/example_scp.json")
 
+    @patch("badfish.helpers.get_now", fixed_datetime)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
