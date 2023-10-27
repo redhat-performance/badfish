@@ -170,7 +170,7 @@ RESPONSE_POWER_OFF_NONE = (
 )
 # test_power_consumed_watts
 POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
-NO_POWER = '{}'
+NO_POWER = '{"PowerControl":[]}'
 RESPONSE_POWER_CONSUMED_OK = '- INFO     - Current watts consumed: 69\n'
 RESPONSE_NO_POWER_CONSUMED = '- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n'
 RESPONSE_POWER_CONSUMED_404 = '- ERROR    - Operation not supported by vendor.\n'
