@@ -649,7 +649,11 @@ class Badfish:
             data = json.loads(raw.strip())
         except ValueError:
             raise BadfishException("Power value outside operating range.")
-        self.logger.info(f"Current watts consumed: {data['PowerControl'][0]['PowerConsumedWatts']}")
+        try:
+            cwc = {data['PowerControl'][0]['PowerConsumedWatts']}
+        except IndexError:
+            cwc = "N/A. Try to `--racreset`."
+        self.logger.info(f"Current watts consumed: {cwc}")
         return
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
@@ -2689,10 +2693,13 @@ def main(argv=None):
             result = True
             bfl.logger.info("RESULTS:")
             for res in results:
-                if len(res) > 1 and res[1]:
-                    bfl.logger.info(f"{res[0]}: SUCCESSFUL")
-                else:
-                    bfl.logger.info(f"{res[0]}: FAILED")
+                try:
+                    if len(res) > 1 and res[1]:
+                        bfl.logger.info(f"{res[0]}: SUCCESSFUL")
+                    else:
+                        bfl.logger.info(f"{res[0]}: FAILED")
+                except Exception as ex:
+                    bfl.logger.debug(str(ex))
                     result = False
     elif not host:
         bfl.logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
