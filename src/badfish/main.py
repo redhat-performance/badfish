@@ -2693,13 +2693,10 @@ def main(argv=None):
             result = True
             bfl.logger.info("RESULTS:")
             for res in results:
-                try:
-                    if len(res) > 1 and res[1]:
-                        bfl.logger.info(f"{res[0]}: SUCCESSFUL")
-                    else:
-                        bfl.logger.info(f"{res[0]}: FAILED")
-                except Exception as ex:
-                    bfl.logger.debug(str(ex))
+                if len(res) > 1 and res[1]:
+                    bfl.logger.info(f"{res[0]}: SUCCESSFUL")
+                else:
+                    bfl.logger.info(f"{res[0]}: FAILED")
                     result = False
     elif not host:
         bfl.logger.error("You must specify at least either a host (-H) or a host list (--host-list).")
