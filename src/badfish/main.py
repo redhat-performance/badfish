@@ -649,7 +649,11 @@ class Badfish:
             data = json.loads(raw.strip())
         except ValueError:
             raise BadfishException("Power value outside operating range.")
-        self.logger.info(f"Current watts consumed: {data['PowerControl'][0]['PowerConsumedWatts']}")
+        try:
+            cwc = data['PowerControl'][0]['PowerConsumedWatts']
+        except IndexError:
+            cwc = "N/A. Try to `--racreset`."
+        self.logger.info(f"Current watts consumed: {cwc}")
         return
 
     async def change_boot(self, host_type, interfaces_path, pxe=False):
