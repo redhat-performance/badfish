@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import functools
-import pprint
 
 import aiohttp
 import json
@@ -2205,7 +2204,7 @@ class Badfish:
             raw = await resp.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             nic_list = [[nic[1].split("/")[-1] for nic in member.items()][0] for member in data.get("Members")]
-            self.logger.debug(f"Detected NIC FQDDs for existing network adapters.")
+            self.logger.debug("Detected NIC FQDDs for existing network adapters.")
             for nic in nic_list:
                 uri = "%s%s/NetworkAdapters/%s/NetworkDeviceFunctions" % (self.host_uri, self.system_resource, nic)
                 resp = await self.get_request(uri)
@@ -2215,7 +2214,7 @@ class Badfish:
                 self.logger.info(f"{nic}:")
                 for i, fqdd in enumerate(nic_fqqds, start=1):
                     self.logger.info(f"    {i}: {fqdd}")
-        except (AttributeError, IndexError, KeyError, TypeError, ValueError) as e:
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError):
             self.logger.error("Was unable to get NIC FQDDs, invalid server response.")
             return False
         return True
@@ -2227,7 +2226,7 @@ class Badfish:
                 self.system_resource.split("/")[-1],
                 fqdd.split("-")[0],
                 fqdd,
-                fqdd
+                fqdd,
             )
         except (IndexError, ValueError):
             self.logger.error("Invalid FQDD supplied.")
@@ -2247,7 +2246,7 @@ class Badfish:
             self.logger.info(f"{fqdd}")
             for key, value in attributes_list:
                 self.logger.info(f"    {key}: {value}")
-        except (AttributeError, KeyError, TypeError,ValueError):
+        except (AttributeError, KeyError, TypeError, ValueError):
             self.logger.error("Was unable to get NIC attribute(s) info, invalid server response.")
             return False
         return True
@@ -2275,7 +2274,11 @@ class Badfish:
             self.logger.error("Unsupported iDRAC version.")
             return []
         try:
-            uri = "%s/Registries/NetworkAttributesRegistry_%s/NetworkAttributesRegistry_%s.json" % (self.root_uri, fqdd, fqdd)
+            uri = "%s/Registries/NetworkAttributesRegistry_%s/NetworkAttributesRegistry_%s.json" % (
+                self.root_uri,
+                fqdd,
+                fqdd,
+            )
             resp = await self.get_request(uri)
             if resp.status == 404:
                 self.logger.error("Was unable to get network attribute registry.")
@@ -2332,7 +2335,7 @@ class Badfish:
                 return True
             if type == "Enumeration":
                 allowed_values = [value_spec.get("ValueName") for value_spec in attr_info.get("Value")]
-                if not value in allowed_values:
+                if value not in allowed_values:
                     self.logger.error("Value not allowed for this attribute.")
                     self.logger.error("Was unable to set a network attribute.")
                     return False
@@ -2354,18 +2357,21 @@ class Badfish:
             return False
 
         try:
-            uri = "%s/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s/Settings" % (
-                self.root_uri,
-                fqdd.split("-")[0],
-                fqdd,
-                fqdd,
+            uri = (
+                "%s/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s/Settings"
+                % (
+                    self.root_uri,
+                    fqdd.split("-")[0],
+                    fqdd,
+                    fqdd,
+                )
             )
             self.logger.info(uri)
         except (IndexError, ValueError):
             self.logger.error("Invalid FQDD suplied.")
             return False
 
-        headers = {'content-type': 'application/json'}
+        headers = {"content-type": "application/json"}
         payload = {
             "@Redfish.SettingsApplyTime": {"ApplyTime": "OnReset"},
             "Attributes": {attribute: value},
@@ -2378,7 +2384,10 @@ class Badfish:
                 if status_code in [200, 202]:
                     self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
                 else:
-                    self.logger.error("Patch command to set network attribute values and create next reboot job FAILED, error code is: %s." % status_code)
+                    self.logger.error(
+                        "Patch command to set network attribute values and create next reboot job FAILED, error code is: %s."
+                        % status_code
+                    )
                     if status_code == 503 and i - 1 != self.retries:
                         self.logger.info("Retrying to send the patch command.")
                         continue
@@ -2390,14 +2399,16 @@ class Badfish:
                             await asyncio.sleep(10)
                             first_reset = True
                         continue
-                    self.logger.error("Patch command to set network attribute values and create next reboot job FAILED, error code is: %s." % status_code)
+                    self.logger.error(
+                        "Patch command to set network attribute values and create next reboot job FAILED, error code is: %s."
+                        % status_code
+                    )
                     self.logger.error("Was unable to set a network attribute.")
                     return False
         except (AttributeError, ValueError):
             self.logger.error("Was unable to set a network attribute.")
 
         await self.reboot_server()
-
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
