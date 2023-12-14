@@ -1225,3 +1225,1072 @@ RESPONSE_IMPORT_SCP_PASS = f"""\
 - INFO     - Successfully imported and applied Server Configuration Profile., percent complete: 100
 - INFO     - Command passed, job successfully marked as completed. Going to reboot.
 """
+GET_NIC_FQQDS_ADAPTERS = """{
+    "@odata.context":"/redfish/v1/$metadata#NetworkAdapterCollection.NetworkAdapterCollection",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters",
+    "@odata.type":"#NetworkAdapterCollection.NetworkAdapterCollection",
+    "Description":"Collection Of Network Adapter",
+    "Members":[
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1"},
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1"},
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Slot.3"}
+    ],
+    "Members@odata.count":3,
+    "Name":"Network Adapter Collection"
+}
+"""
+GET_NIC_FQQDS_EMBEDDED = """{
+    "@odata.context":"/redfish/v1/$metadata#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions",
+    "@odata.type":"#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "Description":"Collection Of Network Device Function entities",
+    "Members":[
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1"},
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.2-1-1"}
+    ],
+    "Members@odata.count":2,
+    "Name":"Network Device Function Collection"
+}
+"""
+GET_NIC_FQQDS_INTEGRATED = """{
+    "@odata.context":"/redfish/v1/$metadata#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions",
+    "@odata.type":"#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "Description":"Collection Of Network Device Function entities",
+    "Members":[
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-1-1"},
+        {"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-2-1"}
+    ],
+    "Members@odata.count":2,
+    "Name":"Network Device Function Collection"
+}
+"""
+GET_NIC_FQQDS_SLOT = """{
+    "@odata.context":"/redfish/v1/$metadata#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Slot.3/NetworkDeviceFunctions",
+    "@odata.type":"#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "Description":"Collection Of Network Device Function entities",
+    "Members":[
+        {"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Slot.3/NetworkDeviceFunctions/NIC.Slot.3-1-1"},
+        {"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Slot.3/NetworkDeviceFunctions/NIC.Slot.3-2-1"}
+    ],
+    "Members@odata.count":2,
+    "Name":"Network Device Function Collection"
+}
+"""
+RESPONSE_GET_NIC_FQQDS_OK = """\
+- INFO     - NIC.Embedded.1:
+- INFO     -     1: NIC.Embedded.1-1-1
+- INFO     -     2: NIC.Embedded.2-1-1
+- INFO     - NIC.Integrated.1:
+- INFO     -     1: NIC.Integrated.1-1-1
+- INFO     -     2: NIC.Integrated.1-2-1
+- INFO     - NIC.Slot.3:
+- INFO     -     1: NIC.Slot.3-1-1
+- INFO     -     2: NIC.Slot.3-2-1
+"""
+RESPONSE_GET_NIC_FQQDS_UNSUPPORTED = "- ERROR    - Operation not supported by vendor.\n"
+RESPONSE_GET_NIC_FQQDS_INVALID = "- ERROR    - Was unable to get NIC FQDDs, invalid server response.\n"
+GET_NIC_ATTR_LIST = """\
+{
+    "@Redfish.Settings":{
+        "@odata.context":"/redfish/v1/$metadata#Settings.Settings",
+        "@odata.type":"#Settings.v1_3_1.Settings",
+        "SettingsObject":{"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1/Settings"},
+        "SupportedApplyTimes":[
+            "Immediate",
+            "AtMaintenanceWindowStart",
+            "OnReset",
+            "InMaintenanceWindowOnReset"
+        ]
+    },
+    "@odata.context":"/redfish/v1/$metadata#DellAttributes.DellAttributes",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1",
+    "@odata.type":"#DellAttributes.v1_0_0.DellAttributes",
+    "AttributeRegistry":"NetworkAttributeRegistry_NIC.Embedded.1-1-1",
+    "Attributes":{
+        "ChipMdl":"BCM5720 A0",
+        "PCIDeviceID":"165F",
+        "BusDeviceFunction":"04:00:00",
+        "MacAddr":"C8:4B:D6:83:16:00",
+        "VirtMacAddr":"C8:4B:D6:83:16:00",
+        "FCoEOffloadSupport":"Unavailable",
+        "iSCSIOffloadSupport":"Unavailable",
+        "iSCSIBootSupport":"Unavailable",
+        "PXEBootSupport":"Available",
+        "FCoEBootSupport":"Unavailable",
+        "NicPartitioningSupport":"Unavailable",
+        "FlexAddressing":"Unavailable",
+        "TXBandwidthControlMaximum":"Unavailable",
+        "TXBandwidthControlMinimum":"Unavailable",
+        "EnergyEfficientEthernet":"Available",
+        "FamilyVersion":"22.00.6",
+        "ControllerBIOSVersion":"1.39",
+        "EFIVersion":"21.6.29",
+        "BlnkLeds":0,
+        "BannerMessageTimeout":5,
+        "VLanId":1,
+        "EEEControl":"Enabled",
+        "LinkStatus":"Disconnected",
+        "BootOptionROM":"Enabled",
+        "LegacyBootProto":"NONE",
+        "BootStrapType":"AutoDetect",
+        "HideSetupPrompt":"Disabled",
+        "LnkSpeed":"AutoNeg",
+        "WakeOnLan":"Enabled",
+        "VLanMode":"Disabled",
+        "PermitTotalPortShutdown":"Disabled"
+    },
+    "Description":"DellNetworkAttributes represents the Network device attribute details.",
+    "Id":"NIC.Embedded.1-1-1",
+    "Name":"DellNetworkAttributes"
+}
+"""
+RESPONSE_GET_NIC_ATTR_LIST_OK = """\
+- INFO     - NIC.Embedded.1-1-1
+- INFO     -     ChipMdl: BCM5720 A0
+- INFO     -     PCIDeviceID: 165F
+- INFO     -     BusDeviceFunction: 04:00:00
+- INFO     -     MacAddr: C8:4B:D6:83:16:00
+- INFO     -     VirtMacAddr: C8:4B:D6:83:16:00
+- INFO     -     FCoEOffloadSupport: Unavailable
+- INFO     -     iSCSIOffloadSupport: Unavailable
+- INFO     -     iSCSIBootSupport: Unavailable
+- INFO     -     PXEBootSupport: Available
+- INFO     -     FCoEBootSupport: Unavailable
+- INFO     -     NicPartitioningSupport: Unavailable
+- INFO     -     FlexAddressing: Unavailable
+- INFO     -     TXBandwidthControlMaximum: Unavailable
+- INFO     -     TXBandwidthControlMinimum: Unavailable
+- INFO     -     EnergyEfficientEthernet: Available
+- INFO     -     FamilyVersion: 22.00.6
+- INFO     -     ControllerBIOSVersion: 1.39
+- INFO     -     EFIVersion: 21.6.29
+- INFO     -     BlnkLeds: 0
+- INFO     -     BannerMessageTimeout: 5
+- INFO     -     VLanId: 1
+- INFO     -     EEEControl: Enabled
+- INFO     -     LinkStatus: Disconnected
+- INFO     -     BootOptionROM: Enabled
+- INFO     -     LegacyBootProto: NONE
+- INFO     -     BootStrapType: AutoDetect
+- INFO     -     HideSetupPrompt: Disabled
+- INFO     -     LnkSpeed: AutoNeg
+- INFO     -     WakeOnLan: Enabled
+- INFO     -     VLanMode: Disabled
+- INFO     -     PermitTotalPortShutdown: Disabled
+"""
+RESPONSE_GET_NIC_ATTR_LIST_UNSUPPORTED = "- ERROR    - Operation not supported by vendor.\n"
+RESPONSE_GET_NIC_ATTR_LIST_INVALID = "- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.\n"
+GET_FW_VERSION = """\
+{
+    "FirmwareVersion":"5.10.50.00"
+}
+"""
+GET_FW_VERSION_UNSUPPORTED = """\
+{
+    "FirmwareVersion":"4.10.50.00"
+}
+"""
+GET_NIC_ATTR_REGISTRY = """
+{
+    "@odata.context": "/redfish/v1/$metadata#AttributeRegistry.AttributeRegistry",
+    "@odata.id": "/redfish/v1/Registries/NetworkAttributesRegistry_NIC.Embedded.1-1-1/NetworkAttributesRegistry_NIC.Embedded.1-1-1.json",
+    "@odata.type": "#AttributeRegistry.v1_3_3.AttributeRegistry",
+    "Description": "This registry defines a representation of Network Attribute instances",
+    "Id": "NetworkAttributesRegistry_NIC.Embedded.1-1-1",
+    "Language": "en",
+    "Name": "Network Attribute Registry",
+    "OwningEntity": "Dell",
+    "RegistryEntries": {
+        "Attributes": [
+            {
+                "AttributeName": "ChipMdl",
+                "CurrentValue": null,
+                "DisplayName": "Chip Type",
+                "DisplayOrder": 104,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 1024,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "PCIDeviceID",
+                "CurrentValue": null,
+                "DisplayName": "PCI Device ID",
+                "DisplayOrder": 105,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 1024,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "BusDeviceFunction",
+                "CurrentValue": null,
+                "DisplayName": "PCI Address",
+                "DisplayOrder": 106,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 1024,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "MacAddr",
+                "CurrentValue": null,
+                "DisplayName": "MAC Address",
+                "DisplayOrder": 108,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 17,
+                "MenuPath": "./",
+                "MinLength": 17,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "VirtMacAddr",
+                "CurrentValue": null,
+                "DisplayName": "Virtual MAC Address",
+                "DisplayOrder": 109,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MaxLength": 17,
+                "MenuPath": "./",
+                "MinLength": 17,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": "^([0-9a-fA-F]{2}:){5}([0-9a-fA-F]{2})$",
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "FCoEOffloadSupport",
+                "CurrentValue": null,
+                "DisplayName": "FCoE Offload Support",
+                "DisplayOrder": 110,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "iSCSIOffloadSupport",
+                "CurrentValue": null,
+                "DisplayName": "iSCSI Offload Support",
+                "DisplayOrder": 111,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "iSCSIBootSupport",
+                "CurrentValue": null,
+                "DisplayName": "iSCSI Boot Support",
+                "DisplayOrder": 112,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "PXEBootSupport",
+                "CurrentValue": null,
+                "DisplayName": "PXE Boot Support",
+                "DisplayOrder": 113,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "FCoEBootSupport",
+                "CurrentValue": null,
+                "DisplayName": "FCoE Boot Support",
+                "DisplayOrder": 114,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "NicPartitioningSupport",
+                "CurrentValue": null,
+                "DisplayName": "NIC Partitioning Support",
+                "DisplayOrder": 115,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "FlexAddressing",
+                "CurrentValue": null,
+                "DisplayName": "FlexAddressing",
+                "DisplayOrder": 116,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "TXBandwidthControlMaximum",
+                "CurrentValue": null,
+                "DisplayName": "TX Bandwidth Control Maximum",
+                "DisplayOrder": 117,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "TXBandwidthControlMinimum",
+                "CurrentValue": null,
+                "DisplayName": "TX Bandwidth Control Minimum",
+                "DisplayOrder": 118,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "EnergyEfficientEthernet",
+                "CurrentValue": null,
+                "DisplayName": "Energy Efficient Ethernet (EEE)",
+                "DisplayOrder": 119,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 12,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "FamilyVersion",
+                "CurrentValue": null,
+                "DisplayName": "Family Firmware Version",
+                "DisplayOrder": 200,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 20,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Firmware Image Properties",
+                        "GroupName": "FrmwImgMenu"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "ControllerBIOSVersion",
+                "CurrentValue": null,
+                "DisplayName": "Controller BIOS Version",
+                "DisplayOrder": 201,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 16,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Firmware Image Properties",
+                        "GroupName": "FrmwImgMenu"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "EFIVersion",
+                "CurrentValue": null,
+                "DisplayName": "EFI Version",
+                "DisplayOrder": 202,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MaxLength": 16,
+                "MenuPath": "./",
+                "MinLength": 0,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Firmware Image Properties",
+                        "GroupName": "FrmwImgMenu"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "String",
+                "ValueExpression": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "BlnkLeds",
+                "CurrentValue": null,
+                "DisplayName": "Blink LEDs",
+                "DisplayOrder": 102,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "LowerBound": 0,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "ScalarIncrement": 0,
+                "Type": "Integer",
+                "UpperBound": 15,
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "BannerMessageTimeout",
+                "CurrentValue": null,
+                "DisplayName": "Banner Message Timeout",
+                "DisplayOrder": 304,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "LowerBound": 0,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "ScalarIncrement": 0,
+                "Type": "Integer",
+                "UpperBound": 15,
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "VLanId",
+                "CurrentValue": null,
+                "DisplayName": "Virtual LAN ID",
+                "DisplayOrder": 308,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "LowerBound": 1,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "ScalarIncrement": 0,
+                "Type": "Integer",
+                "UpperBound": 4094,
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "EEEControl",
+                "CurrentValue": null,
+                "DisplayName": "Energy Efficient Ethernet",
+                "DisplayOrder": 103,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Maximum Power Savings",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "LinkStatus",
+                "CurrentValue": null,
+                "DisplayName": "Link Status",
+                "DisplayOrder": 107,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": true,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Main Configuration Page",
+                        "GroupName": "VndrConfigPage"
+                    }
+                },
+                "ReadOnly": true,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disconnected",
+                        "ValueName": "Disconnected"
+                    },
+                    {
+                        "ValueDisplayName": "Connected",
+                        "ValueName": "Connected"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "BootOptionROM",
+                "CurrentValue": null,
+                "DisplayName": "Option ROM",
+                "DisplayOrder": 300,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "LegacyBootProto",
+                "CurrentValue": null,
+                "DisplayName": "Legacy Boot Protocol",
+                "DisplayOrder": 301,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "PXE",
+                        "ValueName": "PXE"
+                    },
+                    {
+                        "ValueDisplayName": "None",
+                        "ValueName": "NONE"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "BootStrapType",
+                "CurrentValue": null,
+                "DisplayName": "Boot Strap Type",
+                "DisplayOrder": 302,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Auto Detect",
+                        "ValueName": "AutoDetect"
+                    },
+                    {
+                        "ValueDisplayName": "BBS",
+                        "ValueName": "BBS"
+                    },
+                    {
+                        "ValueDisplayName": "Int 18h",
+                        "ValueName": "Int18h"
+                    },
+                    {
+                        "ValueDisplayName": "Int 19h",
+                        "ValueName": "Int19h"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "HideSetupPrompt",
+                "CurrentValue": null,
+                "DisplayName": "Hide Setup Prompt",
+                "DisplayOrder": 303,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "LnkSpeed",
+                "CurrentValue": null,
+                "DisplayName": "Link Speed",
+                "DisplayOrder": 305,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Auto Negotiated",
+                        "ValueName": "AutoNeg"
+                    },
+                    {
+                        "ValueDisplayName": "10 Mbps Half",
+                        "ValueName": "10MbpsHalf"
+                    },
+                    {
+                        "ValueDisplayName": "10 Mbps Full",
+                        "ValueName": "10MbpsFull"
+                    },
+                    {
+                        "ValueDisplayName": "100 Mbps Half",
+                        "ValueName": "100MbpsHalf"
+                    },
+                    {
+                        "ValueDisplayName": "100 Mbps Full",
+                        "ValueName": "100MbpsFull"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "WakeOnLan",
+                "CurrentValue": null,
+                "DisplayName": "Wake On LAN",
+                "DisplayOrder": 306,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "VLanMode",
+                "CurrentValue": null,
+                "DisplayName": "Virtual LAN Mode",
+                "DisplayOrder": 307,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "PermitTotalPortShutdown",
+                "CurrentValue": null,
+                "DisplayName": "Permit Total Port Shutdown",
+                "DisplayOrder": 309,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            }
+        ],
+        "Dependencies": [],
+        "Menus": []
+    },
+    "RegistryVersion": "1.0.0",
+    "SupportedSystems": [
+        {
+            "FirmwareVersion": "1.7.4",
+            "ProductName": "PowerEdge R750",
+            "SystemId": "451YFT3"
+        }
+    ]
+}
+"""
+RESPONSE_GET_NIC_ATTR_SPECIFIC = """\
+- INFO     - AttributeName: WakeOnLan
+- INFO     - CurrentValue: Enabled
+- INFO     - DisplayName: Wake On LAN
+- INFO     - DisplayOrder: 306
+- INFO     - HelpText: None
+- INFO     - Hidden: False
+- INFO     - Immutable: False
+- INFO     - MenuPath: ./
+- INFO     - Oem: {'Dell': {'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}
+- INFO     - ReadOnly: False
+- INFO     - ResetRequired: True
+- INFO     - Type: Enumeration
+- INFO     - Value: [{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}, {'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}]
+- INFO     - WarningText: None
+- INFO     - WriteOnly: False
+"""
+RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED = """\
+- ERROR    - Unsupported iDRAC version.
+- ERROR    - Was unable to get network attribute info.
+"""
+RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL = """\
+- ERROR    - Was unable to get network attribute registry.
+- ERROR    - Was unable to get network attribute info.
+"""
+RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL = """\
+- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.
+- ERROR    - Was unable to get network attribute info.
+"""
