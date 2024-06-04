@@ -75,3 +75,6 @@ uefi_e28_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
 # h35 (should resemble other r640 hosts)
 #director_f04_h35_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
 #foreman_f04_h35_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+
+director_r660_interfaces: NIC.PxeDevice.2-1,RAID.SL.3-2,NIC.PxeDevice.1-1
+foreman_r660_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2,NIC.PxeDevice.2-1

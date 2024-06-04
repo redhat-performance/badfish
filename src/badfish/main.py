@@ -1098,7 +1098,7 @@ class Badfish:
 
         device = await self.get_host_type_boot_device(host_type, _interfaces_path)
 
-        await self.boot_to(device)
+        await self.boot_to(device, True)
 
     async def boot_to_mac(self, mac_address):
         interfaces_endpoints = await self.get_interfaces_endpoints()
@@ -1116,10 +1116,11 @@ class Badfish:
             raise BadfishException("MAC Address does not match any of the existing")
 
     async def send_one_time_boot(self, device):
+        boot_seq = await self.get_boot_seq()
         _payload = {
             "Attributes": {
-                "OneTimeBootMode": "OneTimeBootSeq",
-                "OneTimeBootSeqDev": device,
+                "OneTimeBootMode": f"OneTime{boot_seq}",
+                f"OneTime{boot_seq}Dev": device,
             }
         }
         await self.patch_bios(_payload)
