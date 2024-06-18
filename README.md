@@ -96,7 +96,8 @@ Right now Badfish is focused on managing Dell, SuperMicro and HPE systems, but c
 We're mostly concentrated on programmatically enforcing interface/device boot order to accommodate [TripleO](https://docs.openstack.org/tripleo-docs/latest/) based [OpenStack](https://www.openstack.org/) and [OpenShift](https://www.openshift.com/) deployments while simultaneously allowing easy management and provisioning of those same systems via [The Foreman](https://theforeman.org/).  Badfish can be useful as a general standalone, unified vendor IPMI/OOB tool however as support for more vendors is added.
 
 ## Features
-* Toggle and save a persistent interface/device boot order on remote systems
+* Toggle and save a persistent interface/device boot order on remote system
+* Support for BIOS and EFI modes for interface/device boot operations
 * Perform one-time boot to a specific interface, mac address or device listed for PXE booting
 * Enforce a custom interface boot order
 * Check current boot order
@@ -110,7 +111,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 * Support tokenized authentication
 * Check and set BIOS attributes (e.g. setting UEFI or BIOS mode)
 * Get firmware inventory of installed devices supported by iDRAC
-* Check/ummount virtual media en-masse across a set of systems
+* Check/ummount virtual media en-masse across a set of systems (SuperMicro only)
 * Obtain limited hardware information (CPU, Memory, Interfaces)
 * Bulk actions via plain text file with list of hosts for parallel execution
 * Logging to a specific path
@@ -119,6 +120,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 ## Requirements
 * (Dell) iDRAC7,8,9 or newer
 * (Dell) Firmware version ```2.60.60.60``` or higher
+* Any Redfish IPMI 2.0 support on non-Dell systems
 * iDRAC administrative account
 * Python >= ```3.8``` or [podman](https://podman.io/getting-started/installation) as a container.
 * python3-devel >= ```3.8``` (If using standalone or RPM package below).
@@ -645,6 +647,7 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
 | Dell r640    |  NIC.Integrated.1-1-1  |
 | Dell r650    |  NIC.Integrated.1-1-1  |
+| Dell r660    |  NIC.PxeDevice.1-1     |
 | Dell r750    |  NIC.Integrated.1-1-1  |
 
 ### Host type overrides
