@@ -120,6 +120,7 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 ## Requirements
 * (Dell) iDRAC7,8,9 or newer
 * (Dell) Firmware version ```2.60.60.60``` or higher
+* Any Redfish IPMI 2.0 support on non-Dell systems
 * iDRAC administrative account
 * Python >= ```3.8``` or [podman](https://podman.io/getting-started/installation) as a container.
 * python3-devel >= ```3.8``` (If using standalone or RPM package below).
