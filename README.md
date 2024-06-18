@@ -645,6 +645,7 @@ Your usage may vary, this is what our configuration looks like via ```config/idr
 | Dell r740xd  |  NIC.Integrated.1-3-1  |
 | Dell r640    |  NIC.Integrated.1-1-1  |
 | Dell r650    |  NIC.Integrated.1-1-1  |
+| Dell r660    |  NIC.PxeDevice.1-1     |
 | Dell r750    |  NIC.Integrated.1-1-1  |
 
 ### Host type overrides
