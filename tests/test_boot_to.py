@@ -32,6 +32,7 @@ class TestBootTo(TestBase):
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
+            BOOT_MODE_RESP,
         ]
         responses = INIT_RESP + get_resp
         self.set_mock_response(mock_get, 200, responses)
@@ -54,6 +55,7 @@ class TestBootTo(TestBase):
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
+            BOOT_MODE_RESP,
         ]
         responses = INIT_RESP + get_resp
         post_responses = ["OK"] + [JOB_OK_RESP]
@@ -75,6 +77,7 @@ class TestBootTo(TestBase):
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
+            BOOT_MODE_RESP,
             BLANK_RESP,
             RESET_TYPE_RESP,
             STATE_ON_RESP,
@@ -101,6 +104,7 @@ class TestBootTo(TestBase):
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
+            BOOT_MODE_RESP,
         ]
         responses = INIT_RESP + get_resp
         post_responses = ["OK"] + [JOB_OK_RESP]

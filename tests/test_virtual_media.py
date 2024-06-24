@@ -355,6 +355,7 @@ class TestBootToVirtualMedia(TestBase):
             BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BOOT_MODE_RESP,
+            BOOT_MODE_RESP,
             boot_seq_resp_fmt.replace("'", '"'),
             BLANK_RESP,
         ]
