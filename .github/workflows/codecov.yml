@@ -22,12 +22,12 @@ jobs:
         pip install -r tests/test-requirements.txt
         PYTHONPATH=src pytest --cov=./ --cov-report=xml --cov-config=.coveragerc -p no:warnings
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
         env_vars: PYTHON
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         verbose: true
