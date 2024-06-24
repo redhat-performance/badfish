@@ -2314,10 +2314,6 @@ class Badfish:
         return True
 
     async def set_nic_attribute(self, fqdd, attribute, value):
-        # TODO: Fix after iDRAC version update.
-        self.logger.error("Operation not yet supported due to iDRAC version problems.")
-        return False
-
         if self.vendor == "Supermicro":
             self.logger.error("Operation not supported by vendor.")
             return False
@@ -2383,6 +2379,7 @@ class Badfish:
                 status_code = response.status
                 if status_code in [200, 202]:
                     self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
+                    break
                 else:
                     self.logger.error(
                         "Patch command to set network attribute values and create next reboot job FAILED, error code is: %s."
@@ -2468,8 +2465,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     import_scp = _args["import_scp"]
     get_nic_fqdds = _args["get_nic_fqdds"]
     get_nic_attribute = _args["get_nic_attribute"]
-    # TODO: Fix after iDRAC version update.
-    # set_nic_attribute = _args["set_nic_attribute"]
+    set_nic_attribute = _args["set_nic_attribute"]
     result = True
 
     try:
@@ -2583,9 +2579,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
                 await badfish.get_nic_attribute_info(get_nic_attribute, attribute)
             else:
                 await badfish.get_nic_attribute(get_nic_attribute)
-        # TODO: Fix after iDRAC version update.
-        # elif set_nic_attribute:
-        #     await badfish.set_nic_attribute(set_nic_attribute, attribute, value)
+        elif set_nic_attribute:
+            await badfish.set_nic_attribute(set_nic_attribute, attribute, value)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2873,12 +2868,11 @@ def main(argv=None):
         help="Get a NIC attribute values, specify a NIC FQDD.",
         default="",
     )
-    # TODO: Fix after iDRAC version update.
-    # parser.add_argument(
-    #     "--set-nic-attribute",
-    #     help="Set a NIC attribute value",
-    #     default="",
-    # )
+    parser.add_argument(
+        "--set-nic-attribute",
+        help="Set a NIC attribute value",
+        default="",
+    )
 
     _args = vars(parser.parse_args(argv))
 
