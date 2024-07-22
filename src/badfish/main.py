@@ -2220,17 +2220,13 @@ class Badfish:
         return True
 
     async def get_nic_attribute(self, fqdd, log=True):
-        try:
-            uri = "%s/Chassis/%s/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s" % (
-                self.root_uri,
-                self.system_resource.split("/")[-1],
-                fqdd.split("-")[0],
-                fqdd,
-                fqdd,
-            )
-        except (IndexError, ValueError):
-            self.logger.error("Invalid FQDD supplied.")
-            return False
+        uri = "%s/Chassis/%s/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s" % (
+            self.root_uri,
+            self.system_resource.split("/")[-1],
+            fqdd.split("-")[0],
+            fqdd,
+            fqdd,
+        )
         resp = await self.get_request(uri)
         if resp.status == 404 or self.vendor == "Supermicro":
             self.logger.error("Operation not supported by vendor.")
@@ -2262,7 +2258,7 @@ class Badfish:
             raw = await resp.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             idrac_fw_version = int(data["FirmwareVersion"].replace(".", ""))
-        except (AttributeError, ValueError):
+        except (AttributeError, ValueError, StopIteration):
             self.logger.error("Was unable to get iDRAC Firmware Version.")
             return 0
         return idrac_fw_version

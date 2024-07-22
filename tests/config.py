@@ -163,7 +163,6 @@ POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
 NO_POWER = '{"PowerControl":[]}'
 RESPONSE_POWER_CONSUMED_OK = "- INFO     - Current watts consumed: 69\n"
 RESPONSE_NO_POWER_CONSUMED = "- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n"
-RESPONSE_POWER_CONSUMED_404 = "- ERROR    - Operation not supported by vendor.\n"
 RESPONSE_POWER_CONSUMED_VAL_ERR = "- ERROR    - Power value outside operating range.\n"
 # test_reset_%s
 RESPONSE_RESET = (
@@ -1211,7 +1210,8 @@ RESPONSE_GET_NIC_FQQDS_OK = """\
 - INFO     -     1: NIC.Slot.3-1-1
 - INFO     -     2: NIC.Slot.3-2-1
 """
-RESPONSE_GET_NIC_FQQDS_UNSUPPORTED = "- ERROR    - Operation not supported by vendor.\n"
+RESPONSE_VENDOR_UNSUPPORTED = "- ERROR    - Operation not supported by vendor."
+RESPONSE_FIRMWARE_VERSION_ERROR = "- ERROR    - Was unable to get iDRAC Firmware Version."
 RESPONSE_GET_NIC_FQQDS_INVALID = "- ERROR    - Was unable to get NIC FQDDs, invalid server response.\n"
 GET_NIC_ATTR_LIST = """\
 {
@@ -1302,7 +1302,6 @@ RESPONSE_GET_NIC_ATTR_LIST_OK = """\
 - INFO     -     VLanMode: Disabled
 - INFO     -     PermitTotalPortShutdown: Disabled
 """
-RESPONSE_GET_NIC_ATTR_LIST_UNSUPPORTED = "- ERROR    - Operation not supported by vendor.\n"
 RESPONSE_GET_NIC_ATTR_LIST_INVALID = "- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.\n"
 GET_FW_VERSION = """\
 {
@@ -2227,8 +2226,9 @@ RESPONSE_GET_NIC_ATTR_SPECIFIC = """\
 """
 RESPONSE_NIC_ATTR_GET_ERROR = "- ERROR    - Was unable to get network attribute info."
 RESPONSE_NIC_ATTR_SET_ERROR = "- ERROR    - Was unable to set a network attribute."
+RESPONSE_UNSOPPORTED_IDRAC_VERSION = "- ERROR    - Unsupported iDRAC version."
 RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED = f"""\
-- ERROR    - Unsupported iDRAC version.
+{RESPONSE_UNSOPPORTED_IDRAC_VERSION}
 {RESPONSE_NIC_ATTR_GET_ERROR}
 """
 RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL = f"""\
@@ -2271,4 +2271,14 @@ RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK = """\
 - INFO     - Command passed to GracefulRestart server, code return is 200.
 - INFO     - Polling for host state: Not Down
 - INFO     - Command passed to On server, code return is 200.
+"""
+RESPONSE_GET_NIC_ATTR_FW_BAD = f"""\
+{RESPONSE_VENDOR_UNSUPPORTED}
+{RESPONSE_UNSOPPORTED_IDRAC_VERSION}
+{RESPONSE_NIC_ATTR_GET_ERROR}
+"""
+RESPONSE_GET_NIC_ATTR_FW_EXC = f"""\
+{RESPONSE_FIRMWARE_VERSION_ERROR}
+{RESPONSE_UNSOPPORTED_IDRAC_VERSION}
+{RESPONSE_NIC_ATTR_GET_ERROR}
 """
