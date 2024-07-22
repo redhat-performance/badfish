@@ -524,6 +524,26 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 NOTE:
   * This is only supported on DELL devices.
 
+### Get FQDDs for all nics
+To get a list of all FQDDs for all NICs on the server you can run badfish with ```--get-nic-fqdds```.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-fqdds
+```
+
+### Get NIC attributes
+To get a list of all NIC attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-nic-attribute``` passing the desired FQDD and this will return a list off all NIC attributes with their current value set.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-attribute NIC.Integrated.1-1-1
+```
+
+### Set NIC attribute
+To change the value of a NIC attribute you can use ```--set-nic-attribute``` with the desired FQDD, passing both ```--attribute``` and desired ```--value```.
+```bash
+badfish -H mgmt-your-server.example.com -u root -p yourpass --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
+```
+NOTE:
+  * This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
+
 ### Get BIOS attributes
 To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
 ```bash

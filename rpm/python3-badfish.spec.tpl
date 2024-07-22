@@ -14,7 +14,7 @@ Summary:        %{sum}
 
 License:        GPLv3
 URL:            https://github.com/%{org}/%{project}
-Source:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source:         %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  %{py3_dist setuptools}
