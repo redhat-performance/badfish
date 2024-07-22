@@ -1014,7 +1014,7 @@ class Badfish:
         _response = await self.post_request(_url, _payload, _headers)
 
         status_code = _response.status
-        if status_code == 204:
+        if status_code in [200, 204]:
             self.logger.info("Status code %s returned for POST command to reset iDRAC." % status_code)
         else:
             data = await _response.text("utf-8", "ignore")
@@ -2362,7 +2362,7 @@ class Badfish:
                     fqdd,
                 )
             )
-            self.logger.info(uri)
+            self.logger.debug(uri)
         except (IndexError, ValueError):
             self.logger.error("Invalid FQDD suplied.")
             return False

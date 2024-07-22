@@ -69,28 +69,22 @@ RESPONSE_NO_MATCH = (
     "- INFO     - 2: NIC.Integrated.1-2-1\n"
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
-WARN_NO_MATCH = (
-    "- WARNING  - Current boot order does not match any of the given.\n%s"
-    % RESPONSE_NO_MATCH
-)
+WARN_NO_MATCH = "- WARNING  - Current boot order does not match any of the given.\n%s" % RESPONSE_NO_MATCH
 RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
 RESPONSE_FOREMAN = "- WARNING  - Current boot order is set to: foreman.\n"
-INTERFACES_PATH = os.path.join(
-    os.path.dirname(__file__), "../config/idrac_interfaces.yml"
-)
+INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
 
 # test_boot_to constants
-ERROR_DEV_NO_MATCH = (
-    "- ERROR    - Device %s does not match any of the available boot devices for host %s\n"
-    % (BAD_DEVICE_NAME, MOCK_HOST)
+ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the available boot devices for host %s\n" % (
+    BAD_DEVICE_NAME,
+    MOCK_HOST,
 )
 TOGGLE_DEV_OK = (
     "- INFO     - %s has now been disabled\n"
     "- INFO     - Command passed to ForceOff server, code return is 200.\n"
     "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 200.\n"
-    % DEVICE_NIC_2["name"]
+    "- INFO     - Command passed to On server, code return is 200.\n" % DEVICE_NIC_2["name"]
 )
 TOGGLE_DEV_NO_MATCH = (
     "- WARNING  - Accepted device names:\n"
@@ -129,9 +123,7 @@ RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER = (
 
 RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
 RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-RESPONSE_BOOT_TO_BAD_MAC = (
-    "- ERROR    - MAC Address does not match any of the existing\n"
-)
+RESPONSE_BOOT_TO_BAD_MAC = "- ERROR    - MAC Address does not match any of the existing\n"
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = (
@@ -158,39 +150,32 @@ RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE = (
 
 # test_power
 RESPONSE_POWER_ON_OK = "- INFO     - Command passed to On server, code return is 204.\n"
-RESPONSE_POWER_OFF_OK = (
-    "- INFO     - Command passed to ForceOff server, code return is 204.\n"
-)
+RESPONSE_POWER_OFF_OK = "- INFO     - Command passed to ForceOff server, code return is 204.\n"
 RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
-RESPONSE_POWER_OFF_ALREADY = "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
+RESPONSE_POWER_OFF_ALREADY = (
+    "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
+)
 RESPONSE_POWER_OFF_MISS_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
 RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears to be already in that state.\n"
-RESPONSE_POWER_OFF_NONE = (
-    "- WARNING  - Power state appears to be already set to 'off'.\n"
-)
+RESPONSE_POWER_OFF_NONE = "- WARNING  - Power state appears to be already set to 'off'.\n"
 # test_power_consumed_watts
 POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
 NO_POWER = '{"PowerControl":[]}'
-RESPONSE_POWER_CONSUMED_OK = '- INFO     - Current watts consumed: 69\n'
-RESPONSE_NO_POWER_CONSUMED = '- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n'
-RESPONSE_POWER_CONSUMED_404 = '- ERROR    - Operation not supported by vendor.\n'
-RESPONSE_POWER_CONSUMED_VAL_ERR = '- ERROR    - Power value outside operating range.\n'
+RESPONSE_POWER_CONSUMED_OK = "- INFO     - Current watts consumed: 69\n"
+RESPONSE_NO_POWER_CONSUMED = "- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n"
+RESPONSE_POWER_CONSUMED_404 = "- ERROR    - Operation not supported by vendor.\n"
+RESPONSE_POWER_CONSUMED_VAL_ERR = "- ERROR    - Power value outside operating range.\n"
 # test_reset_%s
 RESPONSE_RESET = (
     "- INFO     - Status code %s returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
-RESPONSE_RESET_FAIL = (
-    "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
-)
-RESPONSE_RESET_WRONG_VENDOR = (
-    "- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
-)
+RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
+RESPONSE_RESET_WRONG_VENDOR = "- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
 
 # test_change_boot
 RESPONSE_CHANGE_NO_BOOT_PREFIX = (
-    "- WARNING  - Could not retrieve Bios Attributes.\n"
-    "- WARNING  - Assuming boot mode is Bios.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n" "- WARNING  - Assuming boot mode is Bios.\n"
 )
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
@@ -199,9 +184,7 @@ RESPONSE_CHANGE_BOOT = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
-RESPONSE_CHANGE_BOOT_INCORRECT_PATH = (
-    "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
-)
+RESPONSE_CHANGE_BOOT_INCORRECT_PATH = "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
 RESPONSE_CHANGE_BOOT_PATCH_ERROR = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
@@ -271,23 +254,15 @@ INIT_RESP_SUPERMICRO = [
 RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
     f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
 )
-RESPONSE_INIT_CREDENTIALS_FAILED_COMS = (
-    f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
-)
-RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = (
-    "- ERROR    - Failed to authenticate. Verify your credentials.\n"
-)
+RESPONSE_INIT_CREDENTIALS_FAILED_COMS = f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
+RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = "- ERROR    - Failed to authenticate. Verify your credentials.\n"
 RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = "- ERROR    - Systems resource not found\n"
 
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
-RESPONSE_POWER_STATE_ON = (
-    "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
-)
-RESPONSE_POWER_STATE_DOWN = (
-    "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
-)
+RESPONSE_POWER_STATE_ON = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
+RESPONSE_POWER_STATE_DOWN = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
 RESPONSE_POWER_STATE_EMPTY = "- ERROR    - Power state not found. Try to racreset.\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
@@ -333,9 +308,7 @@ NETWORK_ADAPTERS_RESP = (
     "]}"
 )
 NETWORK_PORTS_ROOT_RESP = (
-    '{"Members": ['
-    '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkPorts/%s-1"} '
-    "]}"
+    '{"Members": [' '{"@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkPorts/%s-1"} ' "]}"
 )
 NETWORK_DEV_FUNC_RESP = (
     '{"Members": ['
@@ -343,8 +316,7 @@ NETWORK_DEV_FUNC_RESP = (
     "]}"
 )
 NETWORK_DEV_FUNC_DET_RESP = (
-    '{"Ethernet": {"MACAddress": "B0:26:28:D8:68:C0"},'
-    '"Oem": {"Dell": {"DellNIC": {"VendorName": "Intel"}}}}'
+    '{"Ethernet": {"MACAddress": "B0:26:28:D8:68:C0"},' '"Oem": {"Dell": {"DellNIC": {"VendorName": "Intel"}}}}'
 )
 NETWORK_PORTS_RESP = '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
 RESPONSE_LS_INTERFACES = (
@@ -373,38 +345,28 @@ RESPONSE_LS_ETHERNET = (
     "- INFO     -     Health: OK\n"
     "- INFO     -     SpeedMbps: 10240\n"
 )
-RESPONSE_LS_INTERFACES_NOT_SUPPORTED = (
-    "- ERROR    - Server does not support this functionality\n"
-)
-RESPONSE_LS_INTERFACES_VALUE_ERROR = (
-    "- ERROR    - There was something wrong getting network interfaces\n"
-)
+RESPONSE_LS_INTERFACES_NOT_SUPPORTED = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_INTERFACES_VALUE_ERROR = "- ERROR    - There was something wrong getting network interfaces\n"
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = (
-    f"- INFO     - Found active jobs:\n" f"- INFO     -     JobID: {JOB_ID}\n"
-)
+RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     -     JobID: {JOB_ID}\n"
 RESPONSE_LS_JOBS_EMPTY = "- INFO     - Found active jobs: None\n"
-RESPONSE_CLEAR_JOBS = (
-    f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
-)
+RESPONSE_CLEAR_JOBS = f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 RESPONSE_CHECK_JOB = (
     f"- INFO     - JobID: {JOB_ID}\n"
     "- INFO     - Name: Task\n"
     "- INFO     - Message: Job completed successfully.\n"
     "- INFO     - PercentComplete: 100\n"
 )
-RESPONSE_CHECK_JOB_BAD = (
-    "- ERROR    - Command failed to check job status, return code is 404\n"
-)
+RESPONSE_CHECK_JOB_BAD = "- ERROR    - Command failed to check job status, return code is 404\n"
 RESPONSE_CHECK_JOB_ERROR = "- ERROR    - Command failed to check job status\n"
 
-DELLJOBSERVICE_UNSUPPORTED = (
-    "- WARNING  - iDRAC version installed does not support DellJobService\n"
-)
+DELLJOBSERVICE_UNSUPPORTED = "- WARNING  - iDRAC version installed does not support DellJobService\n"
 RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
-RESPONSE_CLEAR_JOBS_LIST = f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
+RESPONSE_CLEAR_JOBS_LIST = (
+    f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
+)
 RESPONSE_CLEAR_JOBS_LIST_EXCEPTION = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
     "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
@@ -418,9 +380,7 @@ RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
     "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
     "- ERROR    - Failed to communicate with server.\n"
 )
-RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = (
-    "- ERROR    - Error reading response from host.\n"
-)
+RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
 
 FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
@@ -448,9 +408,7 @@ FIRMWARE_INVENTORY_2_RESP = (
     '"Updateable": "True",'
     '"Version": "19.5.12"}'
 )
-FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = (
-    '{"error": "Something went wrong when getting firmware inventory"}'
-)
+FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = '{"error": "Something went wrong when getting firmware inventory"}'
 RESPONSE_FIRMWARE_INVENTORY = (
     "- INFO     - Installed-0-16.25.40.62:\n"
     "- INFO     -     Id: Installed-0-16.25.40.62\n"
@@ -469,9 +427,7 @@ RESPONSE_FIRMWARE_INVENTORY = (
     "- INFO     -     Updateable: True\n"
     "- INFO     -     Version: 19.5.12\n"
 )
-RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = (
-    "- ERROR    - Not able to access Firmware inventory.\n"
-)
+RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = "- ERROR    - Not able to access Firmware inventory.\n"
 RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE = (
     "- INFO     - Installed-0-16.25.40.62:\n"
     "- INFO     -     Id: Installed-0-16.25.40.62\n"
@@ -527,18 +483,14 @@ RESPONSE_LS_MEMORY = (
     "- INFO     -     MemoryDeviceType: DDR4\n"
     "- INFO     -     OperatingSpeedMhz: 2933\n"
 )
-RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = (
-    "- ERROR    - There was something wrong getting memory summary\n"
-)
+RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting memory summary\n"
 MEMORY_SUMMARY_RESP_FAULTY = (
     '{"MemorySum": {'
     '"MemoryMirroring": "System",'
     '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"},'
     '"TotalSystemMemoryGiB": 384}}'
 )
-RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = (
-    "- ERROR    - Server does not support this functionality\n"
-)
+RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = "- ERROR    - Server does not support this functionality\n"
 RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND = (
     "- INFO     - Memory Summary:\n"
     "- INFO     -     MemoryMirroring: System\n"
@@ -603,12 +555,8 @@ PROCESSOR_SUMMARY_RESP_FAULTY = (
     '"Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",'
     '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"}}}'
 )
-RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = (
-    "- ERROR    - Server does not support this functionality\n"
-)
-RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = (
-    "- ERROR    - There was something wrong getting processor summary\n"
-)
+RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting processor summary\n"
 RESPONSE_LS_PROCESSORS_DETAILS_NOT_FOUND = (
     "- INFO     - Processor Summary:\n"
     "- INFO     -     Count: 2\n"
@@ -644,25 +592,15 @@ SYSTEM_SERIAL_NUMBER_RESP = """
     "Model":"SYS-5039MS-HUH4F" }
 """
 EMPTY_OEM_RESP = '{"Oem":{}}'
-RESPONSE_LS_SERIAL_SERVICE_TAG = (
-    "- INFO     - ServiceTag:\n" "- INFO     -     f01-h01-000-r630.host.io: HXVMC42\n"
-)
+RESPONSE_LS_SERIAL_SERVICE_TAG = "- INFO     - ServiceTag:\n" "- INFO     -     f01-h01-000-r630.host.io: HXVMC42\n"
 RESPONSE_LS_SERIAL_NUMBER = (
-    "- INFO     - Serial Number:\n"
-    "- INFO     -     f01-h01-000-r630.host.io: S211337X8693420\n"
+    "- INFO     - Serial Number:\n" "- INFO     -     f01-h01-000-r630.host.io: S211337X8693420\n"
 )
-RESPONSE_LS_SERIAL_UNSUPPORTED = (
-    "- ERROR    - Server does not support this functionality\n"
-)
-RESPONSE_LS_SERIAL_SOMETHING_WRONG = (
-    "- ERROR    - There was something wrong getting serial summary\n"
-)
+RESPONSE_LS_SERIAL_UNSUPPORTED = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_SERIAL_SOMETHING_WRONG = "- ERROR    - There was something wrong getting serial summary\n"
 
 BLANK_RESP = '"OK"'
-TASK_OK_RESP = (
-    '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}'
-    % JOB_ID
-)
+TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
 JOB_OK_RESP = '{"JobID": "%s"}' % JOB_ID
 SCREENSHOT_64 = base64.b64encode(bytes("ultimate_screenshot", "utf-8"))
 SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
@@ -784,22 +722,16 @@ VMEDIA_CHECK_EMPTY = """\
 """
 
 VMEDIA_MOUNT_SUCCESS = "- INFO     - Image mounting operation was successful.\n"
-VMEDIA_MOUNT_NOT_ALLOWED = (
-    "- ERROR    - Virtual media mounting is not allowed on this server.\n"
+VMEDIA_MOUNT_NOT_ALLOWED = "- ERROR    - Virtual media mounting is not allowed on this server.\n"
+VMEDIA_MOUNT_ALREADY_FILLED = (
+    "- ERROR    - Couldn't mount virtual media, because there is virtual media mounted already.\n"
 )
-VMEDIA_MOUNT_ALREADY_FILLED = "- ERROR    - Couldn't mount virtual media, because there is virtual media mounted already.\n"
-VMEDIA_MOUNT_SOMETHING_WRONG = (
-    "- ERROR    - There was something wrong trying to mount virtual media.\n"
-)
+VMEDIA_MOUNT_SOMETHING_WRONG = "- ERROR    - There was something wrong trying to mount virtual media.\n"
 
 VMEDIA_UNMOUNT_SUCCESS = "- INFO     - Image unmount operation was successful.\n"
-VMEDIA_UNMOUNT_NOT_ALLOWED = (
-    "- ERROR    - Virtual media unmounting is not allowed on this server.\n"
-)
+VMEDIA_UNMOUNT_NOT_ALLOWED = "- ERROR    - Virtual media unmounting is not allowed on this server.\n"
 VMEDIA_UNMOUNT_EMPTY = "- ERROR    - Couldn't unmount virtual media, because there isn't any virtual media mounted.\n"
-VMEDIA_UNMOUNT_SOMETHING_WRONG = (
-    "- ERROR    - There was something wrong trying to unmount virtual media.\n"
-)
+VMEDIA_UNMOUNT_SOMETHING_WRONG = "- ERROR    - There was something wrong trying to unmount virtual media.\n"
 
 VMEDIA_BOOT_TO_NO_MEDIA = "- ERROR    - No virtual CD is inserted.\n"
 VMEDIA_BOOT_TO_MISSING = (
@@ -807,12 +739,8 @@ VMEDIA_BOOT_TO_MISSING = (
     f"available boot devices for host {MOCK_HOST}\n"
     "- ERROR    - Command failed to set next onetime boot to virtual media. No virtual optical media boot device.\n"
 )
-VMEDIA_BOOT_TO_SM_PASS = (
-    "- INFO     - Command passed to set next onetime boot device to virtual media.\n"
-)
-VMEDIA_BOOT_TO_SM_FAIL = (
-    "- ERROR    - Command failed to set next onetime boot device to virtual media.\n"
-)
+VMEDIA_BOOT_TO_SM_PASS = "- INFO     - Command passed to set next onetime boot device to virtual media.\n"
+VMEDIA_BOOT_TO_SM_FAIL = "- ERROR    - Command failed to set next onetime boot device to virtual media.\n"
 BOOT_SOURCE_OVERRIDE_TARGET_USBCD = """
 {
     "Boot": {
@@ -836,9 +764,7 @@ BOOT_SOURCE_OVERRIDE_TARGET_CD = """
     }
 }
 """
-VMEDIA_CHECK_DISC_VALUE_ERROR = (
-    "- ERROR    - There was something wrong getting values for VirtualMedia\n"
-)
+VMEDIA_CHECK_DISC_VALUE_ERROR = "- ERROR    - There was something wrong getting values for VirtualMedia\n"
 VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
 
 VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED = (
@@ -949,12 +875,9 @@ BIOS_PASS_RM_GOOD = (
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
-BIOS_PASS_CHANGE_NOT_SUPPORTED = (
-    "- ERROR    - BIOS password change not supported on this system.\n"
-)
+BIOS_PASS_CHANGE_NOT_SUPPORTED = "- ERROR    - BIOS password change not supported on this system.\n"
 BIOS_PASS_CHANGE_CMD_FAILED = (
-    "- WARNING  - Command failed to set BIOS password\n"
-    "- ERROR    - Error reading response from host.\n"
+    "- WARNING  - Command failed to set BIOS password\n" "- ERROR    - Error reading response from host.\n"
 )
 BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE = (
     "- INFO     - Command passed to set BIOS password.\n"
@@ -1061,8 +984,7 @@ BIOS_GET_ONE_BAD = (
 )
 NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
 NEXT_BOOT_PXE_BAD = (
-    "- ERROR    - Command failed, error code is 400.\n"
-    "- ERROR    - Error reading response from host.\n"
+    "- ERROR    - Command failed, error code is 400.\n" "- ERROR    - Error reading response from host.\n"
 )
 
 SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
@@ -1072,10 +994,10 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
-KEYBOARD_INTERRUPT_HOST_LIST = (
-    "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
+KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
+WRONG_BADFISH_EXECUTION_HOST_LIST = (
+    "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 )
-WRONG_BADFISH_EXECUTION_HOST_LIST = "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 SUCCESSFUL_HOST_LIST = (
     "[badfish.helpers.logger] - INFO     - RESULTS:\n"
     "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
@@ -2265,6 +2187,27 @@ GET_NIC_ATTR_REGISTRY = """
     ]
 }
 """
+GET_NIC_ATTRS = """
+{
+    "Attributes": [
+        {
+            "AttributeName": "WakeOnLan",
+            "CurrentValue": null,
+            "DisplayName": "Wake On LAN",
+            "Value": [
+                {
+                    "ValueDisplayName": "Disabled",
+                    "ValueName": "Disabled"
+                },
+                {
+                    "ValueDisplayName": "Enabled",
+                    "ValueName": "Enabled"
+                }
+            ]
+        }
+    ]
+}
+"""
 RESPONSE_GET_NIC_ATTR_SPECIFIC = """\
 - INFO     - AttributeName: WakeOnLan
 - INFO     - CurrentValue: Enabled
@@ -2282,15 +2225,50 @@ RESPONSE_GET_NIC_ATTR_SPECIFIC = """\
 - INFO     - WarningText: None
 - INFO     - WriteOnly: False
 """
-RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED = """\
+RESPONSE_NIC_ATTR_GET_ERROR = "- ERROR    - Was unable to get network attribute info."
+RESPONSE_NIC_ATTR_SET_ERROR = "- ERROR    - Was unable to set a network attribute."
+RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED = f"""\
 - ERROR    - Unsupported iDRAC version.
-- ERROR    - Was unable to get network attribute info.
+{RESPONSE_NIC_ATTR_GET_ERROR}
 """
-RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL = """\
+RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL = f"""\
 - ERROR    - Was unable to get network attribute registry.
-- ERROR    - Was unable to get network attribute info.
+{RESPONSE_NIC_ATTR_GET_ERROR}
 """
-RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL = """\
+RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL = f"""\
 - ERROR    - Was unable to get NIC attribute(s) info, invalid server response.
-- ERROR    - Was unable to get network attribute info.
+{RESPONSE_NIC_ATTR_GET_ERROR}
+"""
+RESPONSE_SET_NIC_ATTR_ALREADY_OK = "- WARNING  - This attribute already is set to this value. Skipping.\n"
+RESPONSE_SET_NIC_ATTR_OK = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Command passed to On server, code return is 200.
+"""
+RESPONSE_SET_NIC_ATTR_RETRY_OK = f"""\
+- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 503.
+- INFO     - Retrying to send the patch command.
+{RESPONSE_SET_NIC_ATTR_OK}"""
+RESPONSE_SET_NIC_ATTR_BAD_VALUE = """\
+- ERROR    - Value not allowed for this attribute.
+- ERROR    - Was unable to set a network attribute.
+"""
+RESPONSE_SET_NIC_ATTR_INT_MAXED = f"""\
+- ERROR    - Value not allowed for this attribute. (Incorrect number bounds)
+{RESPONSE_NIC_ATTR_SET_ERROR}
+"""
+RESPONSE_SET_NIC_ATTR_STR_MAXED = f"""\
+- ERROR    - Value not allowed for this attribute. (Incorrect string length)
+{RESPONSE_NIC_ATTR_SET_ERROR}
+"""
+RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK = """\
+- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 400.
+- INFO     - Retrying to send the patch command.
+- WARNING  - Job queue already cleared for iDRAC f01-h01-000-r630.host.io, DELETE command will not execute.
+- INFO     - Status code 200 returned for POST command to reset iDRAC.
+- INFO     - iDRAC will now reset and be back online within a few minutes.
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- WARNING  - Actions resource not found
+- INFO     - Command passed to GracefulRestart server, code return is 200.
+- INFO     - Polling for host state: Not Down
+- INFO     - Command passed to On server, code return is 200.
 """
