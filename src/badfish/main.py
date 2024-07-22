@@ -1014,7 +1014,7 @@ class Badfish:
         _response = await self.post_request(_url, _payload, _headers)
 
         status_code = _response.status
-        if status_code == 204:
+        if status_code in [200, 204]:
             self.logger.info("Status code %s returned for POST command to reset iDRAC." % status_code)
         else:
             data = await _response.text("utf-8", "ignore")
@@ -2193,6 +2193,216 @@ class Badfish:
                 continue
         return True
 
+    async def get_nic_fqdds(self):
+        uri = "%s%s/NetworkAdapters" % (self.host_uri, self.system_resource)
+        resp = await self.get_request(uri)
+        if resp.status == 404 or self.vendor == "Supermicro":
+            self.logger.error("Operation not supported by vendor.")
+            return False
+
+        try:
+            raw = await resp.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            nic_list = [[nic[1].split("/")[-1] for nic in member.items()][0] for member in data.get("Members")]
+            self.logger.debug("Detected NIC FQDDs for existing network adapters.")
+            for nic in nic_list:
+                uri = "%s%s/NetworkAdapters/%s/NetworkDeviceFunctions" % (self.host_uri, self.system_resource, nic)
+                resp = await self.get_request(uri)
+                raw = await resp.text("utf-8", "ignore")
+                data = json.loads(raw.strip())
+                nic_fqqds = [[fqdd[1].split("/")[-1] for fqdd in member.items()][0] for member in data.get("Members")]
+                self.logger.info(f"{nic}:")
+                for i, fqdd in enumerate(nic_fqqds, start=1):
+                    self.logger.info(f"    {i}: {fqdd}")
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+            self.logger.error("Was unable to get NIC FQDDs, invalid server response.")
+            return False
+        return True
+
+    async def get_nic_attribute(self, fqdd, log=True):
+        uri = "%s/Chassis/%s/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s" % (
+            self.root_uri,
+            self.system_resource.split("/")[-1],
+            fqdd.split("-")[0],
+            fqdd,
+            fqdd,
+        )
+        resp = await self.get_request(uri)
+        if resp.status == 404 or self.vendor == "Supermicro":
+            self.logger.error("Operation not supported by vendor.")
+            return False
+
+        try:
+            raw = await resp.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            attributes_list = [(key, value) for key, value in data.get("Attributes").items()]
+            if not log:
+                return attributes_list
+            self.logger.debug(f"All NIC attributes of {fqdd}.")
+            self.logger.info(f"{fqdd}")
+            for key, value in attributes_list:
+                self.logger.info(f"    {key}: {value}")
+        except (AttributeError, KeyError, TypeError, ValueError):
+            self.logger.error("Was unable to get NIC attribute(s) info, invalid server response.")
+            return False
+        return True
+
+    async def get_idrac_fw_version(self):
+        idrac_fw_version = 0
+        try:
+            uri = "%s%s/" % (self.host_uri, self.manager_resource)
+            resp = await self.get_request(uri)
+            if resp.status == 404 or self.vendor == "Supermicro":
+                self.logger.error("Operation not supported by vendor.")
+                return 0
+            raw = await resp.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            idrac_fw_version = int(data["FirmwareVersion"].replace(".", ""))
+        except (AttributeError, ValueError, StopIteration):
+            self.logger.error("Was unable to get iDRAC Firmware Version.")
+            return 0
+        return idrac_fw_version
+
+    async def get_nic_attribute_registry(self, fqdd=None):
+        registry = []
+        idrac_fw_version = await self.get_idrac_fw_version()
+        if not idrac_fw_version or idrac_fw_version < 5100000:
+            self.logger.error("Unsupported iDRAC version.")
+            return []
+        try:
+            uri = "%s/Registries/NetworkAttributesRegistry_%s/NetworkAttributesRegistry_%s.json" % (
+                self.root_uri,
+                fqdd,
+                fqdd,
+            )
+            resp = await self.get_request(uri)
+            if resp.status == 404:
+                self.logger.error("Was unable to get network attribute registry.")
+                return []
+            raw = await resp.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            registry = [attr for attr in data.get("RegistryEntries").get("Attributes")]
+        except (AttributeError, KeyError, TypeError, ValueError):
+            self.logger.error("Was unable to get network attribute registry.")
+            return []
+        return registry
+
+    async def get_nic_attribute_info(self, fqdd, attribute, log=True):
+        if self.vendor == "Supermicro":
+            self.logger.error("Operation not supported by vendor.")
+            return False
+        registry = await self.get_nic_attribute_registry(fqdd)
+        if not registry:
+            self.logger.error("Was unable to get network attribute info.")
+            return False
+        try:
+            registry = [attr_dict for attr_dict in registry if attr_dict.get("AttributeName") == attribute][0]
+            current_value = await self.get_nic_attribute(fqdd, False)
+            current_value = [tup[1] for tup in current_value if tup[0] == attribute][0]
+            registry.update({"CurrentValue": current_value})
+            if not log:
+                return registry
+            for key, value in registry.items():
+                self.logger.info(f"{key}: {value}")
+        except (AttributeError, IndexError, KeyError, TypeError):
+            self.logger.error("Was unable to get network attribute info.")
+            return False
+        return True
+
+    async def set_nic_attribute(self, fqdd, attribute, value):
+        if self.vendor == "Supermicro":
+            self.logger.error("Operation not supported by vendor.")
+            return False
+
+        attr_info = await self.get_nic_attribute_info(fqdd, attribute, False)
+        if not attr_info:
+            self.logger.error("Was unable to set a network attribute. Attribute most likely doesn't exist.")
+            return False
+
+        try:
+            type = attr_info.get("Type")
+            current_value = attr_info.get("CurrentValue")
+            if value == current_value:
+                self.logger.warning("This attribute already is set to this value. Skipping.")
+                return True
+            if type == "Enumeration":
+                allowed_values = [value_spec.get("ValueName") for value_spec in attr_info.get("Value")]
+                if value not in allowed_values:
+                    self.logger.error("Value not allowed for this attribute.")
+                    self.logger.error("Was unable to set a network attribute.")
+                    return False
+            if type == "String":
+                max, min = int(attr_info.get("MaxLength")), int(attr_info.get("MinLength"))
+                if len(value) > max or len(value) < min:
+                    self.logger.error("Value not allowed for this attribute. (Incorrect string length)")
+                    self.logger.error("Was unable to set a network attribute.")
+                    return False
+            if type == "Integer":
+                max, min = int(attr_info.get("UpperBound")), int(attr_info.get("LowerBound"))
+                value = int(value)
+                if value > max or value < min:
+                    self.logger.error("Value not allowed for this attribute. (Incorrect number bounds)")
+                    self.logger.error("Was unable to set a network attribute.")
+                    return False
+        except (AttributeError, IndexError, KeyError, TypeError):
+            self.logger.error("Was unable to set a network attribute.")
+            return False
+
+        try:
+            uri = (
+                "%s/Chassis/System.Embedded.1/NetworkAdapters/%s/NetworkDeviceFunctions/%s/Oem/Dell/DellNetworkAttributes/%s/Settings"
+                % (
+                    self.root_uri,
+                    fqdd.split("-")[0],
+                    fqdd,
+                    fqdd,
+                )
+            )
+            self.logger.debug(uri)
+        except (IndexError, ValueError):
+            self.logger.error("Invalid FQDD suplied.")
+            return False
+
+        headers = {"content-type": "application/json"}
+        payload = {
+            "@Redfish.SettingsApplyTime": {"ApplyTime": "OnReset"},
+            "Attributes": {attribute: value},
+        }
+        first_reset = False
+        try:
+            for i in range(self.retries):
+                response = await self.patch_request(uri, payload, headers)
+                status_code = response.status
+                if status_code in [200, 202]:
+                    self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
+                    break
+                else:
+                    self.logger.error(
+                        "Patch command to set network attribute values and create next reboot job FAILED, error code is: %s."
+                        % status_code
+                    )
+                    if status_code == 503 and i - 1 != self.retries:
+                        self.logger.info("Retrying to send the patch command.")
+                        continue
+                    elif status_code == 400:
+                        self.logger.info("Retrying to send the patch command.")
+                        await self.clear_job_queue()
+                        if not first_reset:
+                            await self.reset_idrac()
+                            await asyncio.sleep(10)
+                            first_reset = True
+                        continue
+                    self.logger.error(
+                        "Patch command to set network attribute values and create next reboot job FAILED, error code is: %s."
+                        % status_code
+                    )
+                    self.logger.error("Was unable to set a network attribute.")
+                    return False
+        except (AttributeError, ValueError):
+            self.logger.error("Was unable to set a network attribute.")
+
+        await self.reboot_server()
+
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args["u"]
@@ -2249,6 +2459,9 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     scp_include_read_only = _args["scp_include_read_only"]
     export_scp = _args["export_scp"]
     import_scp = _args["import_scp"]
+    get_nic_fqdds = _args["get_nic_fqdds"]
+    get_nic_attribute = _args["get_nic_attribute"]
+    set_nic_attribute = _args["set_nic_attribute"]
     result = True
 
     try:
@@ -2355,6 +2568,15 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.export_scp(export_scp, scp_targets, scp_include_read_only)
         elif import_scp:
             await badfish.import_scp(import_scp, scp_targets)
+        elif get_nic_fqdds:
+            await badfish.get_nic_fqdds()
+        elif get_nic_attribute:
+            if attribute:
+                await badfish.get_nic_attribute_info(get_nic_attribute, attribute)
+            else:
+                await badfish.get_nic_attribute(get_nic_attribute)
+        elif set_nic_attribute:
+            await badfish.set_nic_attribute(set_nic_attribute, attribute, value)
 
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
@@ -2630,6 +2852,21 @@ def main(argv=None):
         "--import-scp",
         help="Import system config using iDRAC SCP, argument specifies which JSON file contains config that should be "
         "imported.",
+        default="",
+    )
+    parser.add_argument(
+        "--get-nic-fqdds",
+        help="List FQDDs for all NICs.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--get-nic-attribute",
+        help="Get a NIC attribute values, specify a NIC FQDD.",
+        default="",
+    )
+    parser.add_argument(
+        "--set-nic-attribute",
+        help="Set a NIC attribute value",
         default="",
     )
 
