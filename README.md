@@ -676,7 +676,11 @@ We format the key strings with the following criteria:
 ```
 {host_type}_[{rack}_[{ULocation}_[{blade}_]]]{model}_interfaces
 ```
-With rack, ULocation and blade being optional in a hierarchical fashion otherwise mandatory, ergo you can't define blade without ULocation and so forth. host_type and model values are always mandatory.
+Additionally we can do a blade only override like:
+```
+{host_type}_[{blade}_]{model}_interfaces
+```
+With rack, ULocation and blade being optional in a hierarchical fashion otherwise mandatory with the exception of the blade, as we can now use the blade independently from rack and ULocation. host_type and model values are always mandatory.
 
 #### Example for director type overrides:
 
