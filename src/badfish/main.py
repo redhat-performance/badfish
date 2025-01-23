@@ -209,11 +209,12 @@ class Badfish:
         if len(host_name_split) > 4:
             host_blade = host_name_split[3]
 
-        prefix = [host_type, rack, uloc]
+        prefix = [host_type, rack, uloc, host_blade]
 
-        b_pattern = re.compile("b0[0-9]")
-        if b_pattern.match(host_blade):
-            host_model = "%s_%s" % (host_model, host_blade)
+        key = f"{host_type}_{host_blade}_{host_model}_interfaces"
+        interfaces_string = definitions.get(key)
+        if interfaces_string:
+            return interfaces_string.split(",")
 
         len_prefix = len(prefix)
         key = "None"
