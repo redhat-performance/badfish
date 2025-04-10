@@ -1,0 +1,22 @@
+name: Create Source tarball
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create versioned tarball
+      run: |
+        cd rpm && make tarball
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: source-tarball
+        path: python3-badfish-*.tar.gz
