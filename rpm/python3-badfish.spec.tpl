@@ -12,7 +12,7 @@ Version:        @VERSION@
 Release:        @RELEASE@%{?dist}
 Summary:        %{sum}
 
-License:        GPLv3
+License:        GPL-3.0-or-later and MIT
 URL:            https://github.com/%{org}/%{project}
 Source:         %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
@@ -44,3 +44,6 @@ BuildRequires:  zlib-devel
 %changelog
 * @DATE@ Gonzalo Rafuls <gonza@redhat.com> - @VERSION@-@RELEASE@
 - built from upstream, changelog ignored
+
+%check
+%{__python3} -m tox
