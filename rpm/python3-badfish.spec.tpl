@@ -30,6 +30,7 @@ BuildRequires:  zlib-devel
 
 %build
 %py3_build
+%{__python3} -m pip install --user -r tests/test-requirements.txt
 
 %install
 %py3_install
