@@ -47,4 +47,4 @@ BuildRequires:  zlib-devel
 - built from upstream, changelog ignored
 
 %check
-%{__python3} -m tox
+%{__python3} -m pytest tests/
