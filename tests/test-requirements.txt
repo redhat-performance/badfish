@@ -9,4 +9,4 @@ codecov==2.1.13
 asynctest==0.13.0
 pyyaml>=3.10
 aiohttp>=3.7.4
-tox>=4.11.0
+tox>=4.8.0
