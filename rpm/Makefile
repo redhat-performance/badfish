@@ -8,6 +8,8 @@ TARBALL = python3-badfish-$(VERSION).tar.gz
 
 all: python3-badfish.spec python3-badfish-$(VERSION).tar.gz
 
+tarball: $(TARBALL)
+
 .PHONY: $(TARBALL)
 $(TARBALL):
 	rm -f $(TARBALL)
