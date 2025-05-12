@@ -25,14 +25,16 @@ jobs:
         name: source-tarball
         path: rpm/python3-badfish-*.tar.gz
 
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ steps.create-tarball.outputs.version }}
-        name: Release ${{ steps.create-tarball.outputs.version }}
-        files: rpm/${{ steps.create-tarball.outputs.tarball_name }}
-        draft: false
-        prerelease: false
+    - name: Create Release and Upload Asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release create "v${{ steps.create-tarball.outputs.version }}" \
+          --title "Release ${{ steps.create-tarball.outputs.version }}" \
+          --notes "Release ${{ steps.create-tarball.outputs.version }}" \
+          --repo ${{ github.repository }}
+          
+        gh release upload "v${{ steps.create-tarball.outputs.version }}" \
+          "rpm/${{ steps.create-tarball.outputs.tarball_name }}" \
+          --clobber \
+          --repo ${{ github.repository }}
