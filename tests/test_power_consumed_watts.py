@@ -1,14 +1,10 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    NO_POWER,
-    POWER_CONSUMED_RESP,
-    RESPONSE_NO_POWER_CONSUMED,
-    RESPONSE_POWER_CONSUMED_OK,
-    RESPONSE_POWER_CONSUMED_VAL_ERR,
-    RESPONSE_VENDOR_UNSUPPORTED,
+from unittest.mock import patch
 
-)
+from tests.config import (INIT_RESP, NO_POWER, POWER_CONSUMED_RESP,
+                          RESPONSE_NO_POWER_CONSUMED,
+                          RESPONSE_POWER_CONSUMED_OK,
+                          RESPONSE_POWER_CONSUMED_VAL_ERR,
+                          RESPONSE_VENDOR_UNSUPPORTED)
 from tests.test_base import TestBase
 
 

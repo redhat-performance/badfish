@@ -1,15 +1,12 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    FIRMWARE_INVENTORY_RESP,
-    FIRMWARE_INVENTORY_1_RESP,
-    FIRMWARE_INVENTORY_2_RESP,
-    FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR,
-    RESPONSE_FIRMWARE_INVENTORY,
-    RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS,
-    RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE,
-)
-from tests.test_base import TestBase, MockResponse
+from unittest.mock import patch
+
+from tests.config import (FIRMWARE_INVENTORY_1_RESP, FIRMWARE_INVENTORY_2_RESP,
+                          FIRMWARE_INVENTORY_RESP,
+                          FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR, INIT_RESP,
+                          RESPONSE_FIRMWARE_INVENTORY,
+                          RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE,
+                          RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS)
+from tests.test_base import MockResponse, TestBase
 
 
 class TestFirmwareInventory(TestBase):

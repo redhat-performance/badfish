@@ -21,6 +21,8 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
 BuildRequires:  zlib-devel
+%generate_buildrequires
+%pyproject_buildrequires -t 
 
 %description
 %{desc}
@@ -35,6 +37,9 @@ BuildRequires:  zlib-devel
 %install
 %py3_install
 
+%check
+%tox
+
 %files -n %{name}
 %doc README.md
 %license LICENSE
@@ -45,6 +50,3 @@ BuildRequires:  zlib-devel
 %changelog
 * @DATE@ Gonzalo Rafuls <gonza@redhat.com> - @VERSION@-@RELEASE@
 - built from upstream, changelog ignored
-
-%check
-%{__python3} -m pytest tests/

@@ -1,23 +1,17 @@
 import os
-from asynctest import patch
-from tests.config import (
-    KEYBOARD_INTERRUPT,
-    WRONG_BADFISH_EXECUTION,
-    KEYBOARD_INTERRUPT_HOST_LIST,
-    WRONG_BADFISH_EXECUTION_HOST_LIST,
-    SUCCESSFUL_HOST_LIST,
-    NO_HOST_ERROR,
-    HOST_LIST_EXTRAS,
-    ROOT_RESP,
-    SYS_RESP,
-    MAN_RESP,
-    RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
-    RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
-    RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED,
-    RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
-)
-from tests.test_base import TestBase
+from unittest.mock import patch
+
 from src.badfish.main import BadfishException
+from tests.config import (HOST_LIST_EXTRAS, KEYBOARD_INTERRUPT,
+                          KEYBOARD_INTERRUPT_HOST_LIST, MAN_RESP,
+                          NO_HOST_ERROR, RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
+                          RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
+                          RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
+                          RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED,
+                          ROOT_RESP, SUCCESSFUL_HOST_LIST, SYS_RESP,
+                          WRONG_BADFISH_EXECUTION,
+                          WRONG_BADFISH_EXECUTION_HOST_LIST)
+from tests.test_base import TestBase
 
 
 def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3, ignore4=None):

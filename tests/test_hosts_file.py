@@ -1,5 +1,5 @@
 import os
-from asynctest import patch
+from unittest.mock import patch
 
 from tests import config
 from tests.test_base import TestBase
