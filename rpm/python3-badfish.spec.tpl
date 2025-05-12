@@ -14,7 +14,7 @@ Summary:        %{sum}
 
 License:        GPL-3.0-or-later and MIT
 URL:            https://github.com/%{org}/%{project}
-Source:         %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source:         %{url}/releases/download/v%{version}/python3-badfish-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  %{py3_dist setuptools}

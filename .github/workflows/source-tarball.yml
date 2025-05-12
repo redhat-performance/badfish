@@ -12,11 +12,27 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Create versioned tarball
+      id: create-tarball
       run: |
         cd rpm && make tarball
+        echo "tarball_name=$(ls python3-badfish-*.tar.gz | head -n1)" >> $GITHUB_OUTPUT
+        echo "version=$(ls python3-badfish-*.tar.gz | sed 's/python3-badfish-\(.*\)\.tar\.gz/\1/')" >> $GITHUB_OUTPUT
+      working-directory: rpm
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: source-tarball
         path: rpm/python3-badfish-*.tar.gz
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.create-tarball.outputs.version }}
+        name: Release ${{ steps.create-tarball.outputs.version }}
+        files: rpm/${{ steps.create-tarball.outputs.tarball_name }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
