@@ -36,3 +36,15 @@ srpm: all
 
 clean:
 	rm -rf *.src.rpm *.tar.gz *.spec noarch
+
+test: tarball python3-badfish.spec
+	@echo "Moving tarball to rpmbuild/SOURCES directory"
+	mkdir -p ~/rpmbuild/SOURCES
+	cp $(TARBALL) ~/rpmbuild/SOURCES/
+	@echo "Tarball $(TARBALL) successfully moved to rpmbuild/SOURCES"
+	@echo "Building source RPM from spec file"
+	SRPM_PATH=$$(rpmbuild -bs python3-badfish.spec | grep "Wrote:" | cut -d' ' -f2) && \
+	echo "Source RPM build completed: $$SRPM_PATH" && \
+	echo "Running mock build with the generated SRPM" && \
+	mock -r fedora-rawhide-x86_64 -n $$SRPM_PATH && \
+	echo "Mock build completed successfully"

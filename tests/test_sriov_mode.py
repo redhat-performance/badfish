@@ -1,14 +1,8 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    STATE_ON_RESP,
-    JOB_OK_RESP,
-    RESET_TYPE_RESP,
-    BIOS_SET_OK,
-    BIOS_RESPONSE_SRIOV,
-    SRIOV_ALREADY,
-    SRIOV_STATE,
-)
+from unittest.mock import patch
+
+from tests.config import (BIOS_RESPONSE_SRIOV, BIOS_SET_OK, INIT_RESP,
+                          JOB_OK_RESP, RESET_TYPE_RESP, SRIOV_ALREADY,
+                          SRIOV_STATE, STATE_ON_RESP)
 from tests.test_base import TestBase
 
 

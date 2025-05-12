@@ -1,14 +1,9 @@
-from asynctest import patch
-from tests.config import (
-    RESET_TYPE_RESP,
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    RESPONSE_RESET,
-    INIT_RESP,
-    RESPONSE_RESET_FAIL,
-    INIT_RESP_SUPERMICRO,
-    RESPONSE_RESET_WRONG_VENDOR,
-    RESET_TYPE_RESP_NO_ALLOWABLE_VALUES,
-)
+from unittest.mock import patch
+
+from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
+                          INIT_RESP_SUPERMICRO, RESET_TYPE_RESP,
+                          RESET_TYPE_RESP_NO_ALLOWABLE_VALUES, RESPONSE_RESET,
+                          RESPONSE_RESET_FAIL, RESPONSE_RESET_WRONG_VENDOR)
 from tests.test_base import TestBase
 
 

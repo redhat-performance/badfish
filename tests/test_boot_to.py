@@ -1,21 +1,12 @@
-from asynctest import patch
-from tests.config import (
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    DEVICE_NIC_2,
-    RESPONSE_BOOT_TO,
-    BAD_DEVICE_NAME,
-    ERROR_DEV_NO_MATCH,
-    BOOT_SEQ_RESP,
-    BOOT_MODE_RESP,
-    INIT_RESP,
-    BLANK_RESP,
-    JOB_OK_RESP,
-    RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE,
-    RESET_TYPE_RESP,
-    RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST,
-    STATE_ON_RESP,
-    RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER,
-)
+from unittest.mock import patch
+
+from tests.config import (BAD_DEVICE_NAME, BLANK_RESP, BOOT_MODE_RESP,
+                          BOOT_SEQ_RESP, BOOT_SEQ_RESPONSE_DIRECTOR,
+                          DEVICE_NIC_2, ERROR_DEV_NO_MATCH, INIT_RESP,
+                          JOB_OK_RESP, RESET_TYPE_RESP, RESPONSE_BOOT_TO,
+                          RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST,
+                          RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER,
+                          RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE, STATE_ON_RESP)
 from tests.test_base import TestBase
 
 

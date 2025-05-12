@@ -1,14 +1,11 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    DELL_REDFISH_ROOT_OEM_RESP,
-    RESPONSE_LS_SERIAL_SERVICE_TAG,
-    SYSTEM_SERIAL_NUMBER_RESP,
-    EMPTY_OEM_RESP,
-    RESPONSE_LS_SERIAL_NUMBER,
-    RESPONSE_LS_SERIAL_UNSUPPORTED,
-    RESPONSE_LS_SERIAL_SOMETHING_WRONG,
-)
+from unittest.mock import patch
+
+from tests.config import (DELL_REDFISH_ROOT_OEM_RESP, EMPTY_OEM_RESP,
+                          INIT_RESP, RESPONSE_LS_SERIAL_NUMBER,
+                          RESPONSE_LS_SERIAL_SERVICE_TAG,
+                          RESPONSE_LS_SERIAL_SOMETHING_WRONG,
+                          RESPONSE_LS_SERIAL_UNSUPPORTED,
+                          SYSTEM_SERIAL_NUMBER_RESP)
 from tests.test_base import TestBase
 
 

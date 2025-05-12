@@ -1,12 +1,11 @@
 import sys
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-from asynctest import CoroutineMock, PropertyMock, MagicMock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
-from asynctest import patch
 
-from src.badfish.main import main, BadfishException
+from src.badfish.main import BadfishException, main
 from tests import config
 
 
@@ -30,13 +29,13 @@ class TestBase(AioHTTPTestCase):
             mock.return_value.__aenter__.return_value = status_mock
         else:
             mock.return_value.__aenter__.return_value.status = status
-        mock.return_value.__aenter__.return_value.read = CoroutineMock()
+        mock.return_value.__aenter__.return_value.read = AsyncMock()
         if type(responses) == list:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock(
+            mock.return_value.__aenter__.return_value.text = AsyncMock(
                 side_effect=responses
             )
         else:
-            mock.return_value.__aenter__.return_value.text = CoroutineMock(
+            mock.return_value.__aenter__.return_value.text = AsyncMock(
                 return_value=responses
             )
         if headers is not None:

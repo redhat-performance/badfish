@@ -1,18 +1,10 @@
-from asynctest import patch
-from tests.config import (
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    RESPONSE_BOOT_TO,
-    BOOT_SEQ_RESP,
-    BOOT_MODE_RESP,
-    INIT_RESP,
-    BLANK_RESP,
-    JOB_OK_RESP,
-    INTERFACES_PATH,
-    ETHERNET_INTERFACES_RESP,
-    INTERFACES_RESP,
-    MAC_ADDRESS,
-    RESPONSE_BOOT_TO_BAD_MAC,
-)
+from unittest.mock import patch
+
+from tests.config import (BLANK_RESP, BOOT_MODE_RESP, BOOT_SEQ_RESP,
+                          BOOT_SEQ_RESPONSE_DIRECTOR, ETHERNET_INTERFACES_RESP,
+                          INIT_RESP, INTERFACES_PATH, INTERFACES_RESP,
+                          JOB_OK_RESP, MAC_ADDRESS, RESPONSE_BOOT_TO,
+                          RESPONSE_BOOT_TO_BAD_MAC)
 from tests.test_base import TestBase
 
 

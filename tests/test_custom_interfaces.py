@@ -1,4 +1,5 @@
 import pytest
+
 from src.badfish.main import Badfish
 from tests.config import INTERFACES_PATH
 from tests.test_base import TestBase
