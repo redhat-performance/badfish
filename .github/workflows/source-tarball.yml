@@ -14,7 +14,7 @@ jobs:
     - name: Create versioned tarball
       id: create-tarball
       run: |
-        cd rpm && make tarball
+        make tarball
         echo "tarball_name=$(ls python3-badfish-*.tar.gz | head -n1)" >> $GITHUB_OUTPUT
         echo "version=$(ls python3-badfish-*.tar.gz | sed 's/python3-badfish-\(.*\)\.tar\.gz/\1/')" >> $GITHUB_OUTPUT
       working-directory: rpm
