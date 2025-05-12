@@ -16,7 +16,7 @@ jobs:
         cd rpm && make tarball
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: source-tarball
-        path: python3-badfish-*.tar.gz
+        path: rpm/python3-badfish-*.tar.gz
