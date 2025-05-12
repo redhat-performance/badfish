@@ -1,9 +1,6 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    NEXT_BOOT_PXE_OK,
-    NEXT_BOOT_PXE_BAD,
-)
+from unittest.mock import patch
+
+from tests.config import INIT_RESP, NEXT_BOOT_PXE_BAD, NEXT_BOOT_PXE_OK
 from tests.test_base import TestBase
 
 

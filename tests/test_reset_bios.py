@@ -1,11 +1,7 @@
-from asynctest import patch
-from tests.config import (
-    RESET_TYPE_RESP,
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    RESPONSE_RESET,
-    INIT_RESP,
-    RESPONSE_RESET_FAIL,
-)
+from unittest.mock import patch
+
+from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
+                          RESET_TYPE_RESP, RESPONSE_RESET, RESPONSE_RESET_FAIL)
 from tests.test_base import TestBase
 
 

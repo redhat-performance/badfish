@@ -1,24 +1,17 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    JOB_OK_RESP,
-    RESPONSE_LS_JOBS,
-    BLANK_RESP,
-    RESPONSE_CLEAR_JOBS,
-    RESPONSE_LS_JOBS_EMPTY,
-    RESPONSE_CLEAR_JOBS_UNSUPPORTED,
-    RESPONSE_CLEAR_JOBS_LIST,
-    JOB_ID,
-    TASK_OK_RESP,
-    RESPONSE_CHECK_JOB,
-    RESPONSE_CHECK_JOB_BAD,
-    RESPONSE_CLEAR_JOBS_LIST_EXCEPTION,
-    RESPONSE_CHECK_JOB_ERROR,
-    RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION,
-    RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
-)
-from tests.test_base import TestBase, MockResponse
+from unittest.mock import patch
+
 from src.badfish.main import BadfishException
+from tests.config import (BLANK_RESP, INIT_RESP, JOB_ID, JOB_OK_RESP,
+                          RESPONSE_CHECK_JOB, RESPONSE_CHECK_JOB_BAD,
+                          RESPONSE_CHECK_JOB_ERROR, RESPONSE_CLEAR_JOBS,
+                          RESPONSE_CLEAR_JOBS_LIST,
+                          RESPONSE_CLEAR_JOBS_LIST_EXCEPTION,
+                          RESPONSE_CLEAR_JOBS_UNSUPPORTED,
+                          RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
+                          RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION,
+                          RESPONSE_LS_JOBS, RESPONSE_LS_JOBS_EMPTY,
+                          TASK_OK_RESP)
+from tests.test_base import MockResponse, TestBase
 
 
 def raise_badfish_exception_stub_del_req(arg1=None, arg2=None):

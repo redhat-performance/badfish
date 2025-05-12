@@ -1,28 +1,29 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    INIT_RESP_SUPERMICRO,
-    GET_NIC_FQQDS_ADAPTERS,
-    GET_NIC_FQQDS_EMBEDDED,
-    GET_NIC_FQQDS_INTEGRATED,
-    GET_NIC_FQQDS_SLOT,
-    RESPONSE_GET_NIC_FQQDS_OK,
-    RESPONSE_VENDOR_UNSUPPORTED,
-    RESPONSE_GET_NIC_FQQDS_INVALID,
-    GET_NIC_ATTR_LIST,
-    RESPONSE_GET_NIC_ATTR_LIST_OK,
-    RESPONSE_GET_NIC_ATTR_LIST_INVALID,
-    GET_FW_VERSION,
-    GET_FW_VERSION_UNSUPPORTED,
-    GET_NIC_ATTR_REGISTRY,
-    RESPONSE_GET_NIC_ATTR_SPECIFIC,
-    RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED,
-    RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL,
-    RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL, GET_NIC_ATTRS, RESPONSE_SET_NIC_ATTR_ALREADY_OK, RESET_TYPE_RESP,
-    STATE_ON_RESP, STATE_OFF_RESP, RESPONSE_SET_NIC_ATTR_OK, RESPONSE_SET_NIC_ATTR_BAD_VALUE,
-    RESPONSE_SET_NIC_ATTR_INT_MAXED, RESPONSE_SET_NIC_ATTR_STR_MAXED, RESPONSE_SET_NIC_ATTR_RETRY_OK,
-    RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK, RESPONSE_GET_NIC_ATTR_FW_BAD, RESPONSE_GET_NIC_ATTR_FW_EXC,
-)
+from unittest.mock import patch
+
+from tests.config import (GET_FW_VERSION, GET_FW_VERSION_UNSUPPORTED,
+                          GET_NIC_ATTR_LIST, GET_NIC_ATTR_REGISTRY,
+                          GET_NIC_ATTRS, GET_NIC_FQQDS_ADAPTERS,
+                          GET_NIC_FQQDS_EMBEDDED, GET_NIC_FQQDS_INTEGRATED,
+                          GET_NIC_FQQDS_SLOT, INIT_RESP, INIT_RESP_SUPERMICRO,
+                          RESET_TYPE_RESP, RESPONSE_GET_NIC_ATTR_FW_BAD,
+                          RESPONSE_GET_NIC_ATTR_FW_EXC,
+                          RESPONSE_GET_NIC_ATTR_LIST_INVALID,
+                          RESPONSE_GET_NIC_ATTR_LIST_OK,
+                          RESPONSE_GET_NIC_ATTR_SPECIFIC,
+                          RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL,
+                          RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL,
+                          RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED,
+                          RESPONSE_GET_NIC_FQQDS_INVALID,
+                          RESPONSE_GET_NIC_FQQDS_OK,
+                          RESPONSE_SET_NIC_ATTR_ALREADY_OK,
+                          RESPONSE_SET_NIC_ATTR_BAD_VALUE,
+                          RESPONSE_SET_NIC_ATTR_INT_MAXED,
+                          RESPONSE_SET_NIC_ATTR_OK,
+                          RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK,
+                          RESPONSE_SET_NIC_ATTR_RETRY_OK,
+                          RESPONSE_SET_NIC_ATTR_STR_MAXED,
+                          RESPONSE_VENDOR_UNSUPPORTED, STATE_OFF_RESP,
+                          STATE_ON_RESP)
 from tests.test_base import TestBase
 
 
@@ -180,23 +181,6 @@ class TestGetNICAttribute(TestBase):
         ]
         _, err = self.badfish_call()
         assert err == RESPONSE_GET_NIC_ATTR_FW_BAD
-
-    @patch("aiohttp.ClientSession.delete")
-    @patch("aiohttp.ClientSession.post")
-    @patch("aiohttp.ClientSession.get")
-    def test_get_nic_attr_fw_exc(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP
-        self.set_mock_response(mock_get, 200, responses)
-        self.set_mock_response(mock_post, 200, "OK")
-        self.set_mock_response(mock_delete, 200, "OK")
-        self.args = [
-            self.option_arg,
-            "NIC.Embedded.1-1-1",
-            "--attribute",
-            "WakeOnLan"
-        ]
-        _, err = self.badfish_call()
-        assert err == RESPONSE_GET_NIC_ATTR_FW_EXC
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

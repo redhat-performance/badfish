@@ -1,18 +1,12 @@
-from asynctest import patch
+from unittest.mock import patch
 
-from tests.config import (
-    INIT_RESP,
-    STATE_ON_RESP,
-    STATE_OFF_RESP,
-    RESPONSE_REBOOT_ONLY_SUCCESS,
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    RESET_TYPE_RESP,
-    STATE_DOWN_RESP,
-    RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET,
-    RESET_TYPE_NG_RESP,
-    RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT,
-    RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE,
-)
+from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
+                          RESET_TYPE_NG_RESP, RESET_TYPE_RESP,
+                          RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE,
+                          RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET,
+                          RESPONSE_REBOOT_ONLY_SUCCESS,
+                          RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT,
+                          STATE_DOWN_RESP, STATE_OFF_RESP, STATE_ON_RESP)
 from tests.test_base import TestBase
 
 

@@ -1,21 +1,14 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    STATE_OFF_RESP,
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    RESPONSE_POWER_ON_NOT,
-    RESPONSE_POWER_ON_OK,
-    RESPONSE_POWER_OFF_NO_STATE,
-    RESPONSE_POWER_OFF_ALREADY,
-    JOB_OK_RESP,
-    RESPONSE_POWER_OFF_MISS_STATE,
-    STATE_ON_RESP,
-    RESPONSE_POWER_STATE_ON,
-    RESPONSE_POWER_STATE_DOWN,
-    RESPONSE_POWER_STATE_EMPTY,
-    RESPONSE_POWER_OFF_NONE,
-)
-from tests.test_base import TestBase, MockResponse
+from unittest.mock import patch
+
+from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP, JOB_OK_RESP,
+                          RESPONSE_POWER_OFF_ALREADY,
+                          RESPONSE_POWER_OFF_MISS_STATE,
+                          RESPONSE_POWER_OFF_NO_STATE, RESPONSE_POWER_OFF_NONE,
+                          RESPONSE_POWER_ON_NOT, RESPONSE_POWER_ON_OK,
+                          RESPONSE_POWER_STATE_DOWN,
+                          RESPONSE_POWER_STATE_EMPTY, RESPONSE_POWER_STATE_ON,
+                          STATE_OFF_RESP, STATE_ON_RESP)
+from tests.test_base import MockResponse, TestBase
 
 
 class TestPowerOn(TestBase):

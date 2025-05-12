@@ -1,17 +1,12 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    MEMORY_MEMBERS_RESP,
-    MEMORY_SUMMARY_RESP,
-    MEMORY_A5_RESP,
-    MEMORY_B2_RESP,
-    RESPONSE_LS_MEMORY,
-    RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR,
-    MEMORY_SUMMARY_RESP_FAULTY,
-    RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR,
-    RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND,
-    RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR,
-)
+from unittest.mock import patch
+
+from tests.config import (INIT_RESP, MEMORY_A5_RESP, MEMORY_B2_RESP,
+                          MEMORY_MEMBERS_RESP, MEMORY_SUMMARY_RESP,
+                          MEMORY_SUMMARY_RESP_FAULTY, RESPONSE_LS_MEMORY,
+                          RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND,
+                          RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR,
+                          RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR,
+                          RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR)
 from tests.test_base import TestBase
 
 

@@ -1,16 +1,11 @@
 import os
+from unittest.mock import patch
+
 import pytest
 
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    SCREENSHOT_RESP,
-    IMAGE_SAVED,
-    SCREENSHOT_NAME,
-    SCREENSHOT_NOT_SUPPORTED,
-    SCREENSHOT_BAD_REQUEST,
-    SCREENSHOT_FALSE_OK,
-)
+from tests.config import (IMAGE_SAVED, INIT_RESP, SCREENSHOT_BAD_REQUEST,
+                          SCREENSHOT_FALSE_OK, SCREENSHOT_NAME,
+                          SCREENSHOT_NOT_SUPPORTED, SCREENSHOT_RESP)
 from tests.test_base import TestBase
 
 

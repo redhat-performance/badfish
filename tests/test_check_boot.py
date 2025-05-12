@@ -1,17 +1,11 @@
-from asynctest import patch
-from tests.config import (
-    BOOT_MODE_RESP,
-    BOOT_SEQ_RESP,
-    BOOT_SEQ_RESPONSE_DIRECTOR,
-    INIT_RESP,
-    BOOT_SEQ_RESPONSE_FOREMAN,
-    RESPONSE_WITHOUT,
-    RESPONSE_DIRECTOR,
-    RESPONSE_FOREMAN,
-    BOOT_SEQ_RESPONSE_NO_MATCH,
-    INTERFACES_PATH,
-    WARN_NO_MATCH,
-)
+from unittest.mock import patch
+
+from tests.config import (BOOT_MODE_RESP, BOOT_SEQ_RESP,
+                          BOOT_SEQ_RESPONSE_DIRECTOR,
+                          BOOT_SEQ_RESPONSE_FOREMAN,
+                          BOOT_SEQ_RESPONSE_NO_MATCH, INIT_RESP,
+                          INTERFACES_PATH, RESPONSE_DIRECTOR, RESPONSE_FOREMAN,
+                          RESPONSE_WITHOUT, WARN_NO_MATCH)
 from tests.test_base import TestBase
 
 

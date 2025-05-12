@@ -1,23 +1,11 @@
-from asynctest import patch
-from tests.config import (
-    INIT_RESP,
-    STATE_ON_RESP,
-    JOB_OK_RESP,
-    RESET_TYPE_RESP,
-    ATTRIBUTE_OK,
-    ATTRIBUTE_BAD,
-    ATTR_VALUE_OK,
-    ATTR_VALUE_BAD,
-    BIOS_REGISTRY_OK,
-    BIOS_RESPONSE_DIS,
-    BIOS_SET_OK,
-    BIOS_RESPONSE_OK,
-    BIOS_GET_ALL_OK,
-    BIOS_GET_ONE_OK,
-    BIOS_GET_ONE_BAD,
-    BIOS_SET_BAD_VALUE,
-    BIOS_SET_BAD_ATTR,
-)
+from unittest.mock import patch
+
+from tests.config import (ATTR_VALUE_BAD, ATTR_VALUE_OK, ATTRIBUTE_BAD,
+                          ATTRIBUTE_OK, BIOS_GET_ALL_OK, BIOS_GET_ONE_BAD,
+                          BIOS_GET_ONE_OK, BIOS_REGISTRY_OK, BIOS_RESPONSE_DIS,
+                          BIOS_RESPONSE_OK, BIOS_SET_BAD_ATTR,
+                          BIOS_SET_BAD_VALUE, BIOS_SET_OK, INIT_RESP,
+                          JOB_OK_RESP, RESET_TYPE_RESP, STATE_ON_RESP)
 from tests.test_base import TestBase
 
 
