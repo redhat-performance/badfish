@@ -6,7 +6,7 @@
 pytest>=6.2.5
 pytest-cov>=3.0.0
 codecov>=2.1.12
-pytest-asyncio>=0.23
+pytest-asyncio>=0.21.2
 pyyaml>=3.10
 aiohttp>=3.7.4
 tox>=4.8.0
