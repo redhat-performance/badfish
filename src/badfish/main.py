@@ -1759,7 +1759,8 @@ class Badfish:
             processors = []
             if data.get("Members"):
                 for member in data["Members"]:
-                    processors.append(member["@odata.id"])
+                    if "CPU" in member["@odata.id"]:
+                        processors.append(member["@odata.id"])
 
             proc_details = {}
             for processor in processors:
@@ -1792,6 +1793,83 @@ class Badfish:
             raise BadfishException("There was something wrong getting processor details")
 
         return proc_details
+
+    async def get_gpu_data(self):
+        _url = "%s%s/Processors" % (self.host_uri, self.system_resource)
+        _response = await self.get_request(_url)
+
+        if _response.status == 404:
+            raise BadfishException("GPU endpoint not available on host.")
+
+        try:
+            raw = await _response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+
+        except (ValueError, AttributeError):
+            raise BadfishException("There was something wrong getting GPU data")
+        return data
+
+    async def get_gpu_responses(self, data):
+        gpu_responses = []
+        gpu_endpoints = []
+        try:
+            if data.get("Members"):
+                for member in data["Members"]:
+                    if "Video" in member["@odata.id"] or "ProcAccelerator" in member["@odata.id"]:
+                        gpu_endpoints.append(member["@odata.id"])
+
+            for gpu in gpu_endpoints:
+                gpu_url = "%s%s" % (self.host_uri, gpu)
+                gpu_response = await self.get_request(gpu_url)
+                gpu_raw = await gpu_response.text("utf-8", "ignore")
+                gpu_data = json.loads(gpu_raw.strip())
+                gpu_responses.append(gpu_data)
+
+        except (ValueError, AttributeError):  # pragma: no cover
+            raise BadfishException("There was something wrong getting host GPU details")
+
+        return gpu_responses
+
+    async def get_gpu_summary(self, gpu_responses):
+        gpu_summary = {}
+        try:
+            for gpu_data in gpu_responses:
+
+                gpu_model = gpu_data["Model"]
+
+                if not gpu_summary.get(gpu_model):
+                    gpu_summary[gpu_model] = 1
+                else:
+                    gpu_summary[gpu_model] = gpu_summary[gpu_model] + 1
+
+        except (ValueError, AttributeError, KeyError):
+            raise BadfishException("There was something wrong getting GPU summary values.")
+        return gpu_summary
+
+    async def get_gpu_details(self, gpu_responses):
+        try:
+            gpu_details = {}
+            for gpu_data in gpu_responses:
+
+                gpu_name = gpu_data.get("Id")
+                fields = [
+                    "Model",
+                    "Manufacturer",
+                    "ProcessorType",
+                ]
+
+                values = {}
+                for field in fields:
+                    value = gpu_data.get(field)
+                    if value:
+                        values[field] = value
+
+                gpu_details.update({gpu_name: values})
+
+        except (ValueError, AttributeError):  # pragma: no cover
+            raise BadfishException("There was something wrong getting host GPU details values.")
+
+        return gpu_details
 
     async def get_memory_summary(self):
         _url = "%s%s" % (self.host_uri, self.system_resource)
@@ -1911,6 +1989,27 @@ class Badfish:
 
         for _processor, _properties in processor_data.items():
             self.logger.info(f"{_processor}:")
+            for _key, _value in _properties.items():
+                self.logger.info(f"    {_key}: {_value}")
+
+        return True
+
+    async def list_gpu(self):
+        data = await self.get_gpu_data()
+        gpu_responses = await self.get_gpu_responses(data)
+
+        summary = await self.get_gpu_summary(gpu_responses)
+
+        self.logger.info("GPU Summary:")
+        for _key, _value in summary.items():
+            self.logger.info(f"  Model: {_key} (Count: {_value})")
+
+        self.logger.info("Current GPU's on host:")
+
+        gpu_data = await self.get_gpu_details(gpu_responses)
+
+        for _gpu, _properties in gpu_data.items():
+            self.logger.info(f"  {_gpu}:")
             for _key, _value in _properties.items():
                 self.logger.info(f"    {_key}: {_value}")
 
@@ -2404,7 +2503,6 @@ class Badfish:
 
         await self.reboot_server()
 
-
 async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args["u"]
     _password = _args["p"]
@@ -2431,6 +2529,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     check_job = _args["check_job"]
     list_jobs = _args["ls_jobs"]
     list_interfaces = _args["ls_interfaces"]
+    list_gpu = _args["ls_gpu"]
     list_processors = _args["ls_processors"]
     list_memory = _args["ls_memory"]
     list_serial = _args["ls_serial"]
@@ -2521,6 +2620,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             await badfish.list_interfaces()
         elif list_processors:
             await badfish.list_processors()
+        elif list_gpu:
+            await badfish.list_gpu()
         elif list_memory:
             await badfish.list_memory()
         elif list_serial:
@@ -2714,6 +2815,11 @@ def main(argv=None):
     parser.add_argument(
         "--ls-processors",
         help="List Processor Summary",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--ls-gpu",
+        help="List GPU's on host",
         action="store_true",
     )
     parser.add_argument(
