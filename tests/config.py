@@ -570,7 +570,62 @@ RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
     "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- ERROR    - There was something wrong getting processor details\n"
 )
+GPU_SUMMARY_RESP = (
+    '{"GPUSummary":"AMD Instinct MI300X": 2,}'
 
+)
+GPU_SUMMARY_RESP_FAULTY = (
+    '{"GPUSummary":"Unknown: 1"}'
+)
+GPU_MEMBERS_RESP = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/ProcAccelerator.Slot.21-1"},'
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/ProcAccelerator.Slot.22-1"}]}'
+)
+GPU_MEMBERS_RESP_FAULTY = (
+    '{"Members": ['
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/GPU.Slot.21-1"},'
+    '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/GPU.Slot.22-1"}]}'
+)
+GPU_DATA_RESP1 = (
+    '{"Model": "AMD Instinct MI300X",'
+    '"Manufacturer": "Advanced Micro Devices, Inc. [AMD/ATI]",'
+    '"ProcessorType": "Accelerator",'
+    '"Id": "ProcAccelerator.Slot.21-1"}'
+)
+GPU_DATA_RESP2 = (
+    '{"Model": "AMD Instinct MI300X",'
+    '"Manufacturer": "Advanced Micro Devices, Inc. [AMD/ATI]",'
+    '"ProcessorType": "Accelerator",'
+    '"Id": "ProcAccelerator.Slot.22-1"}'
+)
+GPU_DATA_RESP_FAULTY = (
+    '{"GPU":"" }'
+)
+RESPONSE_LS_GPU = (
+    "- INFO     - GPU Summary:\n"
+    "- INFO     -   Model: AMD Instinct MI300X (Count: 2)\n"
+    "- INFO     - Current GPU's on host:\n"
+    "- INFO     -   ProcAccelerator.Slot.21-1:\n"
+    "- INFO     -     Model: AMD Instinct MI300X\n"
+    "- INFO     -     Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
+    "- INFO     -     ProcessorType: Accelerator\n"
+    "- INFO     -   ProcAccelerator.Slot.22-1:\n"
+    "- INFO     -     Model: AMD Instinct MI300X\n"
+    "- INFO     -     Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
+    "- INFO     -     ProcessorType: Accelerator\n"
+)
+
+RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = "- ERROR    - GPU endpoint not available on host.\n"
+RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting GPU summary values.\n"
+RESPONSE_LS_GPU_SUMMARY_BAD_JSON = "- ERROR    - There was something wrong getting GPU data\n"
+RESPONSE_LS_GPU_DETAILS_NOT_FOUND = "- ERROR    - There was something wrong getting host GPU details\n"
+RESPONSE_LS_GPU_DETAILS_VALUE_ERROR = (
+    "- INFO     - GPU Summary:\n"
+    "- INFO     -     Model: AMD Instinct MI300X OAM\n"
+    "- INFO     - Current GPU's on host:\n"
+    "- ERROR    - There was something wrong getting host GPU detailed values.\n"
+)
 DELL_REDFISH_ROOT_OEM_RESP = """
     {"Oem":
         {"Dell":
