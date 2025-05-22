@@ -2503,6 +2503,7 @@ class Badfish:
 
         await self.reboot_server()
 
+
 async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args["u"]
     _password = _args["p"]
