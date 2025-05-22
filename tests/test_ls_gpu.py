@@ -1,5 +1,5 @@
 import pytest
-from asynctest import patch
+from unittest.mock import patch
 
 from src.badfish.main import BadfishException
 from tests.config import (
