@@ -47,8 +47,6 @@ uefi_b04_fc640_interfaces: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrate
 uefi_r650_interfaces: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
 # Here we should be able to distinguish between 'foreman' and 'director'
 # interface layouts.
-uefi_foreman_r660_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2,NIC.PxeDevice.2-1
-uefi_director_r660_interfaces: NIC.PxeDevice.2-1,RAID.SL.3-2,NIC.PxeDevice.1-1
 uefi_r720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 uefi_r730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 uefi_740xd_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
