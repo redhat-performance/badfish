@@ -2150,7 +2150,7 @@ class Badfish:
             elif _response.status == 404:
                 self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
             else:
-                self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}")
+                self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}.")
         except BadfishException as ex:
             self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
         finally:
