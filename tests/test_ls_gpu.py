@@ -1,21 +1,9 @@
-import pytest
 from unittest.mock import patch
 
-from src.badfish.main import BadfishException
-from tests.config import (
-    INIT_RESP,
-    GPU_MEMBERS_RESP,
-    GPU_MEMBERS_RESP_FAULTY,
-    GPU_DATA_RESP1,
-    GPU_DATA_RESP2,
-    GPU_SUMMARY_RESP,
-    RESPONSE_LS_GPU,
-    GPU_SUMMARY_RESP_FAULTY,
-    RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
-    RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR,
-    RESPONSE_LS_GPU_DETAILS_NOT_FOUND,
-    RESPONSE_LS_GPU_DETAILS_VALUE_ERROR, RESPONSE_LS_GPU_SUMMARY_BAD_JSON, GPU_DATA_RESP_FAULTY,
-)
+from tests.config import (GPU_DATA_RESP1, GPU_DATA_RESP2, GPU_DATA_RESP_FAULTY,
+                          GPU_MEMBERS_RESP, GPU_SUMMARY_RESP_FAULTY, INIT_RESP,
+                          RESPONSE_LS_GPU, RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
+                          RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR)
 from tests.test_base import TestBase
 
 

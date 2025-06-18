@@ -19,16 +19,16 @@ class TestBase(AioHTTPTestCase):
     @staticmethod
     def set_mock_response(mock, status, responses, post=False, headers=None):
         mock.return_value.__aenter__.return_value.name = responses
+        status_mock = MagicMock()
         if type(status) == list:
-            status_mock = MagicMock()
             if post:
                 dup_stats = [val for val in status for _ in range(2)]
                 type(status_mock).status = PropertyMock(side_effect=dup_stats)
             else:
                 type(status_mock).status = PropertyMock(side_effect=status)
-            mock.return_value.__aenter__.return_value = status_mock
         else:
-            mock.return_value.__aenter__.return_value.status = status
+            type(status_mock).status = PropertyMock(return_value=status)
+        mock.return_value.__aenter__.return_value = status_mock
         mock.return_value.__aenter__.return_value.read = AsyncMock()
         if type(responses) == list:
             mock.return_value.__aenter__.return_value.text = AsyncMock(
