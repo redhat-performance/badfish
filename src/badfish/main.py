@@ -69,6 +69,16 @@ class Badfish:
         self.token = None
         self.vendor = None
 
+    async def __aenter__(self):
+        await self.init()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.delete_session()
+        if exc_type is not None:
+            self.logger.debug(f"Exiting context with exception: {exc_type.__name__}: {exc_val}")
+        return False
+
     async def init(self):
         self.session_uri = await self.find_session_uri()
         self.token = await self.validate_credentials()
@@ -2126,12 +2136,29 @@ class Badfish:
         return True
 
     async def delete_session(self):
-        headers = {"content-type": "application/json"}
-        _uri = "%s%s" % (self.host_uri, self.session_id)
-        _response = await self.delete_request(_uri, headers=headers)
-        if _response.status not in [200, 201]:
-            raise BadfishException(f"Failed to delete X-Auth-Token for {self.host}")
-        return
+        try:
+            try:
+                if not self.session_id:
+                    self.logger.debug("No session ID found, skipping session deletion")
+                    return
+                headers = {"content-type": "application/json"}
+                _uri = "%s%s" % (self.host_uri, self.session_id)
+                try:
+                    _response = await self.delete_request(_uri, headers=headers)
+                    if _response.status in [200, 201]:
+                        self.logger.debug(f"Session successfully deleted for {self.host}")
+                    elif _response.status == 404:
+                        self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
+                    else:
+                        self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}.")
+                except Exception as ex:
+                    self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
+            finally:
+                self.session_id = None
+                self.token = None
+        except Exception:
+            self.session_id = None
+            self.token = None
 
     async def get_scp_targets(self, op):
         uri = "%s%s" % (self.host_uri, self.manager_resource)
@@ -2564,6 +2591,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     get_nic_attribute = _args["get_nic_attribute"]
     set_nic_attribute = _args["set_nic_attribute"]
     result = True
+    badfish = None
 
     try:
         badfish = await badfish_factory(
@@ -2684,10 +2712,16 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
 
-        await badfish.delete_session()
     except BadfishException as ex:
         logger.error(ex)
         result = False
+    finally:
+        if badfish and badfish.session_id:
+            try:
+                await badfish.delete_session()
+                logger.debug(f"Session closed for host: {_host}")
+            except BadfishException as ex:
+                logger.warning(f"Failed to close session for {_host}: {ex}")
 
     if _args["host_list"]:
         logger.info("*" * 48)

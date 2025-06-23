@@ -372,12 +372,14 @@ RESPONSE_CLEAR_JOBS_LIST_EXCEPTION = (
     "- INFO     - Attempting to clear job list instead.\n"
     "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
     "- ERROR    - Job queue not cleared, there was something wrong with your request.\n"
+    "- WARNING  - Unexpected status 400 when deleting session for f01-h01-000-r630.host.io.\n"
 )
 RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
     "- WARNING  - iDRAC version installed does not support DellJobService\n"
     "- INFO     - Attempting to clear job list instead.\n"
     "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
     "- ERROR    - Failed to communicate with server.\n"
+    "- WARNING  - Failed to delete session for f01-h01-000-r630.host.io: Failed to communicate with server.\n"
 )
 RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
 
@@ -616,7 +618,7 @@ RESPONSE_LS_GPU = (
     "- INFO     -     ProcessorType: Accelerator\n"
 )
 
-RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = "- ERROR    - GPU endpoint not available on host.\n"
+RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = "- ERROR    - GPU endpoint not available on host.\n- WARNING  - Failed to delete session for f01-h01-000-r630.host.io: Failed to communicate with server.\n"
 RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting GPU summary values.\n"
 RESPONSE_LS_GPU_SUMMARY_BAD_JSON = "- ERROR    - There was something wrong getting GPU data\n"
 RESPONSE_LS_GPU_DETAILS_NOT_FOUND = "- ERROR    - There was something wrong getting host GPU details\n"
