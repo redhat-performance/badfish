@@ -2136,24 +2136,28 @@ class Badfish:
         return True
 
     async def delete_session(self):
-        if not self.session_id:
-            self.logger.debug("No session ID found, skipping session deletion")
-            return
-        
-        headers = {"content-type": "application/json"}
-        _uri = "%s%s" % (self.host_uri, self.session_id)
-        
         try:
-            _response = await self.delete_request(_uri, headers=headers)
-            if _response.status in [200, 201]:
-                self.logger.debug(f"Session successfully deleted for {self.host}")
-            elif _response.status == 404:
-                self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
-            else:
-                self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}.")
-        except BadfishException as ex:
-            self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
-        finally:
+            try:
+                if not self.session_id:
+                    self.logger.debug("No session ID found, skipping session deletion")
+                    return
+                headers = {"content-type": "application/json"}
+                _uri = "%s%s" % (self.host_uri, self.session_id)
+                try:
+                    _response = await self.delete_request(_uri, headers=headers)
+                    if _response.status in [200, 201]:
+                        self.logger.debug(f"Session successfully deleted for {self.host}")
+                    elif _response.status == 404:
+                        self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
+                    else:
+                        self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}.")
+                except Exception as ex:
+                    self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
+            finally:
+                self.session_id = None
+                self.token = None
+        except Exception:
+            # Defensive: ensure no exception escapes
             self.session_id = None
             self.token = None
 
