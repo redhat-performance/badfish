@@ -2157,7 +2157,6 @@ class Badfish:
                 self.session_id = None
                 self.token = None
         except Exception:
-            # Defensive: ensure no exception escapes
             self.session_id = None
             self.token = None
 

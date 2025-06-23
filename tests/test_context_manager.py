@@ -327,4 +327,389 @@ class TestDeleteSession:
             
             # Verify session_id and token are still cleared
             assert badfish_instance.session_id is None
-            assert badfish_instance.token is None 
+            assert badfish_instance.token is None
+
+    @pytest.mark.asyncio
+    async def test_delete_session_outer_exception_handler(self):
+        """Test the outer exception handler that ensures cleanup even for unexpected exceptions."""
+        logger = MockLogger()
+        badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
+        badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
+        badfish_instance.token = "test_token"
+        
+        # Mock the logger to raise an exception when debug is called
+        # This will trigger the outer exception handler
+        with patch.object(logger, 'debug', side_effect=RuntimeError("Logger error")):
+            with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+                # Mock successful response
+                mock_response = MagicMock()
+                mock_response.status = 200
+                mock_delete_request.return_value = mock_response
+                
+                # The method should not raise the exception due to outer exception handler
+                await badfish_instance.delete_session()
+                
+                # Verify session_id and token are still cleared despite the logger exception
+                assert badfish_instance.session_id is None
+                assert badfish_instance.token is None
+                
+                # Verify delete_request was called
+                mock_delete_request.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_delete_session_no_session_id_outer_exception(self):
+        """Test outer exception handler when session_id is None and logger fails."""
+        logger = MockLogger()
+        badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
+        badfish_instance.session_id = None
+        badfish_instance.token = "test_token"
+        
+        # Mock the logger to raise an exception when debug is called
+        with patch.object(logger, 'debug', side_effect=RuntimeError("Logger error")):
+            with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+                # The method should not raise the exception due to outer exception handler
+                await badfish_instance.delete_session()
+                
+                # Verify session_id and token are still cleared despite the logger exception
+                assert badfish_instance.session_id is None
+                assert badfish_instance.token is None
+                
+                # Verify delete_request was not called (since session_id was None)
+                mock_delete_request.assert_not_called()
+
+
+class TestExecuteBadfishSessionCleanup:
+    """Test cases for session cleanup in execute_badfish function."""
+
+    @pytest.mark.asyncio
+    async def test_execute_badfish_session_cleanup_success(self):
+        """Test successful session cleanup in execute_badfish."""
+        from src.badfish.main import execute_badfish
+        
+        logger = MockLogger()
+        args = {
+            "u": MOCK_USERNAME,
+            "p": MOCK_PASSWORD,
+            "t": None,
+            "i": None,
+            "host_list": None,
+            "output": None,
+            "force": False,
+            "pxe": False,
+            "boot_to": None,
+            "boot_to_type": None,
+            "boot_to_mac": None,
+            "reboot_only": False,
+            "power_state": False,
+            "power_on": False,
+            "power_off": False,
+            "power_cycle": False,
+            "get_power_consumed": False,
+            "racreset": False,
+            "bmc_reset": False,
+            "factory_reset": False,
+            "check_boot": False,
+            "toggle_boot_device": None,
+            "firmware_inventory": False,
+            "clear_jobs": False,
+            "check_job": None,
+            "ls_jobs": False,
+            "ls_interfaces": False,
+            "ls_processors": False,
+            "ls_gpu": False,
+            "ls_memory": False,
+            "ls_serial": False,
+            "check_virtual_media": False,
+            "unmount_virtual_media": False,
+            "mount_virtual_media": None,
+            "boot_to_virtual_media": False,
+            "check_remote_image": False,
+            "boot_remote_image": None,
+            "detach_remote_image": False,
+            "get_sriov": False,
+            "enable_sriov": False,
+            "disable_sriov": False,
+            "set_bios_attribute": False,
+            "get_bios_attribute": False,
+            "attribute": "",
+            "value": "",
+            "set_bios_password": False,
+            "remove_bios_password": False,
+            "new_password": "",
+            "old_password": "",
+            "screenshot": False,
+            "retries": MOCK_RETRIES,
+            "get_scp_targets": None,
+            "scp_targets": "ALL",
+            "scp_include_read_only": False,
+            "export_scp": None,
+            "import_scp": None,
+            "get_nic_fqdds": False,
+            "get_nic_attribute": None,
+            "set_nic_attribute": None,
+        }
+        
+        with patch('src.badfish.main.badfish_factory') as mock_factory:
+            # Mock badfish instance
+            mock_badfish = MagicMock()
+            mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
+            mock_factory.return_value = mock_badfish
+            
+            # Mock successful operation
+            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+                host, result = await execute_badfish(MOCK_HOST, args, logger)
+                
+                assert host == MOCK_HOST
+                assert result is True
+                mock_delete.assert_called_once()
+                assert any("Session closed for host" in call for call in logger.debug_calls)
+
+    @pytest.mark.asyncio
+    async def test_execute_badfish_session_cleanup_failure(self):
+        """Test session cleanup failure in execute_badfish."""
+        from src.badfish.main import execute_badfish
+        
+        logger = MockLogger()
+        args = {
+            "u": MOCK_USERNAME,
+            "p": MOCK_PASSWORD,
+            "t": None,
+            "i": None,
+            "host_list": None,
+            "output": None,
+            "force": False,
+            "pxe": False,
+            "boot_to": None,
+            "boot_to_type": None,
+            "boot_to_mac": None,
+            "reboot_only": False,
+            "power_state": False,
+            "power_on": False,
+            "power_off": False,
+            "power_cycle": False,
+            "get_power_consumed": False,
+            "racreset": False,
+            "bmc_reset": False,
+            "factory_reset": False,
+            "check_boot": False,
+            "toggle_boot_device": None,
+            "firmware_inventory": False,
+            "clear_jobs": False,
+            "check_job": None,
+            "ls_jobs": False,
+            "ls_interfaces": False,
+            "ls_processors": False,
+            "ls_gpu": False,
+            "ls_memory": False,
+            "ls_serial": False,
+            "check_virtual_media": False,
+            "unmount_virtual_media": False,
+            "mount_virtual_media": None,
+            "boot_to_virtual_media": False,
+            "check_remote_image": False,
+            "boot_remote_image": None,
+            "detach_remote_image": False,
+            "get_sriov": False,
+            "enable_sriov": False,
+            "disable_sriov": False,
+            "set_bios_attribute": False,
+            "get_bios_attribute": False,
+            "attribute": "",
+            "value": "",
+            "set_bios_password": False,
+            "remove_bios_password": False,
+            "new_password": "",
+            "old_password": "",
+            "screenshot": False,
+            "retries": MOCK_RETRIES,
+            "get_scp_targets": None,
+            "scp_targets": "ALL",
+            "scp_include_read_only": False,
+            "export_scp": None,
+            "import_scp": None,
+            "get_nic_fqdds": False,
+            "get_nic_attribute": None,
+            "set_nic_attribute": None,
+        }
+        
+        with patch('src.badfish.main.badfish_factory') as mock_factory:
+            # Mock badfish instance
+            mock_badfish = MagicMock()
+            mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
+            mock_factory.return_value = mock_badfish
+            
+            # Mock delete_session to raise an exception
+            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+                mock_delete.side_effect = BadfishException("Session cleanup failed")
+                
+                host, result = await execute_badfish(MOCK_HOST, args, logger)
+                
+                assert host == MOCK_HOST
+                assert result is True
+                mock_delete.assert_called_once()
+                # Verify warning message was logged
+                assert any("Failed to close session for" in call for call in logger.warning_calls)
+                assert any("Session cleanup failed" in call for call in logger.warning_calls)
+
+    @pytest.mark.asyncio
+    async def test_execute_badfish_no_session_cleanup(self):
+        """Test execute_badfish when no session exists to clean up."""
+        from src.badfish.main import execute_badfish
+        
+        logger = MockLogger()
+        args = {
+            "u": MOCK_USERNAME,
+            "p": MOCK_PASSWORD,
+            "t": None,
+            "i": None,
+            "host_list": None,
+            "output": None,
+            "force": False,
+            "pxe": False,
+            "boot_to": None,
+            "boot_to_type": None,
+            "boot_to_mac": None,
+            "reboot_only": False,
+            "power_state": False,
+            "power_on": False,
+            "power_off": False,
+            "power_cycle": False,
+            "get_power_consumed": False,
+            "racreset": False,
+            "bmc_reset": False,
+            "factory_reset": False,
+            "check_boot": False,
+            "toggle_boot_device": None,
+            "firmware_inventory": False,
+            "clear_jobs": False,
+            "check_job": None,
+            "ls_jobs": False,
+            "ls_interfaces": False,
+            "ls_processors": False,
+            "ls_gpu": False,
+            "ls_memory": False,
+            "ls_serial": False,
+            "check_virtual_media": False,
+            "unmount_virtual_media": False,
+            "mount_virtual_media": None,
+            "boot_to_virtual_media": False,
+            "check_remote_image": False,
+            "boot_remote_image": None,
+            "detach_remote_image": False,
+            "get_sriov": False,
+            "enable_sriov": False,
+            "disable_sriov": False,
+            "set_bios_attribute": False,
+            "get_bios_attribute": False,
+            "attribute": "",
+            "value": "",
+            "set_bios_password": False,
+            "remove_bios_password": False,
+            "new_password": "",
+            "old_password": "",
+            "screenshot": False,
+            "retries": MOCK_RETRIES,
+            "get_scp_targets": None,
+            "scp_targets": "ALL",
+            "scp_include_read_only": False,
+            "export_scp": None,
+            "import_scp": None,
+            "get_nic_fqdds": False,
+            "get_nic_attribute": None,
+            "set_nic_attribute": None,
+        }
+        
+        with patch('src.badfish.main.badfish_factory') as mock_factory:
+            # Mock badfish instance with no session_id
+            mock_badfish = MagicMock()
+            mock_badfish.session_id = None
+            mock_factory.return_value = mock_badfish
+            
+            # Mock delete_session
+            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+                host, result = await execute_badfish(MOCK_HOST, args, logger)
+                
+                assert host == MOCK_HOST
+                assert result is True
+                # delete_session should not be called when session_id is None
+                mock_delete.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_execute_badfish_no_badfish_instance(self):
+        """Test execute_badfish when badfish instance is None."""
+        from src.badfish.main import execute_badfish
+        
+        logger = MockLogger()
+        args = {
+            "u": MOCK_USERNAME,
+            "p": MOCK_PASSWORD,
+            "t": None,
+            "i": None,
+            "host_list": None,
+            "output": None,
+            "force": False,
+            "pxe": False,
+            "boot_to": None,
+            "boot_to_type": None,
+            "boot_to_mac": None,
+            "reboot_only": False,
+            "power_state": False,
+            "power_on": False,
+            "power_off": False,
+            "power_cycle": False,
+            "get_power_consumed": False,
+            "racreset": False,
+            "bmc_reset": False,
+            "factory_reset": False,
+            "check_boot": False,
+            "toggle_boot_device": None,
+            "firmware_inventory": False,
+            "clear_jobs": False,
+            "check_job": None,
+            "ls_jobs": False,
+            "ls_interfaces": False,
+            "ls_processors": False,
+            "ls_gpu": False,
+            "ls_memory": False,
+            "ls_serial": False,
+            "check_virtual_media": False,
+            "unmount_virtual_media": False,
+            "mount_virtual_media": None,
+            "boot_to_virtual_media": False,
+            "check_remote_image": False,
+            "boot_remote_image": None,
+            "detach_remote_image": False,
+            "get_sriov": False,
+            "enable_sriov": False,
+            "disable_sriov": False,
+            "set_bios_attribute": False,
+            "get_bios_attribute": False,
+            "attribute": "",
+            "value": "",
+            "set_bios_password": False,
+            "remove_bios_password": False,
+            "new_password": "",
+            "old_password": "",
+            "screenshot": False,
+            "retries": MOCK_RETRIES,
+            "get_scp_targets": None,
+            "scp_targets": "ALL",
+            "scp_include_read_only": False,
+            "export_scp": None,
+            "import_scp": None,
+            "get_nic_fqdds": False,
+            "get_nic_attribute": None,
+            "set_nic_attribute": None,
+        }
+        
+        with patch('src.badfish.main.badfish_factory') as mock_factory:
+            # Mock badfish_factory to raise an exception
+            mock_factory.side_effect = BadfishException("Connection failed")
+            
+            host, result = await execute_badfish(MOCK_HOST, args, logger)
+            
+            assert host == MOCK_HOST
+            assert result is False
+            # No session cleanup should happen when badfish is None
+            assert not any("Session closed for host" in call for call in logger.debug_calls)
+            assert not any("Failed to close session for" in call for call in logger.warning_calls) 
