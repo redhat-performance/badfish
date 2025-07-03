@@ -97,7 +97,11 @@ RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
-RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
+RESPONSE_BOOT_TO_CUSTOM = (
+    f"- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
+    "- INFO     - Command passed to set BIOS attribute pending values.\n"
+)
+RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 503.\n"
@@ -216,7 +220,7 @@ RESPONSE_CHANGE_BOOT_UEFI = (
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
-RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
+RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
