@@ -211,26 +211,34 @@ class Badfish:
         definitions = await self.read_yaml(_interfaces_path)
 
         host_name_split = self.host.split(".")[0].split("-")
-        host_model = host_name_split[-1]
-        rack = host_name_split[1]
-        uloc = host_name_split[2]
+        host_model = None
+        rack = None
+        uloc = None
+        host_blade = None
+        prefix = [host_type]
+        if len(host_name_split) > 1:
+            host_model = host_name_split[-1]
+            rack = host_name_split[1]
+            uloc = host_name_split[2]
+            prefix.extend([rack, uloc])
 
-        host_blade = "000"
         if len(host_name_split) > 4:
             host_blade = host_name_split[3]
+            prefix.append(host_blade)
 
-        prefix = [host_type, rack, uloc, host_blade]
-
-        key = f"{host_type}_{host_blade}_{host_model}_interfaces"
-        interfaces_string = definitions.get(key)
-        if interfaces_string:
-            return interfaces_string.split(",")
+        if host_blade:
+            key = f"{host_type}_{host_blade}_{host_model}"
+            interfaces_string = definitions.get(key)
+            if interfaces_string:
+                return interfaces_string.split(",")
 
         len_prefix = len(prefix)
         key = "None"
         for _ in range(len_prefix):
             prefix_string = "_".join(prefix)
-            key = "%s_%s_interfaces" % (prefix_string, host_model)
+            key = prefix_string
+            if host_model:
+                key = "_".join([prefix_string, host_model])
             interfaces_string = definitions.get(key)
             if interfaces_string:
                 return interfaces_string.split(",")
@@ -451,7 +459,10 @@ class Badfish:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for host_type in host_types:
                 match = True
-                interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                try:
+                    interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                except BadfishException as e:
+                    continue
 
                 for device in sorted(self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]):
                     if device["Name"] == interfaces[device["Index"]]:

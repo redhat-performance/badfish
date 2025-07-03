@@ -4,86 +4,88 @@
 # Also see /opt/quads/quads/config.py SUPPORTED list if adding system types.
 #
 ---
-director_b01_fc640_interfaces: NIC.ChassisSlot.8-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_b02_fc640_interfaces: NIC.ChassisSlot.4-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_b03_fc640_interfaces: NIC.ChassisSlot.6-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_b04_fc640_interfaces: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_r630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
-director_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_r650_interfaces: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_r660_interfaces: NIC.PxeDevice.2-1,RAID.SL.3-2,NIC.PxeDevice.1-1
-director_r720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-director_r730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-director_740xd_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
-director_r740xd_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-director_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-director_7425_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
-director_7525_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
-director_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-foreman_b01_fc640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.8-1-1
-foreman_b02_fc640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.4-1-1
-foreman_b03_fc640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.6-1-1
-foreman_b04_fc640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.2-1-1
-foreman_r630_interfaces: NIC.Slot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
-foreman_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
-foreman_r650_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-1-1
-foreman_r660_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2,NIC.PxeDevice.2-1
-foreman_r720xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.4-2-1
-foreman_r730xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
-foreman_740xd_interfaces: NIC.Integrated.1-3-1,NIC.Integrated.1-1-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
-foreman_r740xd_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-foreman_r750_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
-foreman_7425_interfaces: NIC.Integrated.1-3-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,HardDisk.List.1-1
-foreman_7525_interfaces: NIC.Embedded.1-1-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
-foreman_r930_interfaces: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+director_b01_fc640: NIC.ChassisSlot.8-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_b02_fc640: NIC.ChassisSlot.4-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_b03_fc640: NIC.ChassisSlot.6-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_b04_fc640: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_r630: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
+director_r640: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_r650: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_r660: NIC.PxeDevice.2-1,RAID.SL.3-2,NIC.PxeDevice.1-1
+director_r720xd: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+director_r730xd: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+director_740xd: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+director_r740xd: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+director_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+director_7425: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+director_7525: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+director_r930: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+foreman_b01_fc640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.8-1-1
+foreman_b02_fc640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.4-1-1
+foreman_b03_fc640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.6-1-1
+foreman_b04_fc640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.ChassisSlot.2-1-1
+foreman_r630: NIC.Slot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+foreman_r640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+foreman_r650: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-1-1
+foreman_r660: NIC.PxeDevice.1-1,RAID.SL.3-2,NIC.PxeDevice.2-1
+foreman_r720xd: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Slot.4-2-1
+foreman_r730xd: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+foreman_740xd: NIC.Integrated.1-3-1,NIC.Integrated.1-1-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
+foreman_r740xd: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+foreman_r750: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
+foreman_7425: NIC.Integrated.1-3-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,HardDisk.List.1-1
+foreman_7525: NIC.Embedded.1-1-1,NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+foreman_r930: NIC.Integrated.1-3-1,HardDisk.List.1-1,NIC.Integrated.1-2-1
 # These are for EFI
 # Expanding rest of models as a workaround for issue #239
-uefi_r630_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
-uefi_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-1-1
-uefi_b01_fc640_interfaces: NIC.ChassisSlot.8-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-uefi_b02_fc640_interfaces: NIC.ChassisSlot.4-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-uefi_b03_fc640_interfaces: NIC.ChassisSlot.6-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-uefi_b04_fc640_interfaces: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-uefi_r650_interfaces: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_r630: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
+uefi_r640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-1-1
+uefi_b01_fc640: NIC.ChassisSlot.8-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_b02_fc640: NIC.ChassisSlot.4-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_b03_fc640: NIC.ChassisSlot.6-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_b04_fc640: NIC.ChassisSlot.2-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_r650: NIC.Slot.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
 # Here we should be able to distinguish between 'foreman' and 'director'
 # interface layouts.
-uefi_r720xd_interfaces: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-uefi_r730xd_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-uefi_740xd_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
-uefi_r740xd_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-uefi_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-uefi_7425_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
-uefi_7525_interfaces: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
-uefi_r930_interfaces: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
-uefi_mx750c_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2
+uefi_r720xd: NIC.Slot.4-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_r730xd: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_740xd: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+uefi_r740xd: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+uefi_7425: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.7-2-1,NIC.Slot.7-1-1,NIC.Integrated.1-3-1,HardDisk.List.1-1
+uefi_7525: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+uefi_r930: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
+uefi_mx750c: NIC.PxeDevice.1-1,RAID.SL.3-2
 
 # To understand how custom overrides and hierarchy work please see https://github.com/redhat-performance/badfish#host-type-overrides
 # PerfLab Entries
-foreman_cc37_r750_interfaces: NIC.Embedded.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
-director_cc37_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
-foreman_bb37_r750_interfaces: NIC.Embedded.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
-director_bb37_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
-foreman_r760_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2
-director_r760_interfaces: RAID.SL.3-2,NIC.PxeDevice.1-1
-foreman_mx750c_interfaces: NIC.PxeDevice.1-1,RAID.SL.3-2
-director_mx750c_interfaces: RAID.SL.3-2,NIC.PxeDevice.1-1
+foreman_cc37_r750: NIC.Embedded.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
+director_cc37_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
+foreman_bb37_r750: NIC.Embedded.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
+director_bb37_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
+foreman_r760: NIC.PxeDevice.1-1,RAID.SL.3-2
+director_r760: RAID.SL.3-2,NIC.PxeDevice.1-1
+foreman_mx750c: NIC.PxeDevice.1-1,RAID.SL.3-2
+director_mx750c: RAID.SL.3-2,NIC.PxeDevice.1-1
 
 # Custom Rack F04
-director_f18_r640_interfaces: NIC.Slot.3-2,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
-foreman_f18_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
+director_f18_r640: NIC.Slot.3-2,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.2-1,NIC.Slot.2-2,NIC.Integrated.1-1-1
+foreman_f18_r640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1,NIC.Slot.3-2,NIC.Slot.2-1,NIC.Slot.2-2
 
 # Custom Rack E27 and E28 for Dell R750
-director_e27_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
-director_e28_r750_interfaces: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
-foreman_e27_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
-foreman_e28_r750_interfaces: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
-uefi_e27_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
-uefi_e28_r750_interfaces: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
+director_e27_r750: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+director_e28_r750: NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,NIC.Embedded.1-1-1,HardDisk.List.1-1
+foreman_e27_r750: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+foreman_e28_r750: NIC.Embedded.1-1-1,NIC.Slot.3-1-1,NIC.Slot.3-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2-1,HardDisk.List.1-1
+uefi_e27_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
+uefi_e28_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
 
 ## Custom F04 specific overrides (examples)
 ## h34 (should resemble other r640 hosts)
-# director_f04_h34_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-# foreman_f04_h34_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+# director_f04_h34_r640: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+# foreman_f04_h34_r640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
 #  h35 (should resemble other r640 hosts)
-# director_f04_h35_r640_interfaces: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
-# foreman_f04_h35_r640_interfaces: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+# director_f04_h35_r640: NIC.Slot.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-1-1
+# foreman_f04_h35_r640: NIC.Integrated.1-1-1,HardDisk.List.1-1,NIC.Slot.1-2-1
+
+custom: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Slot.2-1-1
