@@ -477,14 +477,15 @@ class Badfish:
 
     async def find_session_uri(self):
         _response = await self.get_request(self.root_uri, _get_token=True)
-        raw = await _response.text("utf-8", "ignore")
-        data = json.loads(raw.strip())
 
         status = _response.status
         if status == 401:
             raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
         if status not in [200, 201]:
             raise BadfishException(f"Failed to communicate with {self.host}")
+
+        raw = await _response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
 
         redfish_version = int(data["RedfishVersion"].replace(".", ""))
         session_uri = None
