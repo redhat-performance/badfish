@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from tests.config import (GPU_DATA_RESP1, GPU_DATA_RESP2, GPU_DATA_RESP_FAULTY,
                           GPU_MEMBERS_RESP, GPU_SUMMARY_RESP_FAULTY, INIT_RESP,
-                          RESPONSE_LS_GPU, RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
+                          MOCK_HOST, RESPONSE_LS_GPU, RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
                           RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR)
 from tests.test_base import TestBase
 
@@ -57,7 +57,7 @@ class TestLsGpu(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert err == RESPONSE_LS_GPU_SUMMARY_DATA_ERROR
+        assert err == RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR + f"- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

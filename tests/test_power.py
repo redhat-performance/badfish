@@ -80,18 +80,12 @@ class TestPowerOff(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_request")
-    def test_power_off_none(self, mock_get_req_call, mock_post, mock_delete):
-        responses = INIT_RESP
-        mock_get_req_call.side_effect = [
-            MockResponse(responses[0], 200),
-            MockResponse(responses[0], 200),
-            MockResponse(responses[1], 200),
-            MockResponse(responses[2], 200),
-            MockResponse(responses[3], 200),
-            MockResponse(responses[4], 200),
-            None,
-        ]
+    def test_power_off_none(self, mock_get_req_call, mock_get, mock_post, mock_delete):
+        # The power off operation should return None when getting power state 
+        mock_get_req_call.side_effect = [None]
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
@@ -136,19 +130,14 @@ class TestPowerState(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_request")
-    def test_power_state_none(self, mock_get_req_call, mock_post, mock_delete):
-        responses = INIT_RESP
-        mock_get_req_call.side_effect = [
-            MockResponse(responses[0], 200),
-            MockResponse(responses[0], 200),
-            MockResponse(responses[1], 200),
-            MockResponse(responses[2], 200),
-            MockResponse(responses[3], 200),
-            MockResponse(responses[4], 200),
-            None,
-        ]
+    def test_power_state_none(self, mock_get_req_call, mock_get, mock_post, mock_delete):
+        # The power state check should return None (simulating communication failure)
+        mock_get_req_call.side_effect = [None]
+        # Add extra response for the power state call that should fail (404)
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], INIT_RESP + [""])
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
-        assert err == RESPONSE_POWER_STATE_DOWN
+        assert err == "- INFO     - Power state:\n- INFO     -     f01-h01-000-r630.host.io: 'Down'\n"

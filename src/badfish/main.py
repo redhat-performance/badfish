@@ -20,7 +20,7 @@ from badfish.helpers.async_lru import alru_cache
 from badfish.helpers.logger import (
     BadfishLogger,
 )
-from badfish.helpers.http_client import BadfishHTTPClient
+from badfish.helpers.http_client import HTTPClient
 
 from logging import (
     DEBUG,
@@ -61,7 +61,7 @@ class Badfish:
         self.loop = _loop
         if not self.loop:
             self.loop = asyncio.get_event_loop()
-        self.http_client = BadfishHTTPClient(_host, _username, _password, _logger, _retries)
+        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries)
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None
@@ -188,7 +188,7 @@ class Badfish:
     async def get_bios_attributes_registry(self):
         self.logger.debug("Getting BIOS attribute registry.")
         _uri = "%s%s/Bios/BiosRegistry" % (self.host_uri, self.system_resource)
-        data = await self.http_client.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
         if not data:
             self.logger.error("Operation not supported by vendor.")
@@ -213,7 +213,7 @@ class Badfish:
     async def get_bios_attributes(self):
         self.logger.debug("Getting BIOS attributes.")
         _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
-        data = await self.http_client.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
         if not data:
             self.logger.error("Operation not supported by vendor.")
@@ -280,8 +280,11 @@ class Badfish:
             _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
             _response = await self.get_request(_uri)
 
-            if _response.status == 404:
-                self.logger.debug(_response.text)
+            if _response and _response.status == 404:
+                self.logger.debug(await _response.text())
+                raise BadfishException("Boot order modification is not supported by this host.")
+                
+            if not _response:
                 raise BadfishException("Boot order modification is not supported by this host.")
 
             raw = await _response.text("utf-8", "ignore")
@@ -380,11 +383,13 @@ class Badfish:
         return None
 
     async def find_session_uri(self):
-        data = await self.http_client.get_request(self.root_uri, _get_token=True)
+        response = await self.http_client.get_request(self.root_uri, _get_token=True)
         
-        if not data:
+        if not response:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
         redfish_version = int(data["RedfishVersion"].replace(".", ""))
         session_uri = None
         if redfish_version >= 160:
@@ -393,8 +398,8 @@ class Badfish:
             session_uri = "/redfish/v1/Sessions"
 
         _uri = "%s%s" % (self.host_uri, session_uri)
-        check_data = await self.http_client.get_request(_uri, _continue=True, _get_token=True)
-        if check_data is None:
+        check_response = await self.http_client.get_request(_uri, _continue=True, _get_token=True)
+        if check_response is None:
             session_uri = "/redfish/v1/SessionService/Sessions"
 
         return session_uri
@@ -404,26 +409,29 @@ class Badfish:
         headers = {"content-type": "application/json"}
         _uri = "%s%s" % (self.host_uri, self.session_uri)
         
-        response_data, status, response_headers = await self.http_client.post_request(_uri, payload, headers, _get_token=True)
-        
+        _response = await self.http_client.post_request(_uri, payload, headers, _get_token=True)
+
+        await _response.text("utf-8", "ignore")
+
+        status = _response.status
         if status == 401:
             raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
         if status not in [200, 201]:
             raise BadfishException(f"Failed to communicate with {self.host}")
-        
+
         # Extract token from response headers
-        token = response_headers.get("X-Auth-Token") if response_headers else None
+        token = _response.headers.get("X-Auth-Token")
         if token:
             self.token = token
             self.http_client.token = token
             # Store session info for cleanup
-            self.session_id = response_headers.get("Location")
+            self.session_id = _response.headers.get("Location")
         
         return token
 
     async def get_interfaces_endpoints(self):
         _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
-        data = await self.http_client.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
         
         if not data:
             raise BadfishException("EthernetInterfaces entry point not supported by this host.")
@@ -439,7 +447,7 @@ class Badfish:
 
     async def get_interface(self, endpoint):
         _uri = "%s%s" % (self.host_uri, endpoint)
-        data = await self.http_client.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
         
         if not data:
             raise BadfishException("EthernetInterface entry point not supported by this host.")
@@ -447,17 +455,22 @@ class Badfish:
         return data
 
     async def find_systems_resource(self):
-        data = await self.http_client.get_request(self.root_uri)
-        if not data:
+        response = await self.http_client.get_request(self.root_uri)
+        if not response:
             raise BadfishException("Failed to communicate with server.")
             
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
         if "Systems" not in data:
             raise BadfishException("Systems resource not found")
         
         systems = data["Systems"]["@odata.id"]
-        systems_data = await self.http_client.get_request(self.host_uri + systems)
-        if not systems_data:
+        systems_response = await self.http_client.get_request(self.host_uri + systems)
+        if not systems_response:
             raise BadfishException("Authorization Error: verify credentials.")
+        
+        raw = await systems_response.text("utf-8", "ignore")  
+        systems_data = json.loads(raw.strip())
 
         if systems_data.get("Members"):
             for member in systems_data["Members"]:
@@ -468,17 +481,23 @@ class Badfish:
             raise BadfishException("ComputerSystem's Members array is either empty or missing")
 
     async def find_managers_resource(self):
-        data = await self.http_client.get_request(self.root_uri)
-        if not data:
+        response = await self.http_client.get_request(self.root_uri)
+        if not response:
             raise BadfishException("Failed to communicate with server.")
 
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
         self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
 
         if "Managers" not in data:
             raise BadfishException("Managers resource not found")
         
         managers = data["Managers"]["@odata.id"]
-        managers_data = await self.http_client.get_request(self.host_uri + managers)
+        managers_response = await self.http_client.get_request(self.host_uri + managers)
+        managers_data = None
+        if managers_response:
+            raw = await managers_response.text("utf-8", "ignore")
+            managers_data = json.loads(raw.strip())
         if managers_data and managers_data.get("Members"):
             for member in managers_data["Members"]:
                 managers_service = member["@odata.id"]
@@ -487,11 +506,24 @@ class Badfish:
         else:
             raise BadfishException("Manager's Members array is either empty or missing")
 
+    # HTTP client wrapper methods
+    async def get_request(self, uri, _continue=False, _get_token=False):
+        return await self.http_client.get_request(uri, _continue, _get_token)
+    
+    async def post_request(self, uri, payload, headers, _get_token=False):
+        return await self.http_client.post_request(uri, payload, headers, _get_token)
+    
+    async def patch_request(self, uri, payload, headers, _continue=False):
+        return await self.http_client.patch_request(uri, payload, headers, _continue)
+    
+    async def delete_request(self, uri, headers):
+        return await self.http_client.delete_request(uri, headers)
+
     async def get_power_state(self):
         _uri = "%s%s" % (self.host_uri, self.system_resource)
         self.logger.debug("url: %s" % _uri)
 
-        data = await self.http_client.get_request(_uri, _continue=True)
+        data = await self.http_client.get_json(_uri, _continue=True)
         if not data:
             self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
@@ -796,15 +828,16 @@ class Badfish:
 
             if status_code == 200:
                 await asyncio.sleep(10)
+                # Only try to access job data if we got a successful response
+                if isinstance(data, dict) and 'Id' in data:
+                    self.logger.info(f"JobID: {data[u'Id']}")
+                    self.logger.info(f"Name: {data[u'Name']}")
+                    self.logger.info(f"Message: {data[u'Message']}")
+                    self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
             else:
                 self.logger.error(f"Command failed to check job status, return code is {status_code}")
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
-
-            self.logger.info(f"JobID: {data[u'Id']}")
-            self.logger.info(f"Name: {data[u'Name']}")
-            self.logger.info(f"Message: {data[u'Message']}")
-            self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
         else:
             self.logger.error("Command failed to check job status")
             return False
@@ -812,18 +845,21 @@ class Badfish:
     async def check_job_status(self, job_id):
         for count in range(self.retries):
             _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
-            self.get_request.cache_clear()
+            self.http_client.get_request.cache_clear()
             _response = await self.get_request(_url)
 
             status_code = _response.status
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
-            if status_code == 200:
-                pass
-            else:
+            if status_code != 200:
                 self.logger.error(f"Command failed to check job status, return code is {status_code}")
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
+            
+            if "Message" not in data:
+                self.logger.warning("Job status response missing Message field")
+                return False
+            
             if "Fail" in data["Message"] or "fail" in data["Message"]:
                 self.logger.debug(f"\n{job_id} job failed.")
                 return False
@@ -2096,7 +2132,7 @@ class Badfish:
         while True:
             ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_raw(uri)
+            response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "SystemConfiguration" in data:
@@ -2164,7 +2200,7 @@ class Badfish:
         while True:
             ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_raw(uri)
+            response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if response.status in [200, 202]:

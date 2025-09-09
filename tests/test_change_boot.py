@@ -9,6 +9,7 @@ from tests.config import (BAD_DEVICE_NAME, BIOS_REGISTRY_OK, BLANK_RESP,
                           INIT_RESP, INTERFACES_PATH, JOB_OK_RESP,
                           PXE_DEV_RESP, RESET_TYPE_RESP,
                           RESPONSE_CHANGE_BAD_TYPE, RESPONSE_CHANGE_BOOT,
+                          RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS,
                           RESPONSE_CHANGE_BOOT_INCORRECT_PATH,
                           RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES,
                           RESPONSE_CHANGE_BOOT_PATCH_ERROR,
@@ -213,7 +214,7 @@ class TestChangeBoot(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = ["-i", INTERFACES_PATH, self.option_arg, "director"]
         _, err = self.badfish_call()
-        assert err == RESPONSE_CHANGE_NO_BOOT_PREFIX + RESPONSE_CHANGE_BOOT
+        assert err == RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

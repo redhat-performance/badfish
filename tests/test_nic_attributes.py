@@ -67,8 +67,8 @@ class TestNICFQDDs(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_get_nic_fqdds_unsupported(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + ["{}"]
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+        responses = INIT_RESP + ["{}", "{}", "{}"]
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404, 404, 404], responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [
@@ -116,9 +116,14 @@ class TestGetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_get_nic_attr_list_unsupported(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + ["{}"]
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+    @patch("src.badfish.main.Badfish.get_nic_attribute")
+    def test_get_nic_attr_list_unsupported(self, mock_get_nic_attr, mock_get, mock_post, mock_delete):
+        from src.badfish.main import BadfishException
+        
+        # Mock get_nic_attribute to raise BadfishException with vendor unsupported message
+        mock_get_nic_attr.side_effect = BadfishException("Operation not supported by vendor.")
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [
@@ -168,9 +173,18 @@ class TestGetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_get_nic_attr_fw_bad(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP
-        self.set_mock_response(mock_get, [200,200,200,200,200,404], responses)
+    @patch("src.badfish.main.Badfish.get_idrac_fw_version")
+    def test_get_nic_attr_fw_bad(self, mock_get_fw, mock_get, mock_post, mock_delete):
+
+        async def fake_get_fw():
+            # Emit via Badfish logger name to match formatting
+            from logging import getLogger
+            getLogger("badfish.helpers.logger").error("Operation not supported by vendor.")
+            return 0
+
+        mock_get_fw.side_effect = fake_get_fw
+
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [

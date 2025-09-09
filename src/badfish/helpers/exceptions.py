@@ -1,0 +1,2 @@
+class BadfishException(Exception):
+    pass

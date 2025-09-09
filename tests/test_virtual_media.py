@@ -19,7 +19,9 @@ from tests.config import (BLANK_RESP, BOOT_MODE_RESP, BOOT_SEQ_RESP,
                           VMEDIA_MOUNT_ALREADY_FILLED,
                           VMEDIA_MOUNT_NOT_ALLOWED,
                           VMEDIA_MOUNT_SOMETHING_WRONG, VMEDIA_MOUNT_SUCCESS,
-                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED,
+                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK,
+                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT,
+                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH,
                           VMEDIA_REMOTE_BOOT_COMMAND_FAIL,
                           VMEDIA_REMOTE_BOOT_GOOD,
                           VMEDIA_REMOTE_BOOT_SOMETHING_WRONG,
@@ -427,7 +429,7 @@ class TestCheckRemoteImage(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -483,7 +485,7 @@ class TestBootRemoteImage(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "nfs.example.com:/mnt/storage/user1/linux.iso"]
         _, err = self.badfish_call()
-        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -574,7 +576,7 @@ class TestDetachRemoteImage(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED
+        assert err == VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

@@ -1,16 +1,15 @@
-"""HTTP client operations for Badfish."""
-
 import asyncio
 import json
-import base64
-from typing import Optional, Dict, Any, Tuple
+from typing import Any, Dict, Optional
 
 import aiohttp
 
+from badfish.helpers.async_lru import alru_cache
+from badfish.helpers.exceptions import BadfishException
 
-class BadfishHTTPClient:
-    """Handles all HTTP operations for Badfish."""
-    
+
+class HTTPClient:
+
     def __init__(self, host: str, username: str, password: str, logger, retries: int = 15):
         self.host = host
         self.username = username
@@ -22,212 +21,210 @@ class BadfishHTTPClient:
         self.root_uri = f"{self.host_uri}{self.redfish_uri}"
         self.semaphore = asyncio.Semaphore(50)
         self.token = None
-        
+        self.session_id = None
+
     async def error_handler(self, response: aiohttp.ClientResponse, message: Optional[str] = None) -> None:
-        """Handle HTTP errors with retries."""
         try:
             raw = await response.text("utf-8", "ignore")
-        except Exception:
-            await asyncio.sleep(1)
-            return
-            
-        try:
-            data = json.loads(raw)
-            detail = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
-        except Exception:
-            if response.status == 401:
-                detail = "Failed to authenticate. Verify your credentials."
-            else:
-                detail = f"HTTP {response.status}"
-                
+            data = json.loads(raw.strip())
+        except ValueError:
+            raise BadfishException("Error reading response from host.")
+
+        detail_message = data
+        if "error" in data:
+            try:
+                detail_message = str(data["error"]["@Message.ExtendedInfo"][0]["Message"])
+                resolution = str(data["error"]["@Message.ExtendedInfo"][0]["Resolution"])
+                self.logger.debug(resolution)
+            except (KeyError, IndexError) as ex:
+                self.logger.debug(ex)
         if message:
-            self.logger.error(f"{message}: {detail}")
+            self.logger.debug(detail_message)
+            raise BadfishException(message)
         else:
-            self.logger.error(detail)
-            
-    async def get_request(self, uri: str, _continue: bool = False, _get_token: bool = False) -> Optional[Dict[str, Any]]:
-        """Execute GET request with retry logic."""
+            raise BadfishException(detail_message)
+
+    @alru_cache(maxsize=64)
+    async def get_request(self, uri: str, _continue: bool = False, _get_token: bool = False):
         return await self.get_raw(uri, _continue, _get_token)
-        
-    async def get_raw(self, uri: str, _continue: bool = False, _get_token: bool = False) -> Optional[Dict[str, Any]]:
-        """Execute raw GET request."""
-        headers = {"Content-Type": "application/json"}
-        if self.token and not _get_token:
-            headers["X-Auth-Token"] = self.token
+    
+    @alru_cache(maxsize=64)
+    async def get_json(self, uri: str, _continue: bool = False, _get_token: bool = False):
+        response = await self.get_raw(uri, _continue, _get_token)
+        if not response:
+            return None
             
-        async with self.semaphore:
-            for retry in range(self.retries):
-                try:
-                    timeout = aiohttp.ClientTimeout(total=60)
-                    connector = aiohttp.TCPConnector(ssl=False, limit=50)
-                    
-                    async with aiohttp.ClientSession(
-                        connector=connector, timeout=timeout
-                    ) as session:
-                        response = await session.get(uri, headers=headers)
-                        
-                        if response.status in [200, 202]:
-                            try:
-                                data = await response.json()
-                                return data
-                            except Exception:
-                                return None
-                        elif response.status == 401 and retry < (self.retries - 1):
-                            await asyncio.sleep(1)
-                            continue
-                        elif not _continue:
-                            await self.error_handler(response)
-                            return None
-                            
-                except (aiohttp.ClientError, asyncio.TimeoutError):
-                    if retry == (self.retries - 1):
-                        self.logger.error(f"Connection failed after {self.retries} attempts")
-                        return None
-                    await asyncio.sleep(1)
-                    
-        return None
-        
+        # Parse JSON from response
+        try:
+            raw = await response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
+            return data
+        except (json.JSONDecodeError, AttributeError) as e:
+            self.logger.debug(f"Failed to parse JSON response: {e}")
+            return None
+
+    async def get_raw(self, uri: str, _continue: bool = False, _get_token: bool = False):
+        try:
+            async with self.semaphore:
+                async with aiohttp.ClientSession() as session:
+                    if not _get_token:
+                        async with session.get(
+                            uri,
+                            headers={"X-Auth-Token": self.token} if self.token else {},
+                            ssl=False,
+                            timeout=60,
+                        ) as _response:
+                            await _response.read()
+                    else:
+                        async with session.get(
+                            uri,
+                            auth=aiohttp.BasicAuth(self.username, self.password),
+                            ssl=False,
+                            timeout=60,
+                        ) as _response:
+                            await _response.read()
+        except (Exception, TimeoutError) as ex:
+            if _continue:
+                return
+            else:
+                self.logger.debug(f"HTTPClient get_raw exception: {ex}")
+                self.logger.debug(f"Exception type: {type(ex)}")
+                raise BadfishException("Failed to communicate with server.")
+
+        return _response
+
     async def post_request(
-        self, 
-        uri: str, 
-        payload: Dict[str, Any], 
-        headers: Dict[str, str], 
-        _get_token: bool = False,
-        return_headers: bool = False
-    ) -> Tuple[Optional[Dict[str, Any]], int, Optional[Dict[str, str]]]:
-        """Execute POST request."""
-        if self.token and not _get_token:
-            headers["X-Auth-Token"] = self.token
-            
-        async with self.semaphore:
-            for retry in range(self.retries):
-                try:
-                    timeout = aiohttp.ClientTimeout(total=60)
-                    connector = aiohttp.TCPConnector(ssl=False, limit=50)
-                    
-                    async with aiohttp.ClientSession(
-                        connector=connector, timeout=timeout
-                    ) as session:
-                        response = await session.post(uri, json=payload, headers=headers)
-                        
-                        if response.status in [200, 201, 202, 204]:
-                            try:
-                                data = await response.json()
-                                response_headers = dict(response.headers) if (_get_token or return_headers) else None
-                                return data, response.status, response_headers
-                            except Exception:
-                                response_headers = dict(response.headers) if (_get_token or return_headers) else None
-                                return None, response.status, response_headers
-                        elif response.status == 401 and retry < (self.retries - 1):
-                            await asyncio.sleep(1)
-                            continue
-                        else:
-                            await self.error_handler(response)
-                            return None, response.status, None
-                            
-                except (aiohttp.ClientError, asyncio.TimeoutError):
-                    if retry == (self.retries - 1):
-                        self.logger.error(f"Connection failed after {self.retries} attempts")
-                        return None, 0, None
-                    await asyncio.sleep(1)
-                    
-        return None, 0, None
-        
-    async def patch_request(
         self,
         uri: str,
         payload: Dict[str, Any],
         headers: Dict[str, str],
-        _continue: bool = False
-    ) -> Optional[Dict[str, Any]]:
-        """Execute PATCH request."""
-        if self.token:
-            headers["X-Auth-Token"] = self.token
-            
-        async with self.semaphore:
-            for retry in range(self.retries):
-                try:
-                    timeout = aiohttp.ClientTimeout(total=60)
-                    connector = aiohttp.TCPConnector(ssl=False, limit=50)
-                    
-                    async with aiohttp.ClientSession(
-                        connector=connector, timeout=timeout
-                    ) as session:
-                        response = await session.patch(uri, json=payload, headers=headers)
-                        
-                        if response.status in [200, 202, 204]:
-                            try:
-                                data = await response.json()
-                                return data
-                            except Exception:
-                                return {}
-                        elif response.status == 401 and retry < (self.retries - 1):
-                            await asyncio.sleep(1)
-                            continue
-                        elif not _continue:
-                            await self.error_handler(response)
-                            return None
-                            
-                except (aiohttp.ClientError, asyncio.TimeoutError):
-                    if retry == (self.retries - 1):
-                        self.logger.error(f"Connection failed after {self.retries} attempts")
-                        return None
-                    await asyncio.sleep(1)
-                    
-        return None
-        
-    async def delete_request(self, uri: str, headers: Dict[str, str]) -> bool:
-        """Execute DELETE request."""
-        if self.token:
-            headers["X-Auth-Token"] = self.token
-            
-        async with self.semaphore:
-            for retry in range(self.retries):
-                try:
-                    timeout = aiohttp.ClientTimeout(total=60)
-                    connector = aiohttp.TCPConnector(ssl=False, limit=50)
-                    
-                    async with aiohttp.ClientSession(
-                        connector=connector, timeout=timeout
-                    ) as session:
-                        response = await session.delete(uri, headers=headers)
-                        
-                        if response.status in [200, 202, 204]:
-                            return True
-                        elif response.status == 401 and retry < (self.retries - 1):
-                            await asyncio.sleep(1)
-                            continue
+        _get_token: bool = False,
+    ):
+        try:
+            async with self.semaphore:
+                async with aiohttp.ClientSession() as session:
+                    if not _get_token and self.token:
+                        headers.update({"X-Auth-Token": self.token})
+                    async with session.post(
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        ssl=False,
+                    ) as _response:
+                        if _response.status != 204:
+                            await _response.read()
                         else:
-                            await self.error_handler(response)
-                            return False
-                            
-                except (aiohttp.ClientError, asyncio.TimeoutError):
-                    if retry == (self.retries - 1):
-                        self.logger.error(f"Connection failed after {self.retries} attempts")
-                        return False
-                    await asyncio.sleep(1)
-                    
-        return False
-        
-    async def validate_credentials(self) -> Optional[str]:
-        """Validate credentials and obtain authentication token."""
-        encoded_creds = base64.b64encode(f"{self.username}:{self.password}".encode()).decode()
-        headers = {
-            "Authorization": f"Basic {encoded_creds}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {"UserName": self.username, "Password": self.password}
-        uri = f"{self.root_uri}/SessionService/Sessions"
-        
-        response, status = await self.post_request(uri, payload, headers, _get_token=True)
-        
-        if response and status in [200, 201]:
-            try:
-                return response.get("X-Auth-Token") or response.get("SessionToken")
-            except (KeyError, TypeError):
-                self.logger.error("Failed to retrieve authentication token")
+                            return _response
+        except (Exception, TimeoutError):
+            raise BadfishException("Failed to communicate with server.")
+        return _response
+
+    async def patch_request(self, uri: str, payload: Dict[str, Any], headers: Dict[str, str], _continue: bool = False):
+        try:
+            async with self.semaphore:
+                async with aiohttp.ClientSession() as session:
+                    if self.token:
+                        headers.update({"X-Auth-Token": self.token})
+                    async with session.patch(
+                        uri,
+                        data=json.dumps(payload),
+                        headers=headers,
+                        ssl=False,
+                    ) as _response:
+                        raw_data = await _response.read()
+                        return _response
+        except Exception as ex:
+            if _continue:
                 return None
-        else:
-            self.logger.error("Authentication failed")
-            return None
+            else:
+                self.logger.debug(ex)
+                raise BadfishException("Failed to communicate with server.")
+
+    async def delete_request(self, uri: str, headers: Dict[str, str]):
+        try:
+            async with self.semaphore:
+                async with aiohttp.ClientSession() as session:
+                    if self.token:
+                        headers.update({"X-Auth-Token": self.token})
+                    async with session.delete(
+                        uri,
+                        headers=headers,
+                        ssl=False,
+                    ) as _response:
+                        raw_data = await _response.read()
+                        return _response
+        except (Exception, TimeoutError):
+            raise BadfishException("Failed to communicate with server.")
+
+    async def find_session_uri(self):
+        _response = await self.get_request(self.root_uri, _get_token=True)
+
+        status = _response.status
+        if status == 401:
+            raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
+        if status not in [200, 201]:
+            raise BadfishException(f"Failed to communicate with {self.host}")
+
+        raw = await _response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
+
+        redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        session_uri = None
+        if redfish_version >= 160:
+            session_uri = "/redfish/v1/SessionService/Sessions"
+        elif redfish_version < 160:
+            session_uri = "/redfish/v1/Sessions"
+
+        _uri = "%s%s" % (self.host_uri, session_uri)
+        check_response = await self.get_request(_uri, _get_token=True)
+        if check_response.status == 404:
+            session_uri = "/redfish/v1/SessionService/Sessions"
+
+        return session_uri
+
+    async def validate_credentials(self):
+        payload = {"UserName": self.username, "Password": self.password}
+        headers = {"content-type": "application/json"}
+        session_uri = await self.find_session_uri()
+        _uri = "%s%s" % (self.host_uri, session_uri)
+        _response = await self.post_request(_uri, payload, headers, _get_token=True)
+
+        # Mock shifting value on value access and not on call.
+        await _response.text("utf-8", "ignore")
+
+        status = _response.status
+        if status == 401:
+            raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
+        if status not in [200, 201]:
+            raise BadfishException(f"Failed to communicate with {self.host}")
+
+        self.session_id = _response.headers.get("Location")
+        token = _response.headers.get("X-Auth-Token")
+        return token
+
+    async def delete_session(self):
+        try:
+            try:
+                if not self.session_id:
+                    self.logger.debug("No session ID found, skipping session deletion")
+                    return
+                headers = {"content-type": "application/json"}
+                _uri = "%s%s" % (self.host_uri, self.session_id)
+                try:
+                    _response = await self.delete_request(_uri, headers=headers)
+                    if _response.status in [200, 201]:
+                        self.logger.debug(f"Session successfully deleted for {self.host}")
+                    elif _response.status == 404:
+                        self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
+                    else:
+                        self.logger.warning(
+                            f"Unexpected status {_response.status} when deleting session for {self.host}."
+                        )
+                except Exception as ex:
+                    self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
+            finally:
+                self.session_id = None
+                self.token = None
+        except Exception:
+            self.session_id = None
+            self.token = None

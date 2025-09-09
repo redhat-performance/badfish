@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 import argparse
+
+from badfish.config import RETRIES
 
 
 def create_parser():
-    """Create and configure the argument parser for badfish CLI."""
     parser = argparse.ArgumentParser(
         prog="badfish",
         description="Tool for managing server hardware via the Redfish API.",
@@ -235,7 +235,7 @@ def create_parser():
         "-r",
         "--retries",
         help="Number of retries for executing actions.",
-        default=15,  # RETRIES constant value
+        default=RETRIES,
     )
     parser.add_argument(
         "--get-scp-targets",
