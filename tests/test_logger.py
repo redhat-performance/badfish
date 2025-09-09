@@ -1,8 +1,10 @@
 import os
 import tempfile
-from logging import INFO, ERROR, LogRecord
+from logging import INFO, ERROR, DEBUG, LogRecord
 
 from badfish.helpers.logger import BadfishHandler, BadfishLogger
+import yaml
+from unittest.mock import patch
 
 
 class TestBadfishHandler:
@@ -51,6 +53,20 @@ class TestBadfishHandler:
         assert handler.messages["host1"] == "key: value\n"
         assert handler.output_dict == {"error": True, "error_msg": "boom"}
 
+    def test_emit_formatted_ignores_separator_line(self):
+        handler = BadfishHandler(format_flag=True)
+        record_sep = LogRecord(
+            name="host1",
+            level=INFO,
+            pathname=__file__,
+            lineno=3,
+            msg="*" * 48,
+            args=(),
+            exc_info=None,
+        )
+        handler.emit(record_sep)
+        assert handler.messages == {}
+
     def test_parse_with_host_builds_output_dict(self):
         handler = BadfishHandler(format_flag=True)
         handler.host = "host1.domain"
@@ -70,6 +86,22 @@ class TestBadfishHandler:
         # Intentionally malformed YAML that still fails after formatting
         handler.messages["host1"] = "- a: 1\n  - b: 2\n"
         handler.parse()
+        assert handler.output_dict == {"unsupported_command": True}
+
+    def test_parse_yamlerror_path_via_patch(self):
+        handler = BadfishHandler(format_flag=True)
+        handler.host = "hostx"
+        handler.messages["hostx"] = "key: value\n"
+        with patch("badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]):
+            handler.parse()
+        assert handler.output_dict == {"unsupported_command": True}
+
+    def test_parse_yamlerror_path_via_patch_no_host(self):
+        handler = BadfishHandler(format_flag=True)
+        # No host set, exercise the else branch
+        handler.messages["badfish.helpers.logger"] = "key: value\n"
+        with patch("badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]):
+            handler.parse()
         assert handler.output_dict == {"unsupported_command": True}
 
     def test_diff_returns_error_if_error_flag_set(self):
@@ -92,6 +124,14 @@ class TestBadfishHandler:
         out = handler.diff()
         assert "hostA:" in out and "hostB:" in out
         assert "Pkg One" in out and "1.0" in out and "1.1" in out
+
+    def test_diff_returns_empty_when_no_differences(self):
+        handler = BadfishHandler(format_flag=True)
+        handler.output_dict = {
+            "h1": {"a": {"SoftwareId": 1, "Version": "1", "Name": "A"}},
+            "h2": {"b": {"SoftwareId": 1, "Version": "1", "Name": "A"}},
+        }
+        assert handler.diff() == "{}"
 
     def test_output_json_and_yaml(self):
         handler = BadfishHandler(format_flag=True)
@@ -118,6 +158,15 @@ class TestBadfishHandler:
             "[hostC] - INFO - msg-3",
         ]
 
+    def test_output_text_without_sorting_when_single_host_order(self):
+        handler = BadfishHandler(format_flag=False)
+        handler.formatted_msg = [
+            "[h2] - INFO - m2",
+            "[h1] - INFO - m1",
+        ]
+        out = handler.output("text", {"h1": 0})
+        assert out.splitlines() == ["[h2] - INFO - m2", "[h1] - INFO - m1"]
+
 
 class TestBadfishLogger:
     def test_logger_levels_and_multi_host_formatting(self):
@@ -143,3 +192,10 @@ class TestBadfishLogger:
                 os.remove(path)
             except OSError:
                 pass
+
+    def test_logger_verbose_and_output_flag_behavior(self):
+        logger = BadfishLogger(verbose=True, multi_host=False, output=True)
+        assert logger.logger.level == DEBUG
+        # badfish_handler should be in formatted parsing mode when output is set
+        assert logger.badfish_handler.format_flag is True
+        logger.queue_listener.stop()
