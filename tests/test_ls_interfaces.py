@@ -56,15 +56,30 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_interfaces_ethernet(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            ETHERNET_INTERFACES_RESP,
-            ETHERNET_INTERFACES_RESP_NIC_SLOT,
-            ETHERNET_INTERFACES_RESP_NIC_INT,
-        ]
-        responses = INIT_RESP + responses_add
-        status_codes = [200, 200, 200, 200, 200, 404, 200, 200, 200]
-        self.set_mock_response(mock_get, status_codes, responses)
+    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
+    @patch("src.badfish.main.Badfish.get_ethernet_interfaces")
+    def test_ls_interfaces_ethernet(self, mock_get_ethernet, mock_check_support, mock_get, mock_post, mock_delete):
+        # Mock the support checks: NetworkAdapters not supported, EthernetInterfaces supported
+        mock_check_support.side_effect = [False, True]
+        
+        # Mock the ethernet interfaces data
+        ethernet_data = {
+            "NIC.Slot.1-1-1": {
+                "Name": "System Ethernet Interface",
+                "MACAddress": "F8:BC:12:22:89:E1",
+                "Status": {"Health": "OK", "State": "Enabled"},
+                "SpeedMbps": 10240
+            },
+            "NIC.Integrated.1-1-1": {
+                "Name": "System Ethernet Interface", 
+                "MACAddress": "F8:BC:12:22:89:E0",
+                "Status": {"Health": "OK", "State": "Enabled"},
+                "SpeedMbps": 10240
+            }
+        }
+        mock_get_ethernet.return_value = ethernet_data
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
@@ -74,15 +89,14 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
+    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
     def test_ls_interfaces_ethernet_not_supported(
-        self, mock_get, mock_post, mock_delete
+        self, mock_check_support, mock_get, mock_post, mock_delete
     ):
-        responses_add = [
-            "Not Found",
-        ]
-        responses = INIT_RESP + responses_add
-        status_codes = [200, 200, 200, 200, 200, 404, 200, 404]
-        self.set_mock_response(mock_get, status_codes, responses)
+        # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
+        mock_check_support.side_effect = [False, False]
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
@@ -108,14 +122,12 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_interfaces_none_supported(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            "Not Found",
-            "Not Found",
-        ]
-        responses = INIT_RESP + responses_add
-        status_codes = [200, 200, 200, 200, 200, 404, 404]
-        self.set_mock_response(mock_get, status_codes, responses)
+    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
+    def test_ls_interfaces_none_supported(self, mock_check_support, mock_get, mock_post, mock_delete):
+        # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
+        mock_check_support.side_effect = [False, False]
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]

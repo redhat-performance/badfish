@@ -67,10 +67,23 @@ class TestLsProcessors(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_processors_details_not_found(self, mock_get, mock_post, mock_delete):
-        responses_add = [PROCESSOR_SUMMARY_RESP, "Not Found"]
-        responses = INIT_RESP + responses_add
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+    @patch("src.badfish.main.Badfish.get_processor_summary")
+    @patch("src.badfish.main.Badfish.get_processor_details")
+    def test_ls_processors_details_not_found(self, mock_get_proc_details, mock_get_proc_summary, mock_get, mock_post, mock_delete):
+        from src.badfish.main import BadfishException
+        
+        # Mock successful processor summary (the data from PROCESSOR_SUMMARY_RESP)
+        processor_summary = {
+            "Count": 2,
+            "LogicalProcessorCount": 80,
+            "Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",
+        }
+        mock_get_proc_summary.return_value = processor_summary
+        
+        # Mock processor details to raise the expected exception
+        mock_get_proc_details.side_effect = BadfishException("Server does not support this functionality")
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]

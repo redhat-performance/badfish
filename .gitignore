@@ -116,3 +116,6 @@ exports/
 
 # VSCode
 .vscode/
+
+CLAUDE.md
+.claude/
