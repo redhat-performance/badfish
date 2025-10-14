@@ -3,7 +3,6 @@ import asyncio
 import base64
 import functools
 
-import aiohttp
 import json
 import os
 import re
@@ -16,7 +15,6 @@ from urllib.parse import urlparse
 
 from badfish.helpers import get_now
 from badfish.helpers.parser import parse_arguments
-from badfish.helpers.async_lru import alru_cache
 from badfish.helpers.logger import (
     BadfishLogger,
 )
@@ -41,10 +39,6 @@ async def badfish_factory(_host, _username, _password, _logger=None, _retries=RE
     badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
     await badfish.init()
     return badfish
-
-
-class BadfishException(Exception):
-    pass
 
 
 class Badfish:
