@@ -1,7 +1,7 @@
 import pytest
-import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
-from src.badfish.main import Badfish, BadfishException, badfish_factory
+from src.badfish.main import Badfish, badfish_factory
+from src.badfish.helpers.exceptions import BadfishException
 
 
 class MockLogger:

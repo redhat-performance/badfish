@@ -7,14 +7,14 @@ vendors.  Badfish is also a popular song from Sublime, this may be a \
 coincidence – are you a badfish too?
 
 
-Name:           python3-%{project}
+Name:           python3-py%{project}
 Version:        @VERSION@
 Release:        @RELEASE@%{?dist}
 Summary:        %{sum}
 
 License:        GPL-3.0-or-later and MIT
 URL:            https://github.com/%{org}/%{project}
-Source:         %{url}/releases/download/v%{version}/python3-badfish-%{version}.tar.gz
+Source:         %{url}/releases/download/v%{version}/python3-pybadfish-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  %{py3_dist setuptools}

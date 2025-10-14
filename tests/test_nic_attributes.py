@@ -179,7 +179,7 @@ class TestGetNICAttribute(TestBase):
         async def fake_get_fw():
             # Emit via Badfish logger name to match formatting
             from logging import getLogger
-            getLogger("badfish.helpers.logger").error("Operation not supported by vendor.")
+            getLogger("src.badfish.helpers.logger").error("Operation not supported by vendor.")
             return 0
 
         mock_get_fw.side_effect = fake_get_fw

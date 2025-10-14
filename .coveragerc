@@ -3,6 +3,8 @@ source = src/badfish
 
 [run]
 omit = tests/*
+    src/badfish/helpers/async_lru.py
+    setup.py
 
 [report]
 # Regexes for lines to exclude from consideration

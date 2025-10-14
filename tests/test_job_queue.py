@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from src.badfish.main import BadfishException
+from src.badfish.helpers.exceptions import BadfishException
 from tests.config import (BLANK_RESP, INIT_RESP, JOB_ID, JOB_OK_RESP,
                           RESPONSE_CHECK_JOB, RESPONSE_CHECK_JOB_BAD,
                           RESPONSE_CHECK_JOB_ERROR, RESPONSE_CLEAR_JOBS,

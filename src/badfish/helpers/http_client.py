@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional
 
 import aiohttp
 
-from badfish.helpers.async_lru import alru_cache
-from badfish.helpers.exceptions import BadfishException
+from src.badfish.helpers.async_lru import alru_cache
+from src.badfish.helpers.exceptions import BadfishException
 
 
 class HTTPClient:

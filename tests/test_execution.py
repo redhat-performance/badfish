@@ -1,14 +1,13 @@
 import os
 from unittest.mock import patch
 
-from src.badfish.main import BadfishException
+from src.badfish.helpers.exceptions import BadfishException
 from tests.config import (HOST_LIST_EXTRAS, KEYBOARD_INTERRUPT,
                           KEYBOARD_INTERRUPT_HOST_LIST, MAN_RESP,
                           NO_HOST_ERROR, RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
                           RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
                           RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
-                          RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED,
-                          ROOT_RESP, SUCCESSFUL_HOST_LIST, SYS_RESP,
+                          ROOT_RESP, SUCCESSFUL_HOST_LIST,
                           WRONG_BADFISH_EXECUTION,
                           WRONG_BADFISH_EXECUTION_HOST_LIST)
 from tests.test_base import TestBase
