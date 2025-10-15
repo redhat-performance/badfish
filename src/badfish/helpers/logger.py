@@ -60,21 +60,21 @@ class BadfishHandler(StreamHandler):
                     new_dict = yaml.safe_load(message)
                 except yaml.YAMLError:
                     # If parsing fails, try to format the value as a quoted string
-                    lines = message.strip().split('\n')
+                    lines = message.strip().split("\n")
                     formatted_lines = []
                     for line in lines:
-                        if ':' in line:
-                            key, value = line.split(':', 1)
+                        if ":" in line:
+                            key, value = line.split(":", 1)
                             value = value.strip()
                             # If value contains spaces or special characters, wrap in quotes
-                            if ' ' in value or any(c in value for c in '{}[](),:#'):
+                            if " " in value or any(c in value for c in "{}[](),:#"):
                                 value = f'"{value}"'
                             formatted_lines.append(f"{key}: {value}")
                         else:
                             formatted_lines.append(line)
-                    formatted_message = '\n'.join(formatted_lines)
+                    formatted_message = "\n".join(formatted_lines)
                     new_dict = yaml.safe_load(formatted_message)
-                
+
                 self.output_dict.update({self.host: new_dict.copy()})
                 self.host = None
             else:
@@ -83,22 +83,22 @@ class BadfishHandler(StreamHandler):
                 try:
                     new_dict = yaml.safe_load(message)
                 except yaml.YAMLError:
-                    lines = message.strip().split('\n')
+                    lines = message.strip().split("\n")
                     formatted_lines = []
                     for line in lines:
-                        if ':' in line:
-                            key, value = line.split(':', 1)
+                        if ":" in line:
+                            key, value = line.split(":", 1)
                             value = value.strip()
-                            if ' ' in value or any(c in value for c in '{}[](),:#'):
+                            if " " in value or any(c in value for c in "{}[](),:#"):
                                 value = f'"{value}"'
                             formatted_lines.append(f"{key}: {value}")
                         else:
                             formatted_lines.append(line)
-                    formatted_message = '\n'.join(formatted_lines)
+                    formatted_message = "\n".join(formatted_lines)
                     new_dict = yaml.safe_load(formatted_message)
-                
+
                 self.output_dict.update(new_dict.copy())
-        except yaml.YAMLError as ex:
+        except yaml.YAMLError:
             self.output_dict = {"unsupported_command": True}
 
     def diff(self):

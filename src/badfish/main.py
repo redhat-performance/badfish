@@ -276,7 +276,7 @@ class Badfish:
             if _response and _response.status == 404:
                 self.logger.debug(await _response.text())
                 raise BadfishException("Boot order modification is not supported by this host.")
-                
+
             if not _response:
                 raise BadfishException("Boot order modification is not supported by this host.")
 
@@ -361,7 +361,8 @@ class Badfish:
                 match = True
                 try:
                     interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
-                except BadfishException as e:
+                except BadfishException as ex:
+                    self.logger(str(ex))
                     continue
 
                 for device in sorted(self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]):
@@ -377,7 +378,7 @@ class Badfish:
 
     async def find_session_uri(self):
         response = await self.http_client.get_request(self.root_uri, _get_token=True)
-        
+
         if not response:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
@@ -401,7 +402,7 @@ class Badfish:
         payload = {"UserName": self.username, "Password": self.password}
         headers = {"content-type": "application/json"}
         _uri = "%s%s" % (self.host_uri, self.session_uri)
-        
+
         _response = await self.http_client.post_request(_uri, payload, headers, _get_token=True)
 
         await _response.text("utf-8", "ignore")
@@ -419,13 +420,13 @@ class Badfish:
             self.http_client.token = token
             # Store session info for cleanup
             self.session_id = _response.headers.get("Location")
-        
+
         return token
 
     async def get_interfaces_endpoints(self):
         _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
         data = await self.http_client.get_json(_uri)
-        
+
         if not data:
             raise BadfishException("EthernetInterfaces entry point not supported by this host.")
 
@@ -441,7 +442,7 @@ class Badfish:
     async def get_interface(self, endpoint):
         _uri = "%s%s" % (self.host_uri, endpoint)
         data = await self.http_client.get_json(_uri)
-        
+
         if not data:
             raise BadfishException("EthernetInterface entry point not supported by this host.")
 
@@ -451,18 +452,18 @@ class Badfish:
         response = await self.http_client.get_request(self.root_uri)
         if not response:
             raise BadfishException("Failed to communicate with server.")
-            
+
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
         if "Systems" not in data:
             raise BadfishException("Systems resource not found")
-        
+
         systems = data["Systems"]["@odata.id"]
         systems_response = await self.http_client.get_request(self.host_uri + systems)
         if not systems_response:
             raise BadfishException("Authorization Error: verify credentials.")
-        
-        raw = await systems_response.text("utf-8", "ignore")  
+
+        raw = await systems_response.text("utf-8", "ignore")
         systems_data = json.loads(raw.strip())
 
         if systems_data.get("Members"):
@@ -484,7 +485,7 @@ class Badfish:
 
         if "Managers" not in data:
             raise BadfishException("Managers resource not found")
-        
+
         managers = data["Managers"]["@odata.id"]
         managers_response = await self.http_client.get_request(self.host_uri + managers)
         managers_data = None
@@ -502,13 +503,13 @@ class Badfish:
     # HTTP client wrapper methods
     async def get_request(self, uri, _continue=False, _get_token=False):
         return await self.http_client.get_request(uri, _continue, _get_token)
-    
+
     async def post_request(self, uri, payload, headers, _get_token=False):
         return await self.http_client.post_request(uri, payload, headers, _get_token)
-    
+
     async def patch_request(self, uri, payload, headers, _continue=False):
         return await self.http_client.patch_request(uri, payload, headers, _continue)
-    
+
     async def delete_request(self, uri, headers):
         return await self.http_client.delete_request(uri, headers)
 
@@ -822,7 +823,7 @@ class Badfish:
             if status_code == 200:
                 await asyncio.sleep(10)
                 # Only try to access job data if we got a successful response
-                if isinstance(data, dict) and 'Id' in data:
+                if isinstance(data, dict) and "Id" in data:
                     self.logger.info(f"JobID: {data[u'Id']}")
                     self.logger.info(f"Name: {data[u'Name']}")
                     self.logger.info(f"Message: {data[u'Message']}")
@@ -848,11 +849,11 @@ class Badfish:
                 self.logger.error(f"Command failed to check job status, return code is {status_code}")
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
-            
+
             if "Message" not in data:
                 self.logger.warning("Job status response missing Message field")
                 return False
-            
+
             if "Fail" in data["Message"] or "fail" in data["Message"]:
                 self.logger.debug(f"\n{job_id} job failed.")
                 return False
@@ -2065,7 +2066,9 @@ class Badfish:
                     elif _response.status == 404:
                         self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
                     else:
-                        self.logger.warning(f"Unexpected status {_response.status} when deleting session for {self.host}.")
+                        self.logger.warning(
+                            f"Unexpected status {_response.status} when deleting session for {self.host}."
+                        )
                 except Exception as ex:
                     self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
             finally:
