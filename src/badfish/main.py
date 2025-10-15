@@ -362,7 +362,7 @@ class Badfish:
                 try:
                     interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
                 except BadfishException as ex:
-                    self.logger(str(ex))
+                    self.logger.debug(str(ex))
                     continue
 
                 for device in sorted(self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]):
