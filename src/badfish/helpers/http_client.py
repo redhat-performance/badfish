@@ -47,13 +47,13 @@ class HTTPClient:
     @alru_cache(maxsize=64)
     async def get_request(self, uri: str, _continue: bool = False, _get_token: bool = False):
         return await self.get_raw(uri, _continue, _get_token)
-    
+
     @alru_cache(maxsize=64)
     async def get_json(self, uri: str, _continue: bool = False, _get_token: bool = False):
         response = await self.get_raw(uri, _continue, _get_token)
         if not response:
             return None
-            
+
         # Parse JSON from response
         try:
             raw = await response.text("utf-8", "ignore")
@@ -132,6 +132,7 @@ class HTTPClient:
                         ssl=False,
                     ) as _response:
                         raw_data = await _response.read()
+                        self.logger.debug(raw_data)
                         return _response
         except Exception as ex:
             if _continue:
@@ -152,6 +153,7 @@ class HTTPClient:
                         ssl=False,
                     ) as _response:
                         raw_data = await _response.read()
+                        self.logger.debug(raw_data)
                         return _response
         except (Exception, TimeoutError):
             raise BadfishException("Failed to communicate with server.")
