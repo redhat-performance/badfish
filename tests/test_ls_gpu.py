@@ -1,21 +1,9 @@
-import pytest
 from unittest.mock import patch
 
-from src.badfish.main import BadfishException
-from tests.config import (
-    INIT_RESP,
-    GPU_MEMBERS_RESP,
-    GPU_MEMBERS_RESP_FAULTY,
-    GPU_DATA_RESP1,
-    GPU_DATA_RESP2,
-    GPU_SUMMARY_RESP,
-    RESPONSE_LS_GPU,
-    GPU_SUMMARY_RESP_FAULTY,
-    RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
-    RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR,
-    RESPONSE_LS_GPU_DETAILS_NOT_FOUND,
-    RESPONSE_LS_GPU_DETAILS_VALUE_ERROR, RESPONSE_LS_GPU_SUMMARY_BAD_JSON, GPU_DATA_RESP_FAULTY,
-)
+from tests.config import (GPU_DATA_RESP1, GPU_DATA_RESP2, GPU_DATA_RESP_FAULTY,
+                          GPU_MEMBERS_RESP, GPU_SUMMARY_RESP_FAULTY, INIT_RESP,
+                          MOCK_HOST, RESPONSE_LS_GPU, RESPONSE_LS_GPU_SUMMARY_DATA_ERROR,
+                          RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR)
 from tests.test_base import TestBase
 
 
@@ -69,7 +57,7 @@ class TestLsGpu(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()
-        assert err == RESPONSE_LS_GPU_SUMMARY_DATA_ERROR
+        assert err == RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR + f"- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

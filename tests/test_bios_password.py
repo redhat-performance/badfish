@@ -107,6 +107,7 @@ class TestChangeBiosPass(TestBase):
         responses = INIT_RESP
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 400], ["OK", "Bad Request"], True)
+        self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "--new-password", "new_pass"]
         _, err = self.badfish_call()
         assert err == BIOS_PASS_CHANGE_CMD_FAILED
@@ -124,8 +125,7 @@ class TestSetBiosPassCheckJobStatus(TestBase):
             STATE_OFF_RESP,
             "{}",
         ]
-        status_codes = [200, 200, 200, 200, 200, 200, 400]
-        self.set_mock_response(mock_get, status_codes, responses)
+        self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, JOB_OK_RESP)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "--new-password", "new_pass"]

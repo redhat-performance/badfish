@@ -59,23 +59,23 @@ class TestFirmwareInventory(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_request")
     def test_firmware_inventory_none_response(
-        self, mock_get_req_call, mock_post, mock_delete
+        self, mock_get_req_call, mock_get, mock_post, mock_delete
     ):
         responses_add = [FIRMWARE_INVENTORY_RESP, FIRMWARE_INVENTORY_1_RESP]
         responses = INIT_RESP + responses_add
+        # The firmware inventory operation makes these calls:
+        # 1. get_request() for firmware inventory list -> should return FIRMWARE_INVENTORY_RESP
+        # 2. get_request() for first device -> should return FIRMWARE_INVENTORY_1_RESP  
+        # 3. get_request() for second device -> should return None (simulating failure)
         mock_get_req_call.side_effect = [
-            MockResponse(responses[0], 200),
-            MockResponse(responses[0], 200),
-            MockResponse(responses[1], 200),
-            MockResponse(responses[2], 200),
-            MockResponse(responses[3], 200),
-            MockResponse(responses[4], 200),
-            MockResponse(responses[5], 200),
-            None,
-            MockResponse(responses[6], 200),
+            MockResponse(FIRMWARE_INVENTORY_RESP, 200),  # Firmware inventory list
+            MockResponse(FIRMWARE_INVENTORY_1_RESP, 200),  # First device details
+            None,  # Second device fails
         ]
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]

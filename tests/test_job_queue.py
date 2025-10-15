@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from src.badfish.main import BadfishException
+from src.badfish.helpers.exceptions import BadfishException
 from tests.config import (BLANK_RESP, INIT_RESP, JOB_ID, JOB_OK_RESP,
                           RESPONSE_CHECK_JOB, RESPONSE_CHECK_JOB_BAD,
                           RESPONSE_CHECK_JOB_ERROR, RESPONSE_CLEAR_JOBS,
@@ -197,18 +197,13 @@ class TestCheckJob(TestBase):
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_request")
-    def test_check_job_error(self, mock_get_req_call, mock_post, mock_delete):
-        responses = INIT_RESP
-        mock_get_req_call.side_effect = [
-            MockResponse(responses[0], 200),
-            MockResponse(responses[0], 200),
-            MockResponse(responses[1], 200),
-            MockResponse(responses[2], 200),
-            MockResponse(responses[3], 200),
-            MockResponse(responses[4], 200),
-            None,
-        ]
+    def test_check_job_error(self, mock_get_req_call, mock_get, mock_post, mock_delete):
+        # The check_schedule_job_status method only makes one call to get_request
+        # which should return None to simulate the error condition
+        mock_get_req_call.side_effect = [None]
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = self.args + [JOB_ID]

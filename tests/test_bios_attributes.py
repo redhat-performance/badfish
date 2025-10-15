@@ -20,7 +20,6 @@ class TestSetBiosAttribute(TestBase):
         get_resp = [
             BIOS_REGISTRY_OK.replace("'", '"'),
             BIOS_RESPONSE_DIS,
-            BIOS_RESPONSE_DIS,
             RESET_TYPE_RESP,
             STATE_ON_RESP,
             STATE_ON_RESP,

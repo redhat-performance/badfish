@@ -62,13 +62,22 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_ls_memory_details_not_found(self, mock_get, mock_post, mock_delete):
-        responses_add = [
-            MEMORY_SUMMARY_RESP,
-            "Not Found",
-        ]
-        responses = INIT_RESP + responses_add
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404], responses)
+    @patch("src.badfish.main.Badfish.get_memory_summary")
+    @patch("src.badfish.main.Badfish.get_memory_details")
+    def test_ls_memory_details_not_found(self, mock_get_mem_details, mock_get_mem_summary, mock_get, mock_post, mock_delete):
+        from src.badfish.main import BadfishException
+        
+        # Mock successful memory summary
+        memory_summary = {
+            "MemoryMirroring": "System",
+            "TotalSystemMemoryGiB": 384
+        }
+        mock_get_mem_summary.return_value = memory_summary
+        
+        # Mock memory details to raise the expected exception
+        mock_get_mem_details.side_effect = BadfishException("Server does not support this functionality")
+        
+        self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]

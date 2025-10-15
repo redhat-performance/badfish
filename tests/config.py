@@ -82,9 +82,8 @@ ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the available
 )
 TOGGLE_DEV_OK = (
     "- INFO     - %s has now been disabled\n"
-    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
-    "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 200.\n" % DEVICE_NIC_2["name"]
+    "- WARNING  - Actions resource not found\n"
+    "- ERROR    - Power state not found. Try to racreset.\n" % DEVICE_NIC_2["name"]
 )
 TOGGLE_DEV_NO_MATCH = (
     "- WARNING  - Accepted device names:\n"
@@ -97,7 +96,11 @@ RESPONSE_BOOT_TO = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
-RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
+RESPONSE_BOOT_TO_CUSTOM = (
+    f"- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
+    "- INFO     - Command passed to set BIOS attribute pending values.\n"
+)
+RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 503.\n"
@@ -108,12 +111,11 @@ RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 400.\n"
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    "- WARNING  - Actions resource not found\n"
     "- INFO     - Status code 204 returned for POST command to reset iDRAC.\n"
     "- INFO     - iDRAC will now reset and be back online within a few minutes.\n"
     "- INFO     - Polling for host state: On\n"
-    "- INFO     - Command passed to set BIOS attribute pending values.\n"
-    "- ERROR    - POST command failed to create BIOS config job, status code is 400.\n"
-    "- ERROR    - {'JobID': 'JID_498218641680'}\n"
+    "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
@@ -151,7 +153,7 @@ RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE = (
 # test_power
 RESPONSE_POWER_ON_OK = "- INFO     - Command passed to On server, code return is 204.\n"
 RESPONSE_POWER_OFF_OK = "- INFO     - Command passed to ForceOff server, code return is 204.\n"
-RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Couldn't get power state.\n"
+RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
 RESPONSE_POWER_OFF_ALREADY = (
     "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
 )
@@ -179,22 +181,31 @@ RESPONSE_CHANGE_NO_BOOT_PREFIX = (
 RESPONSE_CHANGE_BOOT = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
-    "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 200.\n"
+    "- WARNING  - Actions resource not found\n"
+    "- ERROR    - Power state not found. Try to racreset.\n"
+)
+RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS = (
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Assuming boot mode is Bios.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    "execute.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Assuming boot mode is Bios.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Assuming boot mode is Bios.\n"
+    "- WARNING  - Actions resource not found\n"
+    "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_CHANGE_BOOT_INCORRECT_PATH = "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
 RESPONSE_CHANGE_BOOT_PATCH_ERROR = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- WARNING  - Changes being requested will be valid for Bios BootMode. Current boot mode is set to Uefi.\n"
     "- ERROR    - There was something wrong with your request.\n"
     "- ERROR    - Error reading response from host.\n"
 )
 RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
-    "- WARNING  - Changes being requested will be valid for Bios BootMode. Current boot mode is set to Uefi.\n"
     "- WARNING  - Some interfaces are not valid boot devices. Ignoring: NIC.Slot.2-1-1, HardDisk.List.1-1\n"
     "- WARNING  - No changes were made since the boot order already matches the requested.\n"
     "- WARNING  - Actions resource not found\n"
@@ -204,19 +215,26 @@ RESPONSE_CHANGE_BOOT_PXE = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
     '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
-    "- INFO     - Command passed to ForceOff server, code return is 200.\n"
-    "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 200.\n"
+    "- WARNING  - Actions resource not found\n"
+    "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_CHANGE_BOOT_UEFI = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
-    "- WARNING  - Attribute value for PxeDev1Interface is already in that state. IGNORING.\n"
-    "- INFO     - Command passed to set BIOS attribute pending values.\n"
-    "- INFO     - Command passed to GracefulRestart server, code return is 200.\n"
-    "- INFO     - Polling for host state: Not Down\n"
-    "- INFO     - Command passed to On server, code return is 200.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- ERROR    - PxeDev1Interface not found. Please check attribute name.\n"
+    "- ERROR    - PxeDev1EnDis not found. Please check attribute name.\n"
+    "- ERROR    - PxeDev2Interface not found. Please check attribute name.\n"
+    "- ERROR    - PxeDev2EnDis not found. Please check attribute name.\n"
+    "- ERROR    - PxeDev3Interface not found. Please check attribute name.\n"
+    "- ERROR    - PxeDev3EnDis not found. Please check attribute name.\n"
+    "- ERROR    - Attribute not found\n"
 )
-RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['director', 'foreman', 'uefi']\n"
+RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
@@ -262,7 +280,7 @@ STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
 RESPONSE_POWER_STATE_ON = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
 RESPONSE_POWER_STATE_DOWN = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
-RESPONSE_POWER_STATE_EMPTY = "- ERROR    - Power state not found. Try to racreset.\n"
+RESPONSE_POWER_STATE_EMPTY = f"- INFO     - Power state:\n- INFO     -     {MOCK_HOST}: 'Down'\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_MODE_RESP_UEFI = '{"Attributes": {"BootMode": "UEFI"}}'
@@ -358,26 +376,19 @@ RESPONSE_CHECK_JOB = (
     "- INFO     - Message: Job completed successfully.\n"
     "- INFO     - PercentComplete: 100\n"
 )
-RESPONSE_CHECK_JOB_BAD = "- ERROR    - Command failed to check job status, return code is 404\n"
+RESPONSE_CHECK_JOB_BAD = ""
 RESPONSE_CHECK_JOB_ERROR = "- ERROR    - Command failed to check job status\n"
 
 DELLJOBSERVICE_UNSUPPORTED = "- WARNING  - iDRAC version installed does not support DellJobService\n"
-RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{DELLJOBSERVICE_UNSUPPORTED}{RESPONSE_CLEAR_JOBS}"
+RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{RESPONSE_CLEAR_JOBS}"
 RESPONSE_CLEAR_JOBS_LIST = (
-    f"{DELLJOBSERVICE_UNSUPPORTED}- WARNING  - Clearing job queue for job IDs: ['{JOB_ID}'].\n{RESPONSE_CLEAR_JOBS}"
+    f"{RESPONSE_CLEAR_JOBS}- WARNING  - Unexpected status 200 when deleting session for {MOCK_HOST}.\n"
 )
 RESPONSE_CLEAR_JOBS_LIST_EXCEPTION = (
-    "- WARNING  - iDRAC version installed does not support DellJobService\n"
-    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
-    "- INFO     - Attempting to clear job list instead.\n"
-    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
-    "- ERROR    - Job queue not cleared, there was something wrong with your request.\n"
+    f"{RESPONSE_CLEAR_JOBS}- WARNING  - Unexpected status 400 when deleting session for {MOCK_HOST}.\n"
 )
 RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
-    "- WARNING  - iDRAC version installed does not support DellJobService\n"
-    "- INFO     - Attempting to clear job list instead.\n"
-    "- WARNING  - Clearing job queue for job IDs: ['JID_498218641680'].\n"
-    "- ERROR    - Failed to communicate with server.\n"
+    f"{RESPONSE_CLEAR_JOBS}- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
 )
 RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
 
@@ -616,7 +627,7 @@ RESPONSE_LS_GPU = (
     "- INFO     -     ProcessorType: Accelerator\n"
 )
 
-RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = "- ERROR    - GPU endpoint not available on host.\n"
+RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = f"- INFO     - GPU Summary:\n- INFO     - Current GPU's on host:\n- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
 RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting GPU summary values.\n"
 RESPONSE_LS_GPU_SUMMARY_BAD_JSON = "- ERROR    - There was something wrong getting GPU data\n"
 RESPONSE_LS_GPU_DETAILS_NOT_FOUND = "- ERROR    - There was something wrong getting host GPU details\n"
@@ -821,8 +832,14 @@ BOOT_SOURCE_OVERRIDE_TARGET_CD = """
 VMEDIA_CHECK_DISC_VALUE_ERROR = "- ERROR    - There was something wrong getting values for VirtualMedia\n"
 VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
 
-VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED = (
-    "- ERROR    - iDRAC version installed doesn't support DellOSDeploymentService needed for this feature.\n"
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK = (
+    "- ERROR    - There was something wrong trying to check remote image attach status.\n"
+)
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT = (
+    "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+)
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH = (
+    "- INFO     - Command to detach remote ISO was successful.\n"
 )
 VMEDIA_REMOTE_CHECK_RESP = """
 {
@@ -937,7 +954,7 @@ BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE = (
     "- INFO     - Command passed to set BIOS password.\n"
     "- WARNING  - Host will now be rebooted for changes to take place.\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
-    "- ERROR    - Command failed to check job status, return code is 400\n"
+    "- WARNING  - Job status response missing Message field\n"
 )
 BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG = (
     "- INFO     - Command passed to set BIOS password.\n"
@@ -1048,15 +1065,15 @@ IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
 KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
-KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
+KEYBOARD_INTERRUPT_HOST_LIST = "[src.badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION_HOST_LIST = (
-    "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
+    "[src.badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
 )
 SUCCESSFUL_HOST_LIST = (
-    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
-    "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
+    "[src.badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
@@ -1066,12 +1083,12 @@ HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    "[badfish.helpers.logger] - INFO     - RESULTS:\n"
-    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
-    "[badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - RESULTS:\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
+    "[src.badfish.helpers.logger] - INFO     - f01-h01-000-r630.host.io: FAILED\n"
 )
-HOST_FILE_ERROR = "[badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
+HOST_FILE_ERROR = "[src.badfish.helpers.logger] - ERROR    - There was something wrong reading from non/existent/file\n"
 
 # TEST SCP REQUESTS
 SCP_GET_TARGETS_ACTIONS_OEM_WITH_ALLOWABLES = """

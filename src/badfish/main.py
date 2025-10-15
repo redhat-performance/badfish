@@ -3,9 +3,7 @@ import asyncio
 import base64
 import functools
 
-import aiohttp
 import json
-import argparse
 import os
 import re
 import sys
@@ -15,11 +13,11 @@ import yaml
 import tempfile
 from urllib.parse import urlparse
 
-from badfish.helpers import get_now
-from badfish.helpers.async_lru import alru_cache
-from badfish.helpers.logger import (
-    BadfishLogger,
-)
+from src.badfish.helpers import get_now
+from src.badfish.helpers.parser import parse_arguments
+from src.badfish.helpers.logger import BadfishLogger
+from src.badfish.helpers.http_client import HTTPClient
+from src.badfish.helpers.exceptions import BadfishException
 
 from logging import (
     DEBUG,
@@ -42,10 +40,6 @@ async def badfish_factory(_host, _username, _password, _logger=None, _retries=RE
     return badfish
 
 
-class BadfishException(Exception):
-    pass
-
-
 class Badfish:
     def __init__(self, _host, _username, _password, _logger, _retries, _loop=None):
         self.host = _host
@@ -60,6 +54,7 @@ class Badfish:
         self.loop = _loop
         if not self.loop:
             self.loop = asyncio.get_event_loop()
+        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries)
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None
@@ -68,6 +63,16 @@ class Badfish:
         self.session_id = None
         self.token = None
         self.vendor = None
+
+    async def __aenter__(self):
+        await self.init()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.delete_session()
+        if exc_type is not None:
+            self.logger.debug(f"Exiting context with exception: {exc_type.__name__}: {exc_val}")
+        return False
 
     async def init(self):
         self.session_uri = await self.find_session_uri()
@@ -110,117 +115,38 @@ class Badfish:
         else:
             raise BadfishException(detail_message)
 
-    @alru_cache(maxsize=64)
-    async def get_request(self, uri, _continue=False, _get_token=False):
-        return await self.get_raw(uri, _continue, _get_token)
-
-    async def get_raw(self, uri, _continue=False, _get_token=False):
-        try:
-            async with self.semaphore:
-                async with aiohttp.ClientSession() as session:
-                    if not _get_token:
-                        async with session.get(
-                            uri,
-                            headers={"X-Auth-Token": self.token},
-                            ssl=False,
-                            timeout=60,
-                        ) as _response:
-                            await _response.read()
-                    else:
-                        async with session.get(
-                            uri,
-                            auth=aiohttp.BasicAuth(self.username, self.password),
-                            ssl=False,
-                            timeout=60,
-                        ) as _response:
-                            await _response.read()
-        except (Exception, TimeoutError) as ex:
-            if _continue:
-                return
-            else:
-                self.logger.debug(ex)
-                raise BadfishException("Failed to communicate with server.")
-        return _response
-
-    async def post_request(self, uri, payload, headers, _get_token=False):
-        try:
-            async with self.semaphore:
-                async with aiohttp.ClientSession() as session:
-                    if not _get_token:
-                        headers.update({"X-Auth-Token": self.token})
-                    async with session.post(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        ssl=False,
-                    ) as _response:
-                        if _response.status != 204:
-                            await _response.read()
-                        else:
-                            return _response
-        except (Exception, TimeoutError):
-            raise BadfishException("Failed to communicate with server.")
-        return _response
-
-    async def patch_request(self, uri, payload, headers, _continue=False):
-        try:
-            async with self.semaphore:
-                async with aiohttp.ClientSession() as session:
-                    headers.update({"X-Auth-Token": self.token})
-                    async with session.patch(
-                        uri,
-                        data=json.dumps(payload),
-                        headers=headers,
-                        ssl=False,
-                    ) as _response:
-                        await _response.read()
-        except Exception as ex:
-            if _continue:
-                return
-            else:
-                self.logger.debug(ex)
-                raise BadfishException("Failed to communicate with server.")
-        return _response
-
-    async def delete_request(self, uri, headers):
-        try:
-            async with self.semaphore:
-                async with aiohttp.ClientSession() as session:
-                    headers.update({"X-Auth-Token": self.token})
-                    async with session.delete(
-                        uri,
-                        headers=headers,
-                        ssl=False,
-                    ) as _response:
-                        await _response.read()
-        except (Exception, TimeoutError):
-            raise BadfishException("Failed to communicate with server.")
-        return _response
-
     async def get_interfaces_by_type(self, host_type, _interfaces_path):
         definitions = await self.read_yaml(_interfaces_path)
 
         host_name_split = self.host.split(".")[0].split("-")
-        host_model = host_name_split[-1]
-        rack = host_name_split[1]
-        uloc = host_name_split[2]
+        host_model = None
+        rack = None
+        uloc = None
+        host_blade = None
+        prefix = [host_type]
+        if len(host_name_split) > 1:
+            host_model = host_name_split[-1]
+            rack = host_name_split[1]
+            uloc = host_name_split[2]
+            prefix.extend([rack, uloc])
 
-        host_blade = "000"
         if len(host_name_split) > 4:
             host_blade = host_name_split[3]
+            prefix.append(host_blade)
 
-        prefix = [host_type, rack, uloc, host_blade]
-
-        key = f"{host_type}_{host_blade}_{host_model}_interfaces"
-        interfaces_string = definitions.get(key)
-        if interfaces_string:
-            return interfaces_string.split(",")
+        if host_blade:
+            key = f"{host_type}_{host_blade}_{host_model}"
+            interfaces_string = definitions.get(key)
+            if interfaces_string:
+                return interfaces_string.split(",")
 
         len_prefix = len(prefix)
         key = "None"
         for _ in range(len_prefix):
             prefix_string = "_".join(prefix)
-            key = "%s_%s_interfaces" % (prefix_string, host_model)
+            key = prefix_string
+            if host_model:
+                key = "_".join([prefix_string, host_model])
             interfaces_string = definitions.get(key)
             if interfaces_string:
                 return interfaces_string.split(",")
@@ -255,17 +181,11 @@ class Badfish:
     async def get_bios_attributes_registry(self):
         self.logger.debug("Getting BIOS attribute registry.")
         _uri = "%s%s/Bios/BiosRegistry" % (self.host_uri, self.system_resource)
-        _response = await self.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
-        if _response.status == 404:
+        if not data:
             self.logger.error("Operation not supported by vendor.")
             return False
-
-        try:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        except ValueError:
-            raise BadfishException("Could not retrieve Bios Attributes.")
 
         return data
 
@@ -286,17 +206,12 @@ class Badfish:
     async def get_bios_attributes(self):
         self.logger.debug("Getting BIOS attributes.")
         _uri = "%s%s/Bios" % (self.host_uri, self.system_resource)
-        _response = await self.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
-        if _response.status == 404:
+        if not data:
             self.logger.error("Operation not supported by vendor.")
             return False
 
-        try:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        except ValueError:
-            raise BadfishException("Could not retrieve Bios Attributes.")
         return data
 
     async def get_bios_attribute(self, attribute):
@@ -358,8 +273,11 @@ class Badfish:
             _uri = "%s%s/BootSources" % (self.host_uri, self.system_resource)
             _response = await self.get_request(_uri)
 
-            if _response.status == 404:
-                self.logger.debug(_response.text)
+            if _response and _response.status == 404:
+                self.logger.debug(await _response.text())
+                raise BadfishException("Boot order modification is not supported by this host.")
+
+            if not _response:
                 raise BadfishException("Boot order modification is not supported by this host.")
 
             raw = await _response.text("utf-8", "ignore")
@@ -441,7 +359,11 @@ class Badfish:
             host_types = await self.get_host_types_from_yaml(_interfaces_path)
             for host_type in host_types:
                 match = True
-                interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                try:
+                    interfaces = await self.get_interfaces_by_type(host_type, _interfaces_path)
+                except BadfishException as ex:
+                    self.logger.debug(str(ex))
+                    continue
 
                 for device in sorted(self.boot_devices[: len(interfaces)], key=lambda x: x["Index"]):
                     if device["Name"] == interfaces[device["Index"]]:
@@ -455,16 +377,13 @@ class Badfish:
         return None
 
     async def find_session_uri(self):
-        _response = await self.get_request(self.root_uri, _get_token=True)
-        raw = await _response.text("utf-8", "ignore")
-        data = json.loads(raw.strip())
+        response = await self.http_client.get_request(self.root_uri, _get_token=True)
 
-        status = _response.status
-        if status == 401:
-            raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
-        if status not in [200, 201]:
+        if not response:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
         redfish_version = int(data["RedfishVersion"].replace(".", ""))
         session_uri = None
         if redfish_version >= 160:
@@ -473,8 +392,8 @@ class Badfish:
             session_uri = "/redfish/v1/Sessions"
 
         _uri = "%s%s" % (self.host_uri, session_uri)
-        check_response = await self.get_request(_uri, _get_token=True)
-        if check_response.status == 404:
+        check_response = await self.http_client.get_request(_uri, _continue=True, _get_token=True)
+        if check_response is None:
             session_uri = "/redfish/v1/SessionService/Sessions"
 
         return session_uri
@@ -483,9 +402,9 @@ class Badfish:
         payload = {"UserName": self.username, "Password": self.password}
         headers = {"content-type": "application/json"}
         _uri = "%s%s" % (self.host_uri, self.session_uri)
-        _response = await self.post_request(_uri, headers=headers, payload=payload, _get_token=True)
 
-        # Mock shifting value on value access and not on call.
+        _response = await self.http_client.post_request(_uri, payload, headers, _get_token=True)
+
         await _response.text("utf-8", "ignore")
 
         status = _response.status
@@ -494,18 +413,21 @@ class Badfish:
         if status not in [200, 201]:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
-        self.session_id = _response.headers.get("Location")
-        return _response.headers.get("X-Auth-Token")
+        # Extract token from response headers
+        token = _response.headers.get("X-Auth-Token")
+        if token:
+            self.token = token
+            self.http_client.token = token
+            # Store session info for cleanup
+            self.session_id = _response.headers.get("Location")
+
+        return token
 
     async def get_interfaces_endpoints(self):
         _uri = "%s%s/EthernetInterfaces" % (self.host_uri, self.system_resource)
-        _response = await self.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
-        raw = await _response.text("utf-8", "ignore")
-        data = json.loads(raw.strip())
-
-        if _response.status == 404:
-            self.logger.debug(raw)
+        if not data:
             raise BadfishException("EthernetInterfaces entry point not supported by this host.")
 
         endpoints = []
@@ -519,84 +441,84 @@ class Badfish:
 
     async def get_interface(self, endpoint):
         _uri = "%s%s" % (self.host_uri, endpoint)
-        _response = await self.get_request(_uri)
+        data = await self.http_client.get_json(_uri)
 
-        raw = await _response.text("utf-8", "ignore")
-
-        if _response.status == 404:
-            self.logger.debug(raw)
+        if not data:
             raise BadfishException("EthernetInterface entry point not supported by this host.")
-
-        data = json.loads(raw.strip())
 
         return data
 
     async def find_systems_resource(self):
-        response = await self.get_request(self.root_uri)
-        if response:
-            if response.status == 401:
-                raise BadfishException("Failed to authenticate. Verify your credentials.")
-
-            raw = await response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-            if "Systems" not in data:
-                raise BadfishException("Systems resource not found")
-            else:
-                systems = data["Systems"]["@odata.id"]
-                _response = await self.get_request(self.host_uri + systems)
-                if _response.status == 401:
-                    raise BadfishException("Authorization Error: verify credentials.")
-
-                raw = await _response.text("utf-8", "ignore")
-                data = json.loads(raw.strip())
-                if data.get("Members"):
-                    for member in data["Members"]:
-                        systems_service = member["@odata.id"]
-                        self.logger.debug("Systems service: %s." % systems_service)
-                        return systems_service
-                else:
-                    await self.error_handler(
-                        _response,
-                        message="ComputerSystem's Members array is either empty or missing",
-                    )
-        else:
+        response = await self.http_client.get_request(self.root_uri)
+        if not response:
             raise BadfishException("Failed to communicate with server.")
 
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
+        if "Systems" not in data:
+            raise BadfishException("Systems resource not found")
+
+        systems = data["Systems"]["@odata.id"]
+        systems_response = await self.http_client.get_request(self.host_uri + systems)
+        if not systems_response:
+            raise BadfishException("Authorization Error: verify credentials.")
+
+        raw = await systems_response.text("utf-8", "ignore")
+        systems_data = json.loads(raw.strip())
+
+        if systems_data.get("Members"):
+            for member in systems_data["Members"]:
+                systems_service = member["@odata.id"]
+                self.logger.debug("Systems service: %s." % systems_service)
+                return systems_service
+        else:
+            raise BadfishException("ComputerSystem's Members array is either empty or missing")
+
     async def find_managers_resource(self):
-        response = await self.get_request(self.root_uri)
-        if response:
-            raw = await response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
+        response = await self.http_client.get_request(self.root_uri)
+        if not response:
+            raise BadfishException("Failed to communicate with server.")
 
-            self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
+        self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
 
-            if "Managers" not in data:
-                raise BadfishException("Managers resource not found")
-            else:
-                managers = data["Managers"]["@odata.id"]
-                response = await self.get_request(self.host_uri + managers)
-                if response and response.status in [200, 201]:
-                    raw = await response.text("utf-8", "ignore")
-                    data = json.loads(raw.strip())
-                    if data.get("Members"):
-                        for member in data["Members"]:
-                            managers_service = member["@odata.id"]
-                            self.logger.debug("Managers service: %s." % managers_service)
-                            return managers_service
-                    else:
-                        raise BadfishException("Manager's Members array is either empty or missing")
+        if "Managers" not in data:
+            raise BadfishException("Managers resource not found")
+
+        managers = data["Managers"]["@odata.id"]
+        managers_response = await self.http_client.get_request(self.host_uri + managers)
+        managers_data = None
+        if managers_response:
+            raw = await managers_response.text("utf-8", "ignore")
+            managers_data = json.loads(raw.strip())
+        if managers_data and managers_data.get("Members"):
+            for member in managers_data["Members"]:
+                managers_service = member["@odata.id"]
+                self.logger.debug("Managers service: %s." % managers_service)
+                return managers_service
+        else:
+            raise BadfishException("Manager's Members array is either empty or missing")
+
+    # HTTP client wrapper methods
+    async def get_request(self, uri, _continue=False, _get_token=False):
+        return await self.http_client.get_request(uri, _continue, _get_token)
+
+    async def post_request(self, uri, payload, headers, _get_token=False):
+        return await self.http_client.post_request(uri, payload, headers, _get_token)
+
+    async def patch_request(self, uri, payload, headers, _continue=False):
+        return await self.http_client.patch_request(uri, payload, headers, _continue)
+
+    async def delete_request(self, uri, headers):
+        return await self.http_client.delete_request(uri, headers)
 
     async def get_power_state(self):
         _uri = "%s%s" % (self.host_uri, self.system_resource)
         self.logger.debug("url: %s" % _uri)
 
-        _response = await self.get_request(_uri, _continue=True)
-        if not _response:
-            return "Down"
-        if _response.status == 200:
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-        else:
+        data = await self.http_client.get_json(_uri, _continue=True)
+        if not data:
             self.logger.debug("Couldn't get power state. Retrying.")
             return "Down"
 
@@ -900,15 +822,16 @@ class Badfish:
 
             if status_code == 200:
                 await asyncio.sleep(10)
+                # Only try to access job data if we got a successful response
+                if isinstance(data, dict) and "Id" in data:
+                    self.logger.info(f"JobID: {data[u'Id']}")
+                    self.logger.info(f"Name: {data[u'Name']}")
+                    self.logger.info(f"Message: {data[u'Message']}")
+                    self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
             else:
                 self.logger.error(f"Command failed to check job status, return code is {status_code}")
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
-
-            self.logger.info(f"JobID: {data[u'Id']}")
-            self.logger.info(f"Name: {data[u'Name']}")
-            self.logger.info(f"Message: {data[u'Message']}")
-            self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
         else:
             self.logger.error("Command failed to check job status")
             return False
@@ -916,18 +839,21 @@ class Badfish:
     async def check_job_status(self, job_id):
         for count in range(self.retries):
             _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
-            self.get_request.cache_clear()
+            self.http_client.get_request.cache_clear()
             _response = await self.get_request(_url)
 
             status_code = _response.status
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
-            if status_code == 200:
-                pass
-            else:
+            if status_code != 200:
                 self.logger.error(f"Command failed to check job status, return code is {status_code}")
                 self.logger.debug(f"Extended Info Message: {data}")
                 return False
+
+            if "Message" not in data:
+                self.logger.warning("Job status response missing Message field")
+                return False
+
             if "Fail" in data["Message"] or "fail" in data["Message"]:
                 self.logger.debug(f"\n{job_id} job failed.")
                 return False
@@ -2126,12 +2052,31 @@ class Badfish:
         return True
 
     async def delete_session(self):
-        headers = {"content-type": "application/json"}
-        _uri = "%s%s" % (self.host_uri, self.session_id)
-        _response = await self.delete_request(_uri, headers=headers)
-        if _response.status not in [200, 201]:
-            raise BadfishException(f"Failed to delete X-Auth-Token for {self.host}")
-        return
+        try:
+            try:
+                if not self.session_id:
+                    self.logger.debug("No session ID found, skipping session deletion")
+                    return
+                headers = {"content-type": "application/json"}
+                _uri = "%s%s" % (self.host_uri, self.session_id)
+                try:
+                    _response = await self.delete_request(_uri, headers=headers)
+                    if _response.status in [200, 201]:
+                        self.logger.debug(f"Session successfully deleted for {self.host}")
+                    elif _response.status == 404:
+                        self.logger.debug(f"Session not found (404) for {self.host}, may have been already deleted")
+                    else:
+                        self.logger.warning(
+                            f"Unexpected status {_response.status} when deleting session for {self.host}."
+                        )
+                except Exception as ex:
+                    self.logger.warning(f"Failed to delete session for {self.host}: {ex}")
+            finally:
+                self.session_id = None
+                self.token = None
+        except Exception:
+            self.session_id = None
+            self.token = None
 
     async def get_scp_targets(self, op):
         uri = "%s%s" % (self.host_uri, self.manager_resource)
@@ -2183,7 +2128,7 @@ class Badfish:
         while True:
             ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_raw(uri)
+            response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if "SystemConfiguration" in data:
@@ -2251,7 +2196,7 @@ class Badfish:
         while True:
             ct = get_now() - start_time
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
-            response = await self.get_raw(uri)
+            response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
             if response.status in [200, 202]:
@@ -2564,6 +2509,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     get_nic_attribute = _args["get_nic_attribute"]
     set_nic_attribute = _args["set_nic_attribute"]
     result = True
+    badfish = None
 
     try:
         badfish = await badfish_factory(
@@ -2684,10 +2630,16 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         if pxe and not host_type:
             await badfish.set_next_boot_pxe()
 
-        await badfish.delete_session()
     except BadfishException as ex:
         logger.error(ex)
         result = False
+    finally:
+        if badfish and badfish.session_id:
+            try:
+                await badfish.delete_session()
+                logger.debug(f"Session closed for host: {_host}")
+            except BadfishException as ex:
+                logger.warning(f"Failed to close session for {_host}: {ex}")
 
     if _args["host_list"]:
         logger.info("*" * 48)
@@ -2702,283 +2654,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(
-        prog="badfish",
-        description="Tool for managing server hardware via the Redfish API.",
-        allow_abbrev=False,
-    )
-    parser.add_argument("-H", "--host", help="iDRAC host address")
-    parser.add_argument("-u", help="iDRAC username", required=True)
-    parser.add_argument("-p", help="iDRAC password", required=True)
-    parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
-    parser.add_argument("-t", help="Type of host as defined on iDRAC interfaces yaml")
-    parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
-    parser.add_argument(
-        "-o",
-        "--output",
-        choices=["json", "yaml"],
-        help="Optional argument for choosing a special output format (json/yaml), otherwise our normal format is used.",
-    )
-    parser.add_argument(
-        "-f",
-        "--force",
-        dest="force",
-        action="store_true",
-        help="Optional argument for forced clear-jobs",
-    )
-    parser.add_argument(
-        "--host-list",
-        help="Path to a plain text file with a list of hosts",
-        default=None,
-    )
-    parser.add_argument("--pxe", help="Set next boot to one-shot boot PXE", action="store_true")
-    parser.add_argument("--boot-to", help="Set next boot to one-shot boot to a specific device")
-    parser.add_argument(
-        "--boot-to-type",
-        help="Set next boot to one-shot boot to a specific type as defined on iDRAC interfaces yaml",
-    )
-    parser.add_argument(
-        "--boot-to-mac",
-        help="Set next boot to one-shot boot to a specific MAC address on the target",
-    )
-    parser.add_argument("--reboot-only", help="Flag for only rebooting the host", action="store_true")
-    parser.add_argument(
-        "--power-cycle",
-        help="Flag for sending ForceOff instruction to the host",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--power-state",
-        help="Get power state",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--power-on",
-        help="Power on host",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--power-off",
-        help="Power off host",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--get-power-consumed",
-        help="Get current consumed watts on host(s)",
-        action="store_true",
-    )
-    parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
-    parser.add_argument("--bmc-reset", help="Flag for BMC reset", action="store_true")
-    parser.add_argument(
-        "--factory-reset",
-        help="Reset BIOS to default factory settings",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--check-boot",
-        help="Flag for checking the host boot order",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--toggle-boot-device",
-        help="Change the enabled status of a boot device",
-        default="",
-    )
-    parser.add_argument(
-        "--firmware-inventory",
-        help="Get firmware inventory",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--delta",
-        help="Address of the other host between which the delta should be made",
-        default="",
-    )
-    parser.add_argument(
-        "--clear-jobs",
-        help="Clear any scheduled jobs from the queue",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--check-job",
-        help="Check a job status and details",
-    )
-    parser.add_argument(
-        "--ls-jobs",
-        help="List any scheduled jobs in queue",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ls-interfaces",
-        help="List Network interfaces",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ls-processors",
-        help="List Processor Summary",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ls-gpu",
-        help="List GPU's on host",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ls-memory",
-        help="List Memory Summary",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ls-serial",
-        help="List 'Serial Number'/'Service Tag'",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--check-virtual-media",
-        help="Check for mounted iso images",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--mount-virtual-media",
-        help="Mount iso image to virtual CD. Arguments should be the address/path to the iso.",
-        default="",
-    )
-    parser.add_argument(
-        "--unmount-virtual-media",
-        help="Unmount any mounted iso images",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--boot-to-virtual-media",
-        help="Boot to virtual media (Cd).",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--check-remote-image",
-        help="Check the attach status of network ISO.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--boot-remote-image",
-        help="Boot to network ISO, through NFS, takes two arguments 'hostname:path' and name of the ISO 'linux.iso'.",
-        default="",
-    )
-    parser.add_argument(
-        "--detach-remote-image",
-        help="Remove attached network ISO.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--get-sriov",
-        help="Gets global SRIOV mode state",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--enable-sriov",
-        help="Enables global SRIOV mode",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--disable-sriov",
-        help="Disables global SRIOV mode",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--get-bios-attribute",
-        help="Get a BIOS attribute value",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--set-bios-attribute",
-        help="Set a BIOS attribute value",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--attribute",
-        help="BIOS attribute name",
-        default="",
-    )
-    parser.add_argument(
-        "--value",
-        help="BIOS attribute value",
-        default="",
-    )
-    parser.add_argument(
-        "--set-bios-password",
-        help="Set the BIOS password",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--remove-bios-password",
-        help="Removes BIOS password",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--new-password",
-        help="The new password value",
-        default="",
-    )
-    parser.add_argument(
-        "--old-password",
-        help="The old password value",
-        default="",
-    )
-    parser.add_argument(
-        "--screenshot",
-        help="Take a screenshot of the system an store it in jpg format",
-        action="store_true",
-    )
-    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
-    parser.add_argument(
-        "-r",
-        "--retries",
-        help="Number of retries for executing actions.",
-        default=RETRIES,
-    )
-    parser.add_argument(
-        "--get-scp-targets",
-        help="Get allowable target values to export or import with iDRAC SCP. Choices=['Export', 'Import']",
-        choices=["Export", "Import"],
-        default="",
-    )
-    parser.add_argument(
-        "--scp-targets",
-        help="Comma separated targets which configs should be exported with iDRAC SCP.",
-        default="ALL",
-    )
-    parser.add_argument(
-        "--scp-include-read-only",
-        help="Flag for including read only attributes in SCP export.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--export-scp",
-        help="Export system config using iDRAC SCP, argument specifies where file should be saved.",
-        default="",
-    )
-    parser.add_argument(
-        "--import-scp",
-        help="Import system config using iDRAC SCP, argument specifies which JSON file contains config that should be "
-        "imported.",
-        default="",
-    )
-    parser.add_argument(
-        "--get-nic-fqdds",
-        help="List FQDDs for all NICs.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--get-nic-attribute",
-        help="Get a NIC attribute values, specify a NIC FQDD.",
-        default="",
-    )
-    parser.add_argument(
-        "--set-nic-attribute",
-        help="Set a NIC attribute value",
-        default="",
-    )
-
-    _args = vars(parser.parse_args(argv))
+    _args = parse_arguments(argv)
 
     log_level = DEBUG if _args["verbose"] else INFO
     host = _args["host"]
