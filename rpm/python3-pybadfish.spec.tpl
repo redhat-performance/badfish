@@ -31,18 +31,19 @@ BuildRequires:  zlib-devel
 %autosetup -n %{name}-%{version}
 
 %build
-%py3_build
-%{__python3} -m pip install --user -r tests/test-requirements.txt
+%pyproject_wheel
 
 %install
-%py3_install
+%pyproject_install
 
 %check
 %tox
 
-%files -n %{name} -f %{pyproject_files}
+%files -n %{name}
 %doc README.md
 %license LICENSE
+%{python3_sitelib}/py%{project}-%{version}.dist-info/
+%{python3_sitelib}/%{project}/
 %{_bindir}/%{project}
 
 %changelog
