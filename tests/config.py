@@ -97,10 +97,12 @@ RESPONSE_BOOT_TO = (
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_CUSTOM = (
-    f"- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
+    "- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
-RESPONSE_BOOT_TO_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+RESPONSE_BOOT_TO_BAD_TYPE = (
+    "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+)
 RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE = (
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 503.\n"
@@ -234,7 +236,9 @@ RESPONSE_CHANGE_BOOT_UEFI = (
     "- ERROR    - PxeDev3EnDis not found. Please check attribute name.\n"
     "- ERROR    - Attribute not found\n"
 )
-RESPONSE_CHANGE_BAD_TYPE = "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+RESPONSE_CHANGE_BAD_TYPE = (
+    "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+)
 RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
 RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
@@ -581,13 +585,8 @@ RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
     "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- ERROR    - There was something wrong getting processor details\n"
 )
-GPU_SUMMARY_RESP = (
-    '{"GPUSummary":"AMD Instinct MI300X": 2,}'
-
-)
-GPU_SUMMARY_RESP_FAULTY = (
-    '{"GPUSummary":"Unknown: 1"}'
-)
+GPU_SUMMARY_RESP = '{"GPUSummary":"AMD Instinct MI300X": 2,}'
+GPU_SUMMARY_RESP_FAULTY = '{"GPUSummary":"Unknown: 1"}'
 GPU_MEMBERS_RESP = (
     '{"Members": ['
     '{"@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/ProcAccelerator.Slot.21-1"},'
@@ -610,9 +609,7 @@ GPU_DATA_RESP2 = (
     '"ProcessorType": "Accelerator",'
     '"Id": "ProcAccelerator.Slot.22-1"}'
 )
-GPU_DATA_RESP_FAULTY = (
-    '{"GPU":"" }'
-)
+GPU_DATA_RESP_FAULTY = '{"GPU":"" }'
 RESPONSE_LS_GPU = (
     "- INFO     - GPU Summary:\n"
     "- INFO     -   Model: AMD Instinct MI300X (Count: 2)\n"
@@ -835,12 +832,8 @@ VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
 VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK = (
     "- ERROR    - There was something wrong trying to check remote image attach status.\n"
 )
-VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT = (
-    "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
-)
-VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH = (
-    "- INFO     - Command to detach remote ISO was successful.\n"
-)
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT = "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH = "- INFO     - Command to detach remote ISO was successful.\n"
 VMEDIA_REMOTE_CHECK_RESP = """
 {
     "@Message.ExtendedInfo": [{

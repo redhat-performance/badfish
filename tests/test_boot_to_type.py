@@ -1,11 +1,21 @@
 from unittest.mock import patch
 
-from tests.config import (BLANK_RESP, BOOT_MODE_RESP, BOOT_SEQ_RESP,
-                          BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
-                          INTERFACES_PATH, JOB_OK_RESP, RESET_TYPE_RESP,
-                          RESPONSE_BOOT_TO, RESPONSE_BOOT_TO_BAD_FILE,
-                          RESPONSE_BOOT_TO_BAD_TYPE, RESPONSE_BOOT_TO_CUSTOM, RESPONSE_BOOT_TO_NO_FILE,
-                          STATE_ON_RESP)
+from tests.config import (
+    BLANK_RESP,
+    BOOT_MODE_RESP,
+    BOOT_SEQ_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    INTERFACES_PATH,
+    JOB_OK_RESP,
+    RESET_TYPE_RESP,
+    RESPONSE_BOOT_TO,
+    RESPONSE_BOOT_TO_BAD_FILE,
+    RESPONSE_BOOT_TO_BAD_TYPE,
+    RESPONSE_BOOT_TO_CUSTOM,
+    RESPONSE_BOOT_TO_NO_FILE,
+    STATE_ON_RESP,
+)
 from tests.test_base import TestBase
 
 

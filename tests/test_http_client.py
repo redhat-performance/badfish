@@ -55,9 +55,7 @@ async def test_error_handler_valueerror_raises():
 async def test_error_handler_extended_info_with_custom_message():
     logger = DummyLogger()
     client = HTTPClient("host", "u", "p", logger)
-    payload = {
-        "error": {"@Message.ExtendedInfo": [{"Message": "detail", "Resolution": "fix it"}]}
-    }
+    payload = {"error": {"@Message.ExtendedInfo": [{"Message": "detail", "Resolution": "fix it"}]}}
     resp = SimpleNamespace(text=AsyncMock(return_value=json.dumps(payload)))
     with pytest.raises(BadfishException, match="custom"):
         await client.error_handler(resp, message="custom")
@@ -131,7 +129,7 @@ async def test_get_json_success_and_invalid():
         async def text(self, *args, **kwargs):
             return self._text
 
-    client.get_raw = AsyncMock(return_value=FakeResp("{\"a\":1}"))
+    client.get_raw = AsyncMock(return_value=FakeResp('{"a":1}'))
     data = await client.get_json("https://x1")
     assert data == {"a": 1}
 
@@ -315,8 +313,10 @@ async def test_delete_session_paths_and_cleanup():
     # Exception during delete => warning
     client.session_id = "/redfish/v1/SessionService/Sessions/4"
     client.token = "TK"
+
     async def raise_exc(*args, **kwargs):
         raise RuntimeError("fail")
+
     client.delete_request = AsyncMock(side_effect=raise_exc)
     await client.delete_session()
     assert any("Failed to delete session" in m for m in logger.warn_msgs)

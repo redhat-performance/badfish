@@ -3,9 +3,15 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.config import (IMAGE_SAVED, INIT_RESP, SCREENSHOT_BAD_REQUEST,
-                          SCREENSHOT_FALSE_OK, SCREENSHOT_NAME,
-                          SCREENSHOT_NOT_SUPPORTED, SCREENSHOT_RESP)
+from tests.config import (
+    IMAGE_SAVED,
+    INIT_RESP,
+    SCREENSHOT_BAD_REQUEST,
+    SCREENSHOT_FALSE_OK,
+    SCREENSHOT_NAME,
+    SCREENSHOT_NOT_SUPPORTED,
+    SCREENSHOT_RESP,
+)
 from tests.test_base import TestBase
 
 
