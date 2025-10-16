@@ -1,14 +1,22 @@
 from unittest.mock import patch
 
-from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP, JOB_OK_RESP,
-                          RESPONSE_POWER_OFF_ALREADY,
-                          RESPONSE_POWER_OFF_MISS_STATE,
-                          RESPONSE_POWER_OFF_NO_STATE, RESPONSE_POWER_OFF_NONE,
-                          RESPONSE_POWER_ON_NOT, RESPONSE_POWER_ON_OK,
-                          RESPONSE_POWER_STATE_DOWN,
-                          RESPONSE_POWER_STATE_EMPTY, RESPONSE_POWER_STATE_ON,
-                          STATE_OFF_RESP, STATE_ON_RESP)
-from tests.test_base import MockResponse, TestBase
+from tests.config import (
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    JOB_OK_RESP,
+    RESPONSE_POWER_OFF_ALREADY,
+    RESPONSE_POWER_OFF_MISS_STATE,
+    RESPONSE_POWER_OFF_NO_STATE,
+    RESPONSE_POWER_OFF_NONE,
+    RESPONSE_POWER_ON_NOT,
+    RESPONSE_POWER_ON_OK,
+    RESPONSE_POWER_STATE_DOWN,
+    RESPONSE_POWER_STATE_EMPTY,
+    RESPONSE_POWER_STATE_ON,
+    STATE_OFF_RESP,
+    STATE_ON_RESP,
+)
+from tests.test_base import TestBase
 
 
 class TestPowerOn(TestBase):
@@ -83,7 +91,7 @@ class TestPowerOff(TestBase):
     @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_request")
     def test_power_off_none(self, mock_get_req_call, mock_get, mock_post, mock_delete):
-        # The power off operation should return None when getting power state 
+        # The power off operation should return None when getting power state
         mock_get_req_call.side_effect = [None]
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")

@@ -1,14 +1,19 @@
 from unittest.mock import patch
 
-from tests.config import (DEVICE_NIC_I, DEVICE_NIC_S, ETHERNET_INTERFACES_RESP,
-                          ETHERNET_INTERFACES_RESP_NIC_INT,
-                          ETHERNET_INTERFACES_RESP_NIC_SLOT, INIT_RESP,
-                          NETWORK_ADAPTERS_RESP, NETWORK_DEV_FUNC_DET_RESP,
-                          NETWORK_DEV_FUNC_RESP, NETWORK_PORTS_RESP,
-                          NETWORK_PORTS_ROOT_RESP, RESPONSE_LS_ETHERNET,
-                          RESPONSE_LS_INTERFACES,
-                          RESPONSE_LS_INTERFACES_NOT_SUPPORTED,
-                          RESPONSE_LS_INTERFACES_VALUE_ERROR)
+from tests.config import (
+    DEVICE_NIC_I,
+    DEVICE_NIC_S,
+    INIT_RESP,
+    NETWORK_ADAPTERS_RESP,
+    NETWORK_DEV_FUNC_DET_RESP,
+    NETWORK_DEV_FUNC_RESP,
+    NETWORK_PORTS_RESP,
+    NETWORK_PORTS_ROOT_RESP,
+    RESPONSE_LS_ETHERNET,
+    RESPONSE_LS_INTERFACES,
+    RESPONSE_LS_INTERFACES_NOT_SUPPORTED,
+    RESPONSE_LS_INTERFACES_VALUE_ERROR,
+)
 from tests.test_base import TestBase
 
 
@@ -61,24 +66,24 @@ class TestLsInterfaces(TestBase):
     def test_ls_interfaces_ethernet(self, mock_get_ethernet, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: NetworkAdapters not supported, EthernetInterfaces supported
         mock_check_support.side_effect = [False, True]
-        
+
         # Mock the ethernet interfaces data
         ethernet_data = {
             "NIC.Slot.1-1-1": {
                 "Name": "System Ethernet Interface",
                 "MACAddress": "F8:BC:12:22:89:E1",
                 "Status": {"Health": "OK", "State": "Enabled"},
-                "SpeedMbps": 10240
+                "SpeedMbps": 10240,
             },
             "NIC.Integrated.1-1-1": {
-                "Name": "System Ethernet Interface", 
+                "Name": "System Ethernet Interface",
                 "MACAddress": "F8:BC:12:22:89:E0",
                 "Status": {"Health": "OK", "State": "Enabled"},
-                "SpeedMbps": 10240
-            }
+                "SpeedMbps": 10240,
+            },
         }
         mock_get_ethernet.return_value = ethernet_data
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -90,12 +95,10 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
-    def test_ls_interfaces_ethernet_not_supported(
-        self, mock_check_support, mock_get, mock_post, mock_delete
-    ):
+    def test_ls_interfaces_ethernet_not_supported(self, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
         mock_check_support.side_effect = [False, False]
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -126,7 +129,7 @@ class TestLsInterfaces(TestBase):
     def test_ls_interfaces_none_supported(self, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
         mock_check_support.side_effect = [False, False]
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")

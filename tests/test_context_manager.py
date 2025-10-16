@@ -10,16 +10,16 @@ class MockLogger:
         self.warning_calls = []
         self.info_calls = []
         self.error_calls = []
-    
+
     def debug(self, message):
         self.debug_calls.append(message)
-    
+
     def warning(self, message):
         self.warning_calls.append(message)
-    
+
     def info(self, message):
         self.info_calls.append(message)
-    
+
     def error(self, message):
         self.error_calls.append(message)
 
@@ -38,14 +38,14 @@ class TestContextManager:
         """Test successful entry and exit of the context manager."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
+
         # Mock the init method
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock) as mock_init:
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 async with badfish_instance as bf:
                     assert bf is badfish_instance
                     mock_init.assert_called_once()
-                
+
                 mock_delete.assert_called_once()
 
     @pytest.mark.asyncio
@@ -53,16 +53,16 @@ class TestContextManager:
         """Test that exceptions are properly handled and logged."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
+
         # Mock the init method to raise an exception
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock) as mock_init:
             mock_init.side_effect = BadfishException("Test exception")
-            
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 with pytest.raises(BadfishException):
                     async with badfish_instance:
                         pass
-                
+
                 # When init fails, __aexit__ is not called because the exception is raised before entering the context
                 mock_delete.assert_not_called()
 
@@ -71,14 +71,14 @@ class TestContextManager:
         """Test direct calls to __aenter__ and __aexit__ methods."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock) as mock_init:
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 # Test direct __aenter__ call
                 result = await badfish_instance.__aenter__()
                 assert result is badfish_instance
                 mock_init.assert_called_once()
-                
+
                 # Test direct __aexit__ call
                 await badfish_instance.__aexit__(None, None, None)
                 mock_delete.assert_called_once()
@@ -88,17 +88,17 @@ class TestContextManager:
         """Test nested usage of the context manager."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock) as mock_init:
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 # First context manager usage
                 async with badfish_instance as bf1:
                     assert bf1 is badfish_instance
-                    
+
                     # Nested context manager usage (should call init again)
                     async with badfish_instance as bf2:
                         assert bf2 is badfish_instance
-                
+
                 # delete_session should be called twice (once for each context)
                 assert mock_delete.call_count == 2
                 # init should be called twice (once for each context entry)
@@ -108,17 +108,19 @@ class TestContextManager:
     async def test_context_manager_integration_with_factory(self):
         """Test context manager integration with badfish_factory."""
         logger = MockLogger()
-        
-        with patch.object(Badfish, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(Badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
-                async with await badfish_factory(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES) as badfish:
+
+        with patch.object(Badfish, "init", new_callable=AsyncMock) as mock_init:
+            with patch.object(Badfish, "delete_session", new_callable=AsyncMock) as mock_delete:
+                async with await badfish_factory(
+                    MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES
+                ) as badfish:
                     assert isinstance(badfish, Badfish)
                     assert badfish.host == MOCK_HOST
                     assert badfish.username == MOCK_USERNAME
                     assert badfish.password == MOCK_PASSWORD
                     # badfish_factory calls init, then context manager calls it again
                     assert mock_init.call_count == 2
-                
+
                 mock_delete.assert_called_once()
 
     @pytest.mark.asyncio
@@ -126,15 +128,15 @@ class TestContextManager:
         """Test that session cleanup happens even with exceptions."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock):
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 try:
                     async with badfish_instance:
                         raise ValueError("Unexpected error")
                 except ValueError:
                     pass
-                
+
                 # delete_session should still be called despite the exception
                 mock_delete.assert_called_once()
 
@@ -143,15 +145,15 @@ class TestContextManager:
         """Test context manager behavior when init fails."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
+
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock) as mock_init:
             mock_init.side_effect = BadfishException("Init failed")
-            
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 with pytest.raises(BadfishException):
                     async with badfish_instance:
                         pass
-                
+
                 # When init fails, __aexit__ is not called
                 mock_delete.assert_not_called()
 
@@ -160,11 +162,11 @@ class TestContextManager:
         """Test context manager behavior when delete_session fails."""
         logger = MockLogger()
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
-        
-        with patch.object(badfish_instance, 'init', new_callable=AsyncMock) as mock_init:
-            with patch.object(badfish_instance, 'delete_session', new_callable=AsyncMock) as mock_delete:
+
+        with patch.object(badfish_instance, "init", new_callable=AsyncMock):
+            with patch.object(badfish_instance, "delete_session", new_callable=AsyncMock) as mock_delete:
                 mock_delete.side_effect = BadfishException("Delete session failed")
-                
+
                 # The exception should be re-raised from __aexit__
                 with pytest.raises(BadfishException):
                     async with badfish_instance:
@@ -181,26 +183,26 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
+
         # Mock the delete_request method
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             # Mock response with status 200
             mock_response = MagicMock()
             mock_response.status = 200
             mock_delete_request.return_value = mock_response
-            
+
             await badfish_instance.delete_session()
-            
+
             # Verify delete_request was called with correct parameters
             mock_delete_request.assert_called_once()
             call_args = mock_delete_request.call_args
             assert call_args[0][0] == f"https://{MOCK_HOST}/redfish/v1/SessionService/Sessions/123"
-            assert call_args[1]['headers'] == {"content-type": "application/json"}
-            
+            assert call_args[1]["headers"] == {"content-type": "application/json"}
+
             # Verify session_id and token are cleared
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
-            
+
             # Verify success message was logged
             assert any("Session successfully deleted" in call for call in logger.debug_calls)
 
@@ -211,19 +213,19 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             # Mock response with status 404
             mock_response = MagicMock()
             mock_response.status = 404
             mock_delete_request.return_value = mock_response
-            
+
             await badfish_instance.delete_session()
-            
+
             # Verify session_id and token are still cleared
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
-            
+
             # Verify appropriate message was logged
             assert any("Session not found (404)" in call for call in logger.debug_calls)
 
@@ -234,19 +236,19 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             # Mock response with unexpected status
             mock_response = MagicMock()
             mock_response.status = 500
             mock_delete_request.return_value = mock_response
-            
+
             await badfish_instance.delete_session()
-            
+
             # Verify session_id and token are still cleared
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
-            
+
             # Verify warning was logged
             assert any("Unexpected status 500" in call for call in logger.warning_calls)
 
@@ -257,16 +259,16 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             mock_delete_request.side_effect = BadfishException("Network error")
-            
+
             await badfish_instance.delete_session()
-            
+
             # Verify session_id and token are still cleared despite the exception
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
-            
+
             # Verify exception was logged as warning
             assert any("Failed to delete session" in call for call in logger.warning_calls)
             assert any("Network error" in call for call in logger.warning_calls)
@@ -278,16 +280,16 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = None
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             await badfish_instance.delete_session()
-            
+
             # delete_request should not be called
             mock_delete_request.assert_not_called()
-            
+
             # token should still be cleared
             assert badfish_instance.token is None
-            
+
             # Verify appropriate message was logged
             assert any("No session ID found" in call for call in logger.debug_calls)
 
@@ -298,14 +300,14 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             # Mock response to raise an exception
             mock_delete_request.side_effect = Exception("Unexpected error")
-            
+
             # The method should not raise the exception due to try/finally
             await badfish_instance.delete_session()
-            
+
             # Verify session_id and token are still cleared despite the exception
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
@@ -317,14 +319,14 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
-        with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+
+        with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
             # Mock response to raise a different exception
             mock_delete_request.side_effect = ValueError("Unexpected error")
-            
+
             # The method should not raise the exception due to try/finally
             await badfish_instance.delete_session()
-            
+
             # Verify session_id and token are still cleared
             assert badfish_instance.session_id is None
             assert badfish_instance.token is None
@@ -336,23 +338,23 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = "/redfish/v1/SessionService/Sessions/123"
         badfish_instance.token = "test_token"
-        
+
         # Mock the logger to raise an exception when debug is called
         # This will trigger the outer exception handler
-        with patch.object(logger, 'debug', side_effect=RuntimeError("Logger error")):
-            with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+        with patch.object(logger, "debug", side_effect=RuntimeError("Logger error")):
+            with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
                 # Mock successful response
                 mock_response = MagicMock()
                 mock_response.status = 200
                 mock_delete_request.return_value = mock_response
-                
+
                 # The method should not raise the exception due to outer exception handler
                 await badfish_instance.delete_session()
-                
+
                 # Verify session_id and token are still cleared despite the logger exception
                 assert badfish_instance.session_id is None
                 assert badfish_instance.token is None
-                
+
                 # Verify delete_request was called
                 mock_delete_request.assert_called_once()
 
@@ -363,17 +365,17 @@ class TestDeleteSession:
         badfish_instance = Badfish(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD, logger, MOCK_RETRIES)
         badfish_instance.session_id = None
         badfish_instance.token = "test_token"
-        
+
         # Mock the logger to raise an exception when debug is called
-        with patch.object(logger, 'debug', side_effect=RuntimeError("Logger error")):
-            with patch.object(badfish_instance, 'delete_request', new_callable=AsyncMock) as mock_delete_request:
+        with patch.object(logger, "debug", side_effect=RuntimeError("Logger error")):
+            with patch.object(badfish_instance, "delete_request", new_callable=AsyncMock) as mock_delete_request:
                 # The method should not raise the exception due to outer exception handler
                 await badfish_instance.delete_session()
-                
+
                 # Verify session_id and token are still cleared despite the logger exception
                 assert badfish_instance.session_id is None
                 assert badfish_instance.token is None
-                
+
                 # Verify delete_request was not called (since session_id was None)
                 mock_delete_request.assert_not_called()
 
@@ -385,7 +387,7 @@ class TestExecuteBadfishSessionCleanup:
     async def test_execute_badfish_session_cleanup_success(self):
         """Test successful session cleanup in execute_badfish."""
         from src.badfish.main import execute_badfish
-        
+
         logger = MockLogger()
         args = {
             "u": MOCK_USERNAME,
@@ -448,17 +450,17 @@ class TestExecuteBadfishSessionCleanup:
             "get_nic_attribute": None,
             "set_nic_attribute": None,
         }
-        
-        with patch('src.badfish.main.badfish_factory') as mock_factory:
+
+        with patch("src.badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance
             mock_badfish = MagicMock()
             mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
             mock_factory.return_value = mock_badfish
-            
+
             # Mock successful operation
-            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+            with patch.object(mock_badfish, "delete_session", new_callable=AsyncMock) as mock_delete:
                 host, result = await execute_badfish(MOCK_HOST, args, logger)
-                
+
                 assert host == MOCK_HOST
                 assert result is True
                 mock_delete.assert_called_once()
@@ -468,7 +470,7 @@ class TestExecuteBadfishSessionCleanup:
     async def test_execute_badfish_session_cleanup_failure(self):
         """Test session cleanup failure in execute_badfish."""
         from src.badfish.main import execute_badfish
-        
+
         logger = MockLogger()
         args = {
             "u": MOCK_USERNAME,
@@ -531,19 +533,19 @@ class TestExecuteBadfishSessionCleanup:
             "get_nic_attribute": None,
             "set_nic_attribute": None,
         }
-        
-        with patch('src.badfish.main.badfish_factory') as mock_factory:
+
+        with patch("src.badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance
             mock_badfish = MagicMock()
             mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
             mock_factory.return_value = mock_badfish
-            
+
             # Mock delete_session to raise an exception
-            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+            with patch.object(mock_badfish, "delete_session", new_callable=AsyncMock) as mock_delete:
                 mock_delete.side_effect = BadfishException("Session cleanup failed")
-                
+
                 host, result = await execute_badfish(MOCK_HOST, args, logger)
-                
+
                 assert host == MOCK_HOST
                 assert result is True
                 mock_delete.assert_called_once()
@@ -555,7 +557,7 @@ class TestExecuteBadfishSessionCleanup:
     async def test_execute_badfish_no_session_cleanup(self):
         """Test execute_badfish when no session exists to clean up."""
         from src.badfish.main import execute_badfish
-        
+
         logger = MockLogger()
         args = {
             "u": MOCK_USERNAME,
@@ -618,17 +620,17 @@ class TestExecuteBadfishSessionCleanup:
             "get_nic_attribute": None,
             "set_nic_attribute": None,
         }
-        
-        with patch('src.badfish.main.badfish_factory') as mock_factory:
+
+        with patch("src.badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance with no session_id
             mock_badfish = MagicMock()
             mock_badfish.session_id = None
             mock_factory.return_value = mock_badfish
-            
+
             # Mock delete_session
-            with patch.object(mock_badfish, 'delete_session', new_callable=AsyncMock) as mock_delete:
+            with patch.object(mock_badfish, "delete_session", new_callable=AsyncMock) as mock_delete:
                 host, result = await execute_badfish(MOCK_HOST, args, logger)
-                
+
                 assert host == MOCK_HOST
                 assert result is True
                 # delete_session should not be called when session_id is None
@@ -638,7 +640,7 @@ class TestExecuteBadfishSessionCleanup:
     async def test_execute_badfish_no_badfish_instance(self):
         """Test execute_badfish when badfish instance is None."""
         from src.badfish.main import execute_badfish
-        
+
         logger = MockLogger()
         args = {
             "u": MOCK_USERNAME,
@@ -701,15 +703,15 @@ class TestExecuteBadfishSessionCleanup:
             "get_nic_attribute": None,
             "set_nic_attribute": None,
         }
-        
-        with patch('src.badfish.main.badfish_factory') as mock_factory:
+
+        with patch("src.badfish.main.badfish_factory") as mock_factory:
             # Mock badfish_factory to raise an exception
             mock_factory.side_effect = BadfishException("Connection failed")
-            
+
             host, result = await execute_badfish(MOCK_HOST, args, logger)
-            
+
             assert host == MOCK_HOST
             assert result is False
             # No session cleanup should happen when badfish is None
             assert not any("Session closed for host" in call for call in logger.debug_calls)
-            assert not any("Failed to close session for" in call for call in logger.warning_calls) 
+            assert not any("Failed to close session for" in call for call in logger.warning_calls)

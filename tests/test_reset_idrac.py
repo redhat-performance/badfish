@@ -1,9 +1,14 @@
 from unittest.mock import patch
 
-from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
-                          INIT_RESP_SUPERMICRO, RESET_TYPE_RESP,
-                          RESPONSE_RESET, RESPONSE_RESET_FAIL,
-                          RESPONSE_RESET_WRONG_VENDOR)
+from tests.config import (
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    INIT_RESP_SUPERMICRO,
+    RESET_TYPE_RESP,
+    RESPONSE_RESET,
+    RESPONSE_RESET_FAIL,
+    RESPONSE_RESET_WRONG_VENDOR,
+)
 from tests.test_base import TestBase
 
 

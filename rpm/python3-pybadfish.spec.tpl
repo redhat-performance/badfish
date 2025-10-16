@@ -21,10 +21,17 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
 BuildRequires:  zlib-devel
-BuildRequires:  python3-coverage
+BuildRequires:  python3dist(pytest)
+BuildRequires:  python3dist(pytest-cov)
+BuildRequires:  python3dist(codecov)
+BuildRequires:  python3dist(pytest-asyncio)
+BuildRequires:  python3dist(pyyaml)
+BuildRequires:  python3dist(aiohttp)
+BuildRequires:  python3dist(tox)
+BuildRequires:  python3dist(coverage)
 Provides:       badfish = %{version}-%{release}
 %generate_buildrequires
-%pyproject_buildrequires -t
+%pyproject_buildrequires
 
 %description
 %{desc}
@@ -39,7 +46,7 @@ Provides:       badfish = %{version}-%{release}
 %pyproject_install
 
 %check
-%tox
+tox run-parallel --skip-missing-interpreters false
 
 %files -n %{name}
 %doc README.md

@@ -1,40 +1,57 @@
 from unittest.mock import patch
 
-from tests.config import (BLANK_RESP, BOOT_MODE_RESP, BOOT_SEQ_RESP,
-                          BOOT_SEQ_RESPONSE_DIRECTOR,
-                          BOOT_SEQ_RESPONSE_OPTICAL,
-                          BOOT_SOURCE_OVERRIDE_TARGET_CD,
-                          BOOT_SOURCE_OVERRIDE_TARGET_USBCD, INIT_RESP,
-                          INIT_RESP_SUPERMICRO, JOB_OK_RESP, RESPONSE_BOOT_TO,
-                          VMEDIA_BOOT_TO_MISSING, VMEDIA_BOOT_TO_NO_MEDIA,
-                          VMEDIA_BOOT_TO_SM_FAIL, VMEDIA_BOOT_TO_SM_PASS,
-                          VMEDIA_CHECK_DISC_VALUE_ERROR,
-                          VMEDIA_CHECK_GOOD_DELL, VMEDIA_CHECK_GOOD_SM,
-                          VMEDIA_CONFIG_NO_CONFIG, VMEDIA_CONFIG_NO_RESOURCE,
-                          VMEDIA_GET_VM_CONFIG_EMPTY_RESP_SM,
-                          VMEDIA_GET_VM_CONFIG_RESP_DELL,
-                          VMEDIA_GET_VM_CONFIG_RESP_SM,
-                          VMEDIA_GET_VM_CONFIG_RESP_SM_WITH_MEMBERS,
-                          VMEDIA_MEMBER_CD_RESP, VMEDIA_MEMBER_RM_DISK_RESP,
-                          VMEDIA_MOUNT_ALREADY_FILLED,
-                          VMEDIA_MOUNT_NOT_ALLOWED,
-                          VMEDIA_MOUNT_SOMETHING_WRONG, VMEDIA_MOUNT_SUCCESS,
-                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK,
-                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT,
-                          VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH,
-                          VMEDIA_REMOTE_BOOT_COMMAND_FAIL,
-                          VMEDIA_REMOTE_BOOT_GOOD,
-                          VMEDIA_REMOTE_BOOT_SOMETHING_WRONG,
-                          VMEDIA_REMOTE_BOOT_TASK_FAIL,
-                          VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP,
-                          VMEDIA_REMOTE_BOOT_TASK_RESP,
-                          VMEDIA_REMOTE_BOOT_WRONG_PATH,
-                          VMEDIA_REMOTE_CHECK_ERROR, VMEDIA_REMOTE_CHECK_FAIL,
-                          VMEDIA_REMOTE_CHECK_GOOD, VMEDIA_REMOTE_CHECK_RESP,
-                          VMEDIA_REMOTE_DETACH_FAIL, VMEDIA_REMOTE_DETACH_GOOD,
-                          VMEDIA_UNMOUNT_EMPTY, VMEDIA_UNMOUNT_NOT_ALLOWED,
-                          VMEDIA_UNMOUNT_SOMETHING_WRONG,
-                          VMEDIA_UNMOUNT_SUCCESS)
+from tests.config import (
+    BLANK_RESP,
+    BOOT_MODE_RESP,
+    BOOT_SEQ_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    BOOT_SEQ_RESPONSE_OPTICAL,
+    BOOT_SOURCE_OVERRIDE_TARGET_CD,
+    BOOT_SOURCE_OVERRIDE_TARGET_USBCD,
+    INIT_RESP,
+    INIT_RESP_SUPERMICRO,
+    JOB_OK_RESP,
+    RESPONSE_BOOT_TO,
+    VMEDIA_BOOT_TO_MISSING,
+    VMEDIA_BOOT_TO_NO_MEDIA,
+    VMEDIA_BOOT_TO_SM_FAIL,
+    VMEDIA_BOOT_TO_SM_PASS,
+    VMEDIA_CHECK_DISC_VALUE_ERROR,
+    VMEDIA_CHECK_GOOD_DELL,
+    VMEDIA_CHECK_GOOD_SM,
+    VMEDIA_CONFIG_NO_CONFIG,
+    VMEDIA_CONFIG_NO_RESOURCE,
+    VMEDIA_GET_VM_CONFIG_EMPTY_RESP_SM,
+    VMEDIA_GET_VM_CONFIG_RESP_DELL,
+    VMEDIA_GET_VM_CONFIG_RESP_SM,
+    VMEDIA_GET_VM_CONFIG_RESP_SM_WITH_MEMBERS,
+    VMEDIA_MEMBER_CD_RESP,
+    VMEDIA_MEMBER_RM_DISK_RESP,
+    VMEDIA_MOUNT_ALREADY_FILLED,
+    VMEDIA_MOUNT_NOT_ALLOWED,
+    VMEDIA_MOUNT_SOMETHING_WRONG,
+    VMEDIA_MOUNT_SUCCESS,
+    VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK,
+    VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT,
+    VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH,
+    VMEDIA_REMOTE_BOOT_COMMAND_FAIL,
+    VMEDIA_REMOTE_BOOT_GOOD,
+    VMEDIA_REMOTE_BOOT_SOMETHING_WRONG,
+    VMEDIA_REMOTE_BOOT_TASK_FAIL,
+    VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP,
+    VMEDIA_REMOTE_BOOT_TASK_RESP,
+    VMEDIA_REMOTE_BOOT_WRONG_PATH,
+    VMEDIA_REMOTE_CHECK_ERROR,
+    VMEDIA_REMOTE_CHECK_FAIL,
+    VMEDIA_REMOTE_CHECK_GOOD,
+    VMEDIA_REMOTE_CHECK_RESP,
+    VMEDIA_REMOTE_DETACH_FAIL,
+    VMEDIA_REMOTE_DETACH_GOOD,
+    VMEDIA_UNMOUNT_EMPTY,
+    VMEDIA_UNMOUNT_NOT_ALLOWED,
+    VMEDIA_UNMOUNT_SOMETHING_WRONG,
+    VMEDIA_UNMOUNT_SUCCESS,
+)
 from tests.test_base import TestBase
 
 
@@ -491,10 +508,7 @@ class TestBootRemoteImage(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_boot_good(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            BLANK_RESP,
-            VMEDIA_REMOTE_BOOT_TASK_RESP
-        ]
+        responses_get = [BLANK_RESP, VMEDIA_REMOTE_BOOT_TASK_RESP]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], "OK", True)
@@ -533,10 +547,7 @@ class TestBootRemoteImage(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_boot_task_fail(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            BLANK_RESP,
-            VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP
-        ]
+        responses_get = [BLANK_RESP, VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], "OK", True)
@@ -549,10 +560,7 @@ class TestBootRemoteImage(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_boot_something_wrong(self, mock_get, mock_post, mock_delete):
-        responses_get = [
-            BLANK_RESP,
-            BLANK_RESP
-        ]
+        responses_get = [BLANK_RESP, BLANK_RESP]
         responses = INIT_RESP + responses_get
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], "OK", True)

@@ -1,10 +1,14 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from tests.config import (INIT_RESP, NO_POWER, POWER_CONSUMED_RESP,
-                          RESPONSE_NO_POWER_CONSUMED,
-                          RESPONSE_POWER_CONSUMED_OK,
-                          RESPONSE_POWER_CONSUMED_VAL_ERR,
-                          RESPONSE_VENDOR_UNSUPPORTED)
+from tests.config import (
+    INIT_RESP,
+    NO_POWER,
+    POWER_CONSUMED_RESP,
+    RESPONSE_NO_POWER_CONSUMED,
+    RESPONSE_POWER_CONSUMED_OK,
+    RESPONSE_POWER_CONSUMED_VAL_ERR,
+    RESPONSE_VENDOR_UNSUPPORTED,
+)
 from tests.test_base import TestBase
 
 
@@ -29,9 +33,10 @@ class TestPowerConsumed(TestBase):
         # Mock the get_request method to return a 404 response that properly triggers vendor error
         with patch("src.badfish.main.Badfish.get_request") as mock_get_request:
             from tests.test_base import MockResponse
+
             # Mock get_request to return 404 for power endpoint
             mock_get_request.return_value = MockResponse('{"error": "Not Found"}', 404)
-            
+
             self.set_mock_response(mock_get, 200, INIT_RESP)
             self.set_mock_response(mock_post, 200, "OK", True)
             self.set_mock_response(mock_delete, 200, "OK")

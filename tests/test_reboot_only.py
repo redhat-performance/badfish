@@ -1,12 +1,17 @@
 from unittest.mock import patch
 
-from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
-                          RESET_TYPE_NG_RESP, RESET_TYPE_RESP,
-                          RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE,
-                          RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET,
-                          RESPONSE_REBOOT_ONLY_SUCCESS,
-                          RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT,
-                          STATE_DOWN_RESP, STATE_OFF_RESP, STATE_ON_RESP)
+from tests.config import (
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    RESET_TYPE_NG_RESP,
+    RESET_TYPE_RESP,
+    RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET,
+    RESPONSE_REBOOT_ONLY_SUCCESS,
+    RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT,
+    STATE_DOWN_RESP,
+    STATE_OFF_RESP,
+    STATE_ON_RESP,
+)
 from tests.test_base import TestBase
 
 
@@ -34,9 +39,7 @@ class TestRebootOnly(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_reboot_only_success_with_polling_down(
-        self, mock_get, mock_post, mock_delete
-    ):
+    def test_reboot_only_success_with_polling_down(self, mock_get, mock_post, mock_delete):
         responses = INIT_RESP + [
             RESET_TYPE_RESP,
             STATE_ON_RESP,
@@ -98,9 +101,7 @@ class TestRebootOnly(TestBase):
         ]
         self.set_mock_response(mock_get, 200, responses)
         # Provide enough POST responses to handle the entire reboot sequence
-        self.set_mock_response(
-            mock_post, [200] + [409] * 10, ["OK"] + ["Conflict"] * 10, True
-        )
+        self.set_mock_response(mock_post, [200] + [409] * 10, ["OK"] + ["Conflict"] * 10, True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg]
         _, err = self.badfish_call()

@@ -1,9 +1,15 @@
 from unittest.mock import patch
 
-from tests.config import (BOOT_SEQ_RESPONSE_DIRECTOR, INIT_RESP,
-                          INIT_RESP_SUPERMICRO, RESET_TYPE_RESP,
-                          RESET_TYPE_RESP_NO_ALLOWABLE_VALUES, RESPONSE_RESET,
-                          RESPONSE_RESET_FAIL, RESPONSE_RESET_WRONG_VENDOR)
+from tests.config import (
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    INIT_RESP,
+    INIT_RESP_SUPERMICRO,
+    RESET_TYPE_RESP,
+    RESET_TYPE_RESP_NO_ALLOWABLE_VALUES,
+    RESPONSE_RESET,
+    RESPONSE_RESET_FAIL,
+    RESPONSE_RESET_WRONG_VENDOR,
+)
 from tests.test_base import TestBase
 
 
@@ -61,4 +67,3 @@ class TestResetBMC(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_RESET_WRONG_VENDOR % ("Supermicro", "Dell", "--racreset")
-

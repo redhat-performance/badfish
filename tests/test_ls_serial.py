@@ -1,11 +1,15 @@
 from unittest.mock import patch
 
-from tests.config import (DELL_REDFISH_ROOT_OEM_RESP, EMPTY_OEM_RESP,
-                          INIT_RESP, RESPONSE_LS_SERIAL_NUMBER,
-                          RESPONSE_LS_SERIAL_SERVICE_TAG,
-                          RESPONSE_LS_SERIAL_SOMETHING_WRONG,
-                          RESPONSE_LS_SERIAL_UNSUPPORTED,
-                          SYSTEM_SERIAL_NUMBER_RESP)
+from tests.config import (
+    DELL_REDFISH_ROOT_OEM_RESP,
+    EMPTY_OEM_RESP,
+    INIT_RESP,
+    RESPONSE_LS_SERIAL_NUMBER,
+    RESPONSE_LS_SERIAL_SERVICE_TAG,
+    RESPONSE_LS_SERIAL_SOMETHING_WRONG,
+    RESPONSE_LS_SERIAL_UNSUPPORTED,
+    SYSTEM_SERIAL_NUMBER_RESP,
+)
 from tests.test_base import TestBase
 
 
@@ -40,10 +44,10 @@ class TestLsSerial(TestBase):
     @patch("src.badfish.main.Badfish.get_serial_summary")
     def test_ls_serial_unsupported_root(self, mock_get_serial_summary, mock_get, mock_post, mock_delete):
         from src.badfish.main import BadfishException
-        
+
         # Mock serial summary to raise the expected exception
         mock_get_serial_summary.side_effect = BadfishException("Server does not support this functionality")
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -56,10 +60,10 @@ class TestLsSerial(TestBase):
     @patch("src.badfish.main.Badfish.get_serial_summary")
     def test_ls_serial_unsupported_systems(self, mock_get_serial_summary, mock_get, mock_post, mock_delete):
         from src.badfish.main import BadfishException
-        
+
         # Mock serial summary to raise the expected exception
         mock_get_serial_summary.side_effect = BadfishException("Server does not support this functionality")
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
