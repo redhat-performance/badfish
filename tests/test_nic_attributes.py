@@ -76,14 +76,14 @@ class TestNICFQDDs(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_get_nic_fqdds_unsupported(self, mock_get, mock_post, mock_delete):
         responses = INIT_RESP + ["{}", "{}", "{}"]
-        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 404, 404, 404], responses)
+        self.set_mock_response(mock_get, 404, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [
             self.option_arg,
         ]
         _, err = self.badfish_call()
-        assert err == RESPONSE_VENDOR_UNSUPPORTED
+        assert err == RESPONSE_VENDOR_UNSUPPORTED + '\n'
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
