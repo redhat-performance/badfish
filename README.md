@@ -142,6 +142,8 @@ Active RPM releases:
 ### Badfish Standalone CLI
 ```bash
 git clone https://github.com/redhat-performance/badfish && cd badfish
+python3 -m venv bf
+source bf/bin/activate
 python3 -m pip install --upgrade build
 python3 -m build
 python3 -m pip install dist/pybadfish-*.tar.gz
