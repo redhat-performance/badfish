@@ -4,7 +4,7 @@
 
 <h2 align="center">The Out-of-Band Wrangler</h2>
 
-[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/package/python3-pybadfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-pybadfish/)
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/package/python3-pybadfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/package/python3-pybadfish/)
 [![Codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Container image on Quay](https://quay.io/repository/quads/badfish/status "Container image on Quay")](https://quay.io/repository/quads/badfish)
 [![Tox](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
