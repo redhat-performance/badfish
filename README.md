@@ -147,9 +147,9 @@ python3 -m build
 python3 -m pip install dist/pybadfish-*.tar.gz
 ```
 > [!TIP]
-
-* This will allow Badfish to be called from the terminal via the `badfish` command
-* This requires `python3-devel` if you see errors about missing `Python.h`.
+> This will allow Badfish to be called from the terminal via the `badfish` command
+>
+> This requires `python3-devel` if you see errors about missing `Python.h`.
 
 ### Badfish Container
 Perhaps the easiest way to run Badfish is with Podman, you can see more usage details below on [using the Badfish container with Podman](#via-podman).  You can substitute Docker for Podman as well though not all functionality may be actively tested as we prefer Podman.
@@ -228,8 +228,9 @@ We will likely add more libaries in the future and [can't guarantee](https://git
 If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
 
 > [!NOTE]
-
-If you plan on using the `idrac_interfaces.yml` file to further customize or define pre-made boot orders you'll want to model your own [based on the repo example file](config/idrac_interfaces.yml).  This file serves as an example but is specific to our internal environments so you'd most likely want to modify it to match your environment and naming conventions.
+> If you plan on using the `idrac_interfaces.yml` file to further customize or define pre-made boot orders you'll want to model your own [based on the repo example file](config/idrac_interfaces.yml).
+>
+> This file serves as an example but is specific to our internal environments so you'd most likely want to modify it to match your environment and naming conventions.
 
 You can always retrieve our example `idrac_interfaces.yml` file via:
 
@@ -550,12 +551,13 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-attribute 
 ```
 
 ### Set NIC attribute
+> [!WARNING]
+> This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
+
 To change the value of a NIC attribute you can use ```--set-nic-attribute``` with the desired FQDD, passing both ```--attribute``` and desired ```--value```.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
 ```
-> [!WARNING]
-> This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
 
 ### Get BIOS attributes
 To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
@@ -575,7 +577,7 @@ To change the value of a bios attribute you can use ```--set-bios-attribute``` p
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute ProcC1E --value Enabled
 ```
 > [!NOTE]
-* You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
+> You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
 
 ### Change between BIOS and UEFI modes
 * Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers.
@@ -726,5 +728,6 @@ Please refer to our contributing [guide](CONTRIBUTING.md).
 
 ## Contact
 
-* You can find us on IRC in `#badfish` (or `#quads`) on `irc.libera.chat` if you have questions or need help.  [Click here](https://https://web.libera.chat/?channels=#quads) to join in your browser.
+* You can find us on IRC in `#badfish` (or `#quads`) on `irc.libera.chat` if you have questions or need help.
+* [Click here](https://https://web.libera.chat/?channels=#quads) to join in your browser.
 
