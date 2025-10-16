@@ -2,14 +2,20 @@ import os
 from unittest.mock import patch
 
 from src.badfish.helpers.exceptions import BadfishException
-from tests.config import (HOST_LIST_EXTRAS, KEYBOARD_INTERRUPT,
-                          KEYBOARD_INTERRUPT_HOST_LIST, MAN_RESP,
-                          NO_HOST_ERROR, RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
-                          RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
-                          RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
-                          ROOT_RESP, SUCCESSFUL_HOST_LIST,
-                          WRONG_BADFISH_EXECUTION,
-                          WRONG_BADFISH_EXECUTION_HOST_LIST)
+from tests.config import (
+    HOST_LIST_EXTRAS,
+    KEYBOARD_INTERRUPT,
+    KEYBOARD_INTERRUPT_HOST_LIST,
+    MAN_RESP,
+    NO_HOST_ERROR,
+    RESPONSE_INIT_CREDENTIALS_FAILED_COMS,
+    RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED,
+    RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
+    ROOT_RESP,
+    SUCCESSFUL_HOST_LIST,
+    WRONG_BADFISH_EXECUTION,
+    WRONG_BADFISH_EXECUTION_HOST_LIST,
+)
 from tests.test_base import TestBase
 
 
@@ -106,11 +112,10 @@ class TestInitialization(TestBase):
         # 2: Check session URI exists
         # 3: Systems resource (should return 401)
         # Additional responses needed if code continues after authentication
-        responses = [ROOT_RESP, ROOT_RESP, ROOT_RESP, ROOT_RESP, MAN_RESP, 
-                    '{"Members":[]}', ROOT_RESP]
+        responses = [ROOT_RESP, ROOT_RESP, ROOT_RESP, ROOT_RESP, MAN_RESP, '{"Members":[]}', ROOT_RESP]
         # Put 401 on a different position - the key is finding where Systems is actually called
         self.set_mock_response(mock_get, [200, 200, 200, 401, 200, 200, 200], responses)
-        self.set_mock_response(mock_post, 200, "OK") 
+        self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
         assert err == "- ERROR    - ComputerSystem's Members array is either empty or missing\n"

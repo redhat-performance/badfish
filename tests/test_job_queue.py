@@ -1,17 +1,25 @@
 from unittest.mock import patch
 
 from src.badfish.helpers.exceptions import BadfishException
-from tests.config import (BLANK_RESP, INIT_RESP, JOB_ID, JOB_OK_RESP,
-                          RESPONSE_CHECK_JOB, RESPONSE_CHECK_JOB_BAD,
-                          RESPONSE_CHECK_JOB_ERROR, RESPONSE_CLEAR_JOBS,
-                          RESPONSE_CLEAR_JOBS_LIST,
-                          RESPONSE_CLEAR_JOBS_LIST_EXCEPTION,
-                          RESPONSE_CLEAR_JOBS_UNSUPPORTED,
-                          RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
-                          RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION,
-                          RESPONSE_LS_JOBS, RESPONSE_LS_JOBS_EMPTY,
-                          TASK_OK_RESP)
-from tests.test_base import MockResponse, TestBase
+from tests.config import (
+    BLANK_RESP,
+    INIT_RESP,
+    JOB_ID,
+    JOB_OK_RESP,
+    RESPONSE_CHECK_JOB,
+    RESPONSE_CHECK_JOB_BAD,
+    RESPONSE_CHECK_JOB_ERROR,
+    RESPONSE_CLEAR_JOBS,
+    RESPONSE_CLEAR_JOBS_LIST,
+    RESPONSE_CLEAR_JOBS_LIST_EXCEPTION,
+    RESPONSE_CLEAR_JOBS_UNSUPPORTED,
+    RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION,
+    RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION,
+    RESPONSE_LS_JOBS,
+    RESPONSE_LS_JOBS_EMPTY,
+    TASK_OK_RESP,
+)
+from tests.test_base import TestBase
 
 
 def raise_badfish_exception_stub_del_req(arg1=None, arg2=None):
@@ -89,9 +97,7 @@ class TestClearJobs(TestBase):
             BLANK_RESP,
         ]
         responses = INIT_RESP + responses_add
-        self.set_mock_response(
-            mock_get, [200, 200, 200, 200, 200, 400, 400, 400], responses
-        )
+        self.set_mock_response(mock_get, [200, 200, 200, 200, 200, 400, 400, 400], responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(
             mock_delete,

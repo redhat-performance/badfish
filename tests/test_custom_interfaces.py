@@ -39,7 +39,13 @@ class TestGetInterfaceByType(TestBase):
             for host_type in expected:
                 expected_interfaces = expected[host_type].split(",")
                 with self.subTest(host=host, host_type=host_type):
-                    badfish = Badfish(_host=host, _username="", _password="", _logger="", _retries="",)
+                    badfish = Badfish(
+                        _host=host,
+                        _username="",
+                        _password="",
+                        _logger="",
+                        _retries="",
+                    )
                     interfaces = await badfish.get_interfaces_by_type(host_type, _interfaces_path=INTERFACES_PATH)
                     assert interfaces == expected_interfaces, (
                         f"{host_type} interfaces for host: {host} : "

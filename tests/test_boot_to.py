@@ -1,12 +1,22 @@
 from unittest.mock import patch
 
-from tests.config import (BAD_DEVICE_NAME, BLANK_RESP, BOOT_MODE_RESP,
-                          BOOT_SEQ_RESP, BOOT_SEQ_RESPONSE_DIRECTOR,
-                          DEVICE_NIC_2, ERROR_DEV_NO_MATCH, INIT_RESP,
-                          JOB_OK_RESP, RESET_TYPE_RESP, RESPONSE_BOOT_TO,
-                          RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST,
-                          RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER,
-                          RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE, STATE_ON_RESP)
+from tests.config import (
+    BAD_DEVICE_NAME,
+    BLANK_RESP,
+    BOOT_MODE_RESP,
+    BOOT_SEQ_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    DEVICE_NIC_2,
+    ERROR_DEV_NO_MATCH,
+    INIT_RESP,
+    JOB_OK_RESP,
+    RESET_TYPE_RESP,
+    RESPONSE_BOOT_TO,
+    RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST,
+    RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER,
+    RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE,
+    STATE_ON_RESP,
+)
 from tests.test_base import TestBase
 
 
@@ -38,9 +48,7 @@ class TestBootTo(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_boot_to_service_unavailable(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_boot_to_service_unavailable(self, mock_get, mock_patch, mock_post, mock_delete):
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
         get_resp = [
             BOOT_MODE_RESP,
@@ -87,9 +95,7 @@ class TestBootTo(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_boot_to_service_err_handler(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_boot_to_service_err_handler(self, mock_get, mock_patch, mock_post, mock_delete):
         boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
         get_resp = [
             BOOT_MODE_RESP,

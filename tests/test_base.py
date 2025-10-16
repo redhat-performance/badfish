@@ -21,7 +21,7 @@ class TestBase(AioHTTPTestCase):
     def set_mock_response(mock, status, responses, post=False, headers=None):
         mock.return_value.__aenter__.return_value.name = responses
         status_mock = MagicMock()
-        if type(status) == list:
+        if isinstance(status, list):
             if post:
                 dup_stats = [val for val in status for _ in range(2)]
                 type(status_mock).status = PropertyMock(side_effect=dup_stats)
@@ -31,14 +31,10 @@ class TestBase(AioHTTPTestCase):
             type(status_mock).status = PropertyMock(return_value=status)
         mock.return_value.__aenter__.return_value = status_mock
         mock.return_value.__aenter__.return_value.read = AsyncMock()
-        if type(responses) == list:
-            mock.return_value.__aenter__.return_value.text = AsyncMock(
-                side_effect=responses
-            )
+        if isinstance(responses, list):
+            mock.return_value.__aenter__.return_value.text = AsyncMock(side_effect=responses)
         else:
-            mock.return_value.__aenter__.return_value.text = AsyncMock(
-                return_value=responses
-            )
+            mock.return_value.__aenter__.return_value.text = AsyncMock(return_value=responses)
         if headers is not None:
             mock.return_value.__aenter__.return_value.headers = headers
 

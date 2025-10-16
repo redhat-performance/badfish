@@ -20,10 +20,12 @@ class TestBadfishHandler:
             args=(),
             exc_info=None,
         )
+
         # If no formatter, logging module will access handler.formatter, we emulate format() result
         class DummyFormatter:
             def format(self, rec):
                 return f"[{rec.name}] - INFO - {rec.msg}"
+
         handler.formatter = DummyFormatter()
         handler.emit(record)
         assert handler.formatted_msg == ["[badfish.helpers.logger] - INFO - hello"]
@@ -92,7 +94,9 @@ class TestBadfishHandler:
         handler = BadfishHandler(format_flag=True)
         handler.host = "hostx"
         handler.messages["hostx"] = "key: value\n"
-        with patch("badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]):
+        with patch(
+            "badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]
+        ):
             handler.parse()
         assert handler.output_dict == {"unsupported_command": True}
 
@@ -100,7 +104,9 @@ class TestBadfishHandler:
         handler = BadfishHandler(format_flag=True)
         # No host set, exercise the else branch
         handler.messages["badfish.helpers.logger"] = "key: value\n"
-        with patch("badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]):
+        with patch(
+            "badfish.helpers.logger.yaml.safe_load", side_effect=[yaml.YAMLError("bad1"), yaml.YAMLError("bad2")]
+        ):
             handler.parse()
         assert handler.output_dict == {"unsupported_command": True}
 
@@ -183,9 +189,7 @@ class TestBadfishLogger:
         os.close(fd)
         try:
             logger = BadfishLogger(verbose=True, multi_host=False, log_file=path)
-            assert any(
-                getattr(h, "baseFilename", None) == path for h in logger.queue_listener.handlers
-            )
+            assert any(getattr(h, "baseFilename", None) == path for h in logger.queue_listener.handlers)
             logger.queue_listener.stop()
         finally:
             try:

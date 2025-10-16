@@ -1,22 +1,36 @@
 from unittest.mock import patch
 
-from tests.config import (BAD_DEVICE_NAME, BIOS_REGISTRY_OK, BLANK_RESP,
-                          BOOT_MODE_NO_RESP, BOOT_MODE_RESP,
-                          BOOT_MODE_RESP_UEFI, BOOT_SEQ_RESP,
-                          BOOT_SEQ_RESPONSE_DIRECTOR,
-                          BOOT_SEQ_RESPONSE_FOREMAN,
-                          BOOT_SEQ_RESPONSE_FOREMAN_SHORTER, DEVICE_NIC_2,
-                          INIT_RESP, INTERFACES_PATH, JOB_OK_RESP,
-                          PXE_DEV_RESP, RESET_TYPE_RESP,
-                          RESPONSE_CHANGE_BAD_TYPE, RESPONSE_CHANGE_BOOT,
-                          RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS,
-                          RESPONSE_CHANGE_BOOT_INCORRECT_PATH,
-                          RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES,
-                          RESPONSE_CHANGE_BOOT_PATCH_ERROR,
-                          RESPONSE_CHANGE_BOOT_PXE, RESPONSE_CHANGE_BOOT_UEFI,
-                          RESPONSE_CHANGE_NO_BOOT_PREFIX,
-                          RESPONSE_CHANGE_NO_INT, RESPONSE_CHANGE_TO_SAME,
-                          STATE_ON_RESP, TOGGLE_DEV_NO_MATCH, TOGGLE_DEV_OK)
+from tests.config import (
+    BAD_DEVICE_NAME,
+    BIOS_REGISTRY_OK,
+    BLANK_RESP,
+    BOOT_MODE_NO_RESP,
+    BOOT_MODE_RESP,
+    BOOT_MODE_RESP_UEFI,
+    BOOT_SEQ_RESP,
+    BOOT_SEQ_RESPONSE_DIRECTOR,
+    BOOT_SEQ_RESPONSE_FOREMAN,
+    BOOT_SEQ_RESPONSE_FOREMAN_SHORTER,
+    DEVICE_NIC_2,
+    INIT_RESP,
+    INTERFACES_PATH,
+    JOB_OK_RESP,
+    PXE_DEV_RESP,
+    RESET_TYPE_RESP,
+    RESPONSE_CHANGE_BAD_TYPE,
+    RESPONSE_CHANGE_BOOT,
+    RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS,
+    RESPONSE_CHANGE_BOOT_INCORRECT_PATH,
+    RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES,
+    RESPONSE_CHANGE_BOOT_PATCH_ERROR,
+    RESPONSE_CHANGE_BOOT_PXE,
+    RESPONSE_CHANGE_BOOT_UEFI,
+    RESPONSE_CHANGE_NO_INT,
+    RESPONSE_CHANGE_TO_SAME,
+    STATE_ON_RESP,
+    TOGGLE_DEV_NO_MATCH,
+    TOGGLE_DEV_OK,
+)
 from tests.test_base import TestBase
 
 
@@ -65,9 +79,7 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_boot_patch_error(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_change_boot_patch_error(self, mock_get, mock_patch, mock_post, mock_delete):
         get_resp = [
             BOOT_MODE_RESP,
             self.boot_seq_resp_fmt_dir.replace("'", '"'),
@@ -91,9 +103,7 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_boot_less_valid_devices(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_change_boot_less_valid_devices(self, mock_get, mock_patch, mock_post, mock_delete):
         boot_seq_resp_fmt_for = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_FOREMAN_SHORTER)
         get_resp = [
             BOOT_MODE_RESP,
@@ -194,9 +204,7 @@ class TestChangeBoot(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_change_to_director_no_boot(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_change_to_director_no_boot(self, mock_get, mock_patch, mock_post, mock_delete):
         get_resp = [
             BOOT_MODE_NO_RESP,
             self.boot_seq_resp_fmt_for.replace("'", '"'),

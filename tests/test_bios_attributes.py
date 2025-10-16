@@ -1,11 +1,24 @@
 from unittest.mock import patch
 
-from tests.config import (ATTR_VALUE_BAD, ATTR_VALUE_OK, ATTRIBUTE_BAD,
-                          ATTRIBUTE_OK, BIOS_GET_ALL_OK, BIOS_GET_ONE_BAD,
-                          BIOS_GET_ONE_OK, BIOS_REGISTRY_OK, BIOS_RESPONSE_DIS,
-                          BIOS_RESPONSE_OK, BIOS_SET_BAD_ATTR,
-                          BIOS_SET_BAD_VALUE, BIOS_SET_OK, INIT_RESP,
-                          JOB_OK_RESP, RESET_TYPE_RESP, STATE_ON_RESP)
+from tests.config import (
+    ATTR_VALUE_BAD,
+    ATTR_VALUE_OK,
+    ATTRIBUTE_BAD,
+    ATTRIBUTE_OK,
+    BIOS_GET_ALL_OK,
+    BIOS_GET_ONE_BAD,
+    BIOS_GET_ONE_OK,
+    BIOS_REGISTRY_OK,
+    BIOS_RESPONSE_DIS,
+    BIOS_RESPONSE_OK,
+    BIOS_SET_BAD_ATTR,
+    BIOS_SET_BAD_VALUE,
+    BIOS_SET_OK,
+    INIT_RESP,
+    JOB_OK_RESP,
+    RESET_TYPE_RESP,
+    STATE_ON_RESP,
+)
 from tests.test_base import TestBase
 
 
@@ -43,9 +56,7 @@ class TestSetBiosAttribute(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_set_bios_attribute_bad_value(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_set_bios_attribute_bad_value(self, mock_get, mock_patch, mock_post, mock_delete):
         get_resp = [
             BIOS_REGISTRY_OK.replace("'", '"'),
             BIOS_RESPONSE_DIS,
@@ -70,9 +81,7 @@ class TestSetBiosAttribute(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.get")
-    def test_set_bios_attribute_bad_attr(
-        self, mock_get, mock_patch, mock_post, mock_delete
-    ):
+    def test_set_bios_attribute_bad_attr(self, mock_get, mock_patch, mock_post, mock_delete):
         get_resp = [
             BIOS_REGISTRY_OK.replace("'", '"'),
             BIOS_RESPONSE_DIS,

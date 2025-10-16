@@ -1,15 +1,23 @@
 from unittest.mock import patch
 
-from tests.config import (BIOS_PASS_CHANGE_CMD_FAILED,
-                          BIOS_PASS_CHANGE_NOT_SUPPORTED, BIOS_PASS_RM_GOOD,
-                          BIOS_PASS_RM_MISS_ARG,
-                          BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE,
-                          BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG,
-                          BIOS_PASS_SET_GOOD, BIOS_PASS_SET_MISS_ARG,
-                          BLANK_RESP, CHECK_JOB_STATUS_FAIL_MSG,
-                          CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT, INIT_RESP,
-                          JOB_OK_RESP, RESET_TYPE_RESP, STATE_OFF_RESP,
-                          TASK_OK_RESP)
+from tests.config import (
+    BIOS_PASS_CHANGE_CMD_FAILED,
+    BIOS_PASS_CHANGE_NOT_SUPPORTED,
+    BIOS_PASS_RM_GOOD,
+    BIOS_PASS_RM_MISS_ARG,
+    BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE,
+    BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG,
+    BIOS_PASS_SET_GOOD,
+    BIOS_PASS_SET_MISS_ARG,
+    BLANK_RESP,
+    CHECK_JOB_STATUS_FAIL_MSG,
+    CHECK_JOB_STATUS_UNEXPECTED_MSG_CONTENT,
+    INIT_RESP,
+    JOB_OK_RESP,
+    RESET_TYPE_RESP,
+    STATE_OFF_RESP,
+    TASK_OK_RESP,
+)
 from tests.test_base import TestBase
 
 

@@ -1,12 +1,18 @@
 from unittest.mock import patch
 
-from tests.config import (INIT_RESP, MEMORY_A5_RESP, MEMORY_B2_RESP,
-                          MEMORY_MEMBERS_RESP, MEMORY_SUMMARY_RESP,
-                          MEMORY_SUMMARY_RESP_FAULTY, RESPONSE_LS_MEMORY,
-                          RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND,
-                          RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR,
-                          RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR,
-                          RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR)
+from tests.config import (
+    INIT_RESP,
+    MEMORY_A5_RESP,
+    MEMORY_B2_RESP,
+    MEMORY_MEMBERS_RESP,
+    MEMORY_SUMMARY_RESP,
+    MEMORY_SUMMARY_RESP_FAULTY,
+    RESPONSE_LS_MEMORY,
+    RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND,
+    RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR,
+    RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR,
+    RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR,
+)
 from tests.test_base import TestBase
 
 
@@ -64,19 +70,18 @@ class TestLsMemory(TestBase):
     @patch("aiohttp.ClientSession.get")
     @patch("src.badfish.main.Badfish.get_memory_summary")
     @patch("src.badfish.main.Badfish.get_memory_details")
-    def test_ls_memory_details_not_found(self, mock_get_mem_details, mock_get_mem_summary, mock_get, mock_post, mock_delete):
+    def test_ls_memory_details_not_found(
+        self, mock_get_mem_details, mock_get_mem_summary, mock_get, mock_post, mock_delete
+    ):
         from src.badfish.main import BadfishException
-        
+
         # Mock successful memory summary
-        memory_summary = {
-            "MemoryMirroring": "System",
-            "TotalSystemMemoryGiB": 384
-        }
+        memory_summary = {"MemoryMirroring": "System", "TotalSystemMemoryGiB": 384}
         mock_get_mem_summary.return_value = memory_summary
-        
+
         # Mock memory details to raise the expected exception
         mock_get_mem_details.side_effect = BadfishException("Server does not support this functionality")
-        
+
         self.set_mock_response(mock_get, 200, INIT_RESP)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")

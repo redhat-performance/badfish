@@ -1,8 +1,15 @@
 from unittest.mock import patch
 
-from tests.config import (BIOS_RESPONSE_SRIOV, BIOS_SET_OK, INIT_RESP,
-                          JOB_OK_RESP, RESET_TYPE_RESP, SRIOV_ALREADY,
-                          SRIOV_STATE, STATE_ON_RESP)
+from tests.config import (
+    BIOS_RESPONSE_SRIOV,
+    BIOS_SET_OK,
+    INIT_RESP,
+    JOB_OK_RESP,
+    RESET_TYPE_RESP,
+    SRIOV_ALREADY,
+    SRIOV_STATE,
+    STATE_ON_RESP,
+)
 from tests.test_base import TestBase
 
 
