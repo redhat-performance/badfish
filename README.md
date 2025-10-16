@@ -4,7 +4,7 @@
 
 <h2 align="center">The Out-of-Band Wrangler</h2>
 
-[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/package/python3-pybadfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-pybadfish/)
 [![Codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Container image on Quay](https://quay.io/repository/quads/badfish/status "Container image on Quay")](https://quay.io/repository/quads/badfish)
 [![Tox](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
@@ -128,28 +128,30 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 ## Setup
 ### Badfish RPM package
 ```bash
-dnf copr enable quadsdev/python3-badfish  -y
-dnf install python3-badfish -y
+dnf copr enable quadsdev/python3-pybadfish  -y
+dnf install python3-pybadfish -y
 ```
 
-Active releases:
-- CentOS Stream 8 and 9
-- Rocky & Alma Linux 8 and 9
-- EPEL 8 and 9
+Active RPM releases:
 - All current Fedora releases
-- Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/)
+- Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/)
+
+> [!NOTE]
+> RHEL and derivatives (Rocky, Alma, etc) should use [containers](#badfish-container) instead due to missing libs/dependencies.
 
 ### Badfish Standalone CLI
 ```bash
 git clone https://github.com/redhat-performance/badfish && cd badfish
+python3 -m venv bf
+source bf/bin/activate
 python3 -m pip install --upgrade build
 python3 -m build
-python3 -m pip install dist/badfish-1.0.3.tar.gz
+python3 -m pip install dist/pybadfish-*.tar.gz
 ```
-NOTE:
-
-* This will allow Badfish to be called from the terminal via the `badfish` command
-* This requires `python3-devel` if you see errors about missing `Python.h`.
+> [!TIP]
+> This will allow Badfish to be called from the terminal via the `badfish` command
+>
+> This requires `python3-devel` if you see errors about missing `Python.h`.
 
 ### Badfish Container
 Perhaps the easiest way to run Badfish is with Podman, you can see more usage details below on [using the Badfish container with Podman](#via-podman).  You can substitute Docker for Podman as well though not all functionality may be actively tested as we prefer Podman.
@@ -162,7 +164,9 @@ podman pull quay.io/quads/badfish
 Badfish can be consumed in several ways after successful installation. Either via the standalone cli tool or as a python library.
 For an extensive use of the cli tool check the [Common Operations](#common-operations) section of this file.
 
-NOTE: Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+> [!TIP]
+> Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.
+> You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
 ### As Python Library
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
@@ -183,7 +187,9 @@ result = await badfish.reboot_server()
 if not result:
     print("Failed to reboot system")
 ```
-NOTE: Badfish relies heavily on asyncio for executing multiple tasks. If you will be using badfish from outside an async function you will have to provide an async event loop and run via `run_until_complete`
+> [!IMPORTANT]
+> Badfish relies heavily on asyncio for executing multiple tasks.
+> If you will be using badfish from outside an async function you will have to provide an async event loop and run via `run_until_complete`
 
 ### Via Podman
 Badfish happily runs in a container image using Podman or Docker (likely, but not actively tested).
@@ -193,11 +199,17 @@ podman pull quay.io/quads/badfish
 ```bash
 podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
 ```
-NOTE:
-* If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
-* If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml:Z`
-* If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish:Z`
-* When mapping a volume to a container make sure to use the `:Z` suffix for appropiate labeling
+> [!IMPORTANT]
+>
+> If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
+>
+> If you would like to use a different file for `config/idrac_interfaces.yml` you can map a volume to your modified config with `-v idrac_interfaces.yml:config/idrac_interfaces.yml:Z`
+
+> [!TIP]
+> If you want to run any actions that would have output files like `--screenshot` you can map the container root volume to a directory on your local machine where you would like to have those files stored like `-v /tmp/screens:/badfish:Z`
+
+> [!IMPORTANT]
+> When mapping a volume to a container make sure to use the `:Z` suffix for appropiate labeling
 
 ### Via Virtualenv
 [Virtualenv](https://docs.python.org/3/library/venv.html) is a wonderful tool to sandbox running Python applications or to separate Python versions of components from your main system libaries.  Unfortunately it can be problematic with running Badfish directly from the Git repo inside a virtualenv sandbox.
@@ -217,7 +229,10 @@ We will likely add more libaries in the future and [can't guarantee](https://git
 ### Via RPM System Package
 If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
 
-Note: If you plan on using the `idrac_interfaces.yml` file to further customize or define pre-made boot orders you'll want to model your own [based on the repo example file](config/idrac_interfaces.yml).  This file serves as an example but is specific to our internal environments so you'd most likely want to modify it to match your environment and naming conventions.
+> [!NOTE]
+> If you plan on using the `idrac_interfaces.yml` file to further customize or define pre-made boot orders you'll want to model your own [based on the repo example file](config/idrac_interfaces.yml).
+>
+> This file serves as an example but is specific to our internal environments so you'd most likely want to modify it to match your environment and naming conventions.
 
 You can always retrieve our example `idrac_interfaces.yml` file via:
 
@@ -346,24 +361,25 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
-NOTE:
-* Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
+> [!NOTE]
+> Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
 
 ### Resetting BMC
 For the replacement of `ipmitool bmc reset` or `ipmiutil reset`, the optional argument `--bmc-reset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the BMC itself.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --bmc-reset
 ```
-NOTE:
-* Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
+> [!NOTE]
+> Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
 
 ### BIOS factory reset
+> [!CAUTION]
+> Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
+
 You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
 ```
-NOTE:
-* WARNING: Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
 
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match as those defined on the iDRAC interfaces yaml.
@@ -484,32 +500,32 @@ If you would like to check the attach status of a remote ISO in DellOSDeployment
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
 ```
-NOTE:
-  * This is only supported on DELL devices.
+> [!NOTE]
+> This is only supported on DELL devices.
 
 ### Boot to Remote Image
 If you would like to boot to a remote ISO on NFS with DellOSDeployment service you can run ```badfish``` with the ```--boot-remote-image``` option which will attach the image and reboot the server to it. Expects the NFS path to the ISO as the argument.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
 ```
-NOTE:
-  * This is only supported on DELL devices.
+> [!NOTE]
+> This is only supported on DELL devices.
 
 ### Detach Remote Image
 If you would like to detach an ISO from DellOSDeployment service you can run ```badfish``` with the ```--detach-remote-image``` option.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-image
 ```
-NOTE:
-  * This is only supported on DELL devices.
+> [!NOTE]
+> This is only supported on DELL devices.
 
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
 ```
-NOTE:
-  * This is only supported on DELL devices.
+> [!NOTE]
+> This is only supported on DELL devices.
 
 ### Set SRIOV mode
 For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments.
@@ -521,8 +537,8 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 ```
-NOTE:
-  * This is only supported on DELL devices.
+> [!NOTE]
+> This is only supported on DELL devices.
 
 ### Get FQDDs for all nics
 To get a list of all FQDDs for all NICs on the server you can run badfish with ```--get-nic-fqdds```.
@@ -537,12 +553,13 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-attribute 
 ```
 
 ### Set NIC attribute
+> [!WARNING]
+> This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
+
 To change the value of a NIC attribute you can use ```--set-nic-attribute``` with the desired FQDD, passing both ```--attribute``` and desired ```--value```.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
 ```
-NOTE:
-  * This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
 
 ### Get BIOS attributes
 To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
@@ -561,14 +578,14 @@ To change the value of a bios attribute you can use ```--set-bios-attribute``` p
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute ProcC1E --value Enabled
 ```
-NOTE:
-* You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
+> [!NOTE]
+> You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
 
 ### Change between BIOS and UEFI modes
 * Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers.
 
-NOTE:
-  * This is only supported on Dell devices.
+> [!NOTE]
+> This is only supported on Dell devices.
 
 #### Querying bootmode
 * First determine what bootmode state your server is using before proceeding.
@@ -584,9 +601,9 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Bios
 ```
 
-NOTE:
-  * Like all batch-driven actions this takes a reboot and time to process so be patient.
-  * You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
+> [!IMPORTANT]
+> Like all batch-driven actions this takes a reboot and time to process so be patient.
+> You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
 
 ### Get server screenshot
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
@@ -599,8 +616,8 @@ If you want to get a list of allowed targets for SCP export or import you can ge
 ```
 badfish -H mgmt-your-server.example.com -u root -p yourpass --get-scp-targets (Export | Import)
 ```
-NOTE:
-  * This is only supported on Dell devices.
+> [!NOTE]
+> This is only supported on Dell devices.
 
 
 ### Export server configuration profile
@@ -608,16 +625,16 @@ If you would like to export a SCP as a JSON file for either some specific target
 ```
 badfish -H mgmt-your-server.example.com -u root -p yourpass --export-scp "./" --scp-targets IDRAC,BIOS --scp-include-read-only
 ```
-NOTE:
-  * This is only supported on Dell devices.
+> [!NOTE]
+> This is only supported on Dell devices.
 
 ### Import server configuration profile
 If you would like to import a SCP in a JSON file for either some specific targets or all of them, you can run badfish with `--import-scp`. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Command will reboot the server and return it to a state at the launch start of import.
 ```
 badfish -H mgmt-your-server.example.com -u root -p yourpass --import-scp "./example_export.json" --scp-targets IDRAC,BIOS
 ```
-NOTE:
-  * This is only supported on Dell devices.
+> [!NOTE]
+> This is only supported on Dell devices.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
@@ -626,7 +643,7 @@ badfish --host-list /tmp/bad-hosts -u root -p yourpass --clear-jobs
 ```
 
 ### Verbose output
-If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. Note: this is the default log level for the ```--log``` argument.
+If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. > [!NOTE] this is the default log level for the ```--log``` argument.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
 ```
@@ -713,5 +730,6 @@ Please refer to our contributing [guide](CONTRIBUTING.md).
 
 ## Contact
 
-* You can find us on IRC in `#badfish` (or `#quads`) on `irc.libera.chat` if you have questions or need help.  [Click here](https://https://web.libera.chat/?channels=#quads) to join in your browser.
+* You can find us on IRC in `#badfish` (or `#quads`) on `irc.libera.chat` if you have questions or need help.
+* [Click here](https://https://web.libera.chat/?channels=#quads) to join in your browser.
 
