@@ -21,8 +21,9 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
 BuildRequires:  zlib-devel
+Provides:       badfish = %{version}-%{release}
 %generate_buildrequires
-%pyproject_buildrequires -t 
+%pyproject_buildrequires -t
 
 %description
 %{desc}
