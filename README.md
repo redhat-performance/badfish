@@ -146,7 +146,7 @@ python3 -m pip install --upgrade build
 python3 -m build
 python3 -m pip install dist/pybadfish-*.tar.gz
 ```
-> [!NOTE]
+> [!TIP]
 
 * This will allow Badfish to be called from the terminal via the `badfish` command
 * This requires `python3-devel` if you see errors about missing `Python.h`.
@@ -162,7 +162,9 @@ podman pull quay.io/quads/badfish
 Badfish can be consumed in several ways after successful installation. Either via the standalone cli tool or as a python library.
 For an extensive use of the cli tool check the [Common Operations](#common-operations) section of this file.
 
-> [!NOTE] Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.  You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
+> [!TIP]
+> Badfish operates optionally against a YAML configuration file to toggle between key:value pair sets of boot interface/device strings.
+> You just need to create your own interface config that matches your needs to easily swap/save interface/device boot ordering or select one-time boot devices.
 
 ### As Python Library
 If Badfish has been properly installed in the system (RPM package install, setuptools), then the library should be available under your python path therefore it can be imported as a python library to your python project.
@@ -183,7 +185,9 @@ result = await badfish.reboot_server()
 if not result:
     print("Failed to reboot system")
 ```
-> [!NOTE] Badfish relies heavily on asyncio for executing multiple tasks. If you will be using badfish from outside an async function you will have to provide an async event loop and run via `run_until_complete`
+> [!IMPORTANT]
+> Badfish relies heavily on asyncio for executing multiple tasks.
+> If you will be using badfish from outside an async function you will have to provide an async event loop and run via `run_until_complete`
 
 ### Via Podman
 Badfish happily runs in a container image using Podman or Docker (likely, but not actively tested).
@@ -350,7 +354,7 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 badfish -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ```
 > [!NOTE]
-* Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
+> Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
 
 ### Resetting BMC
 For the replacement of `ipmitool bmc reset` or `ipmiutil reset`, the optional argument `--bmc-reset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the BMC itself.
@@ -358,15 +362,16 @@ For the replacement of `ipmitool bmc reset` or `ipmiutil reset`, the optional ar
 badfish -H mgmt-your-server.example.com -u root -p yourpass --bmc-reset
 ```
 > [!NOTE]
-* Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
+> Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
 
 ### BIOS factory reset
+> [!CAUTION]
+> Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
+
 You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
 ```
-> [!NOTE]
-* WARNING: Use this carefully, vendor defaults differ and may be disruptive. Do not use this in the Scale Lab or ALIAS.
 
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match as those defined on the iDRAC interfaces yaml.
@@ -488,7 +493,7 @@ If you would like to check the attach status of a remote ISO in DellOSDeployment
 badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
 ```
 > [!NOTE]
-  * This is only supported on DELL devices.
+> This is only supported on DELL devices.
 
 ### Boot to Remote Image
 If you would like to boot to a remote ISO on NFS with DellOSDeployment service you can run ```badfish``` with the ```--boot-remote-image``` option which will attach the image and reboot the server to it. Expects the NFS path to the ISO as the argument.
@@ -496,7 +501,7 @@ If you would like to boot to a remote ISO on NFS with DellOSDeployment service y
 badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
 ```
 > [!NOTE]
-  * This is only supported on DELL devices.
+> This is only supported on DELL devices.
 
 ### Detach Remote Image
 If you would like to detach an ISO from DellOSDeployment service you can run ```badfish``` with the ```--detach-remote-image``` option.
@@ -504,7 +509,7 @@ If you would like to detach an ISO from DellOSDeployment service you can run ```
 badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-image
 ```
 > [!NOTE]
-  * This is only supported on DELL devices.
+> This is only supported on DELL devices.
 
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```
@@ -512,7 +517,7 @@ For checking if the global SRIOV mode is enabled you can use ```--get-sriov```
 badfish -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
 ```
 > [!NOTE]
-  * This is only supported on DELL devices.
+> This is only supported on DELL devices.
 
 ### Set SRIOV mode
 For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments.
@@ -525,7 +530,7 @@ On the contrary, if you would like to disable the SRIOV mode, you can now pass `
 badfish -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 ```
 > [!NOTE]
-  * This is only supported on DELL devices.
+> This is only supported on DELL devices.
 
 ### Get FQDDs for all nics
 To get a list of all FQDDs for all NICs on the server you can run badfish with ```--get-nic-fqdds```.
@@ -544,8 +549,8 @@ To change the value of a NIC attribute you can use ```--set-nic-attribute``` wit
 ```bash
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
 ```
-> [!NOTE]
-  * This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
+> [!WARNING]
+> This action will trigger a reboot of the server to apply the changes. Changes will be reflected after the reboot is completed.
 
 ### Get BIOS attributes
 To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
@@ -571,7 +576,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 * Building on the get/set bios attribute commands above here's how you can manage BIOS and UEFI modes on supported servers.
 
 > [!NOTE]
-  * This is only supported on Dell devices.
+> This is only supported on Dell devices.
 
 #### Querying bootmode
 * First determine what bootmode state your server is using before proceeding.
@@ -587,9 +592,9 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Bios
 ```
 
-> [!NOTE]
-  * Like all batch-driven actions this takes a reboot and time to process so be patient.
-  * You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
+> [!IMPORTANT]
+> Like all batch-driven actions this takes a reboot and time to process so be patient.
+> You should also give it time to process before checking result via `--get-bios-attribute --attribute BootMode` as it could be cached for a minute or two after processing.
 
 ### Get server screenshot
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
@@ -603,7 +608,7 @@ If you want to get a list of allowed targets for SCP export or import you can ge
 badfish -H mgmt-your-server.example.com -u root -p yourpass --get-scp-targets (Export | Import)
 ```
 > [!NOTE]
-  * This is only supported on Dell devices.
+> This is only supported on Dell devices.
 
 
 ### Export server configuration profile
@@ -612,7 +617,7 @@ If you would like to export a SCP as a JSON file for either some specific target
 badfish -H mgmt-your-server.example.com -u root -p yourpass --export-scp "./" --scp-targets IDRAC,BIOS --scp-include-read-only
 ```
 > [!NOTE]
-  * This is only supported on Dell devices.
+> This is only supported on Dell devices.
 
 ### Import server configuration profile
 If you would like to import a SCP in a JSON file for either some specific targets or all of them, you can run badfish with `--import-scp`. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Command will reboot the server and return it to a state at the launch start of import.
@@ -620,7 +625,7 @@ If you would like to import a SCP in a JSON file for either some specific target
 badfish -H mgmt-your-server.example.com -u root -p yourpass --import-scp "./example_export.json" --scp-targets IDRAC,BIOS
 ```
 > [!NOTE]
-  * This is only supported on Dell devices.
+> This is only supported on Dell devices.
 
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
