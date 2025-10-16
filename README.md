@@ -132,11 +132,12 @@ dnf copr enable quadsdev/python3-pybadfish  -y
 dnf install python3-pybadfish -y
 ```
 
-Active releases:
+Active RPM releases:
 - All current Fedora releases
 - Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-pybadfish/)
-- RHEL and derivatives (Rocky, Alma, etc) should use [containers](#badfish-container) instead due to missing libs/dependencies.
 
+> [!NOTE]
+> RHEL and derivatives (Rocky, Alma, etc) should use [containers](#badfish-container) instead due to missing libs/dependencies.
 
 ### Badfish Standalone CLI
 ```bash
