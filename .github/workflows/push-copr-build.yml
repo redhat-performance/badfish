@@ -35,4 +35,4 @@ jobs:
 
       - name: Submit the build by uploading the source RPM
         run: |
-          copr build quadsdev/python3-pybadfish rpm/*.src.rpm
+          copr build quadsdev/python3-badfish rpm/*.src.rpm

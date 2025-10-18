@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/grafuls/badfish/blob/development/image/badfish-original-licensed.small.png" />
+  <img src="https://raw.githubusercontent.com/redhat-performance/badfish/development/image/badfish-original-licensed.small.png" />
 </p>
 
 <h2 align="center">The Out-of-Band Wrangler</h2>
