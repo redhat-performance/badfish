@@ -4,7 +4,7 @@
 
 <h2 align="center">The Out-of-Band Wrangler</h2>
 
-[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/package/python3-badfish/)
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/badfish/package/badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/badfish/package/badfish/)
 [![Codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
 [![Container image on Quay](https://quay.io/repository/quads/badfish/status "Container image on Quay")](https://quay.io/repository/quads/badfish)
 [![Tox](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
@@ -128,13 +128,13 @@ We're mostly concentrated on programmatically enforcing interface/device boot or
 ## Setup
 ### Badfish RPM package
 ```bash
-dnf copr enable quadsdev/python3-badfish  -y
-dnf install python3-badfish -y
+dnf copr enable quadsdev/badfish  -y
+dnf install badfish -y
 ```
 
 Active RPM releases:
 - All current Fedora releases
-- Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/python3-badfish/)
+- Some older Fedora releases, check the [RPM releases here](https://copr.fedorainfracloud.org/coprs/quadsdev/badfish/)
 
 > [!NOTE]
 > RHEL and derivatives (Rocky, Alma, etc) should use [containers](#badfish-container) instead due to missing libs/dependencies.
