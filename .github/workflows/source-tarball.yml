@@ -15,15 +15,15 @@ jobs:
       id: create-tarball
       run: |
         make tarball
-        echo "tarball_name=$(ls python3-badfish-*.tar.gz | head -n1)" >> $GITHUB_OUTPUT
-        echo "version=$(ls python3-badfish-*.tar.gz | sed 's/python3-badfish-\(.*\)\.tar\.gz/\1/')" >> $GITHUB_OUTPUT
+        echo "tarball_name=$(ls badfish-*.tar.gz | head -n1)" >> $GITHUB_OUTPUT
+        echo "version=$(ls badfish-*.tar.gz | sed 's/badfish-\(.*\)\.tar\.gz/\1/')" >> $GITHUB_OUTPUT
       working-directory: rpm
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: source-tarball
-        path: rpm/python3-badfish-*.tar.gz
+        path: rpm/badfish-*.tar.gz
 
     - name: Create Release and Upload Asset
       env:
