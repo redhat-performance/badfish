@@ -13,11 +13,11 @@ import yaml
 import tempfile
 from urllib.parse import urlparse
 
-from src.badfish.helpers import get_now
-from src.badfish.helpers.parser import parse_arguments
-from src.badfish.helpers.logger import BadfishLogger
-from src.badfish.helpers.http_client import HTTPClient
-from src.badfish.helpers.exceptions import BadfishException
+from badfish.helpers import get_now
+from badfish.helpers.parser import parse_arguments
+from badfish.helpers.logger import BadfishLogger
+from badfish.helpers.http_client import HTTPClient
+from badfish.helpers.exceptions import BadfishException
 
 from logging import (
     DEBUG,

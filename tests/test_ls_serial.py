@@ -41,9 +41,9 @@ class TestLsSerial(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.get_serial_summary")
+    @patch("badfish.main.Badfish.get_serial_summary")
     def test_ls_serial_unsupported_root(self, mock_get_serial_summary, mock_get, mock_post, mock_delete):
-        from src.badfish.main import BadfishException
+        from badfish.main import BadfishException
 
         # Mock serial summary to raise the expected exception
         mock_get_serial_summary.side_effect = BadfishException("Server does not support this functionality")
@@ -57,9 +57,9 @@ class TestLsSerial(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.get_serial_summary")
+    @patch("badfish.main.Badfish.get_serial_summary")
     def test_ls_serial_unsupported_systems(self, mock_get_serial_summary, mock_get, mock_post, mock_delete):
-        from src.badfish.main import BadfishException
+        from badfish.main import BadfishException
 
         # Mock serial summary to raise the expected exception
         mock_get_serial_summary.side_effect = BadfishException("Server does not support this functionality")

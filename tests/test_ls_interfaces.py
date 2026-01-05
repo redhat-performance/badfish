@@ -61,8 +61,8 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
-    @patch("src.badfish.main.Badfish.get_ethernet_interfaces")
+    @patch("badfish.main.Badfish.check_supported_network_interfaces")
+    @patch("badfish.main.Badfish.get_ethernet_interfaces")
     def test_ls_interfaces_ethernet(self, mock_get_ethernet, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: NetworkAdapters not supported, EthernetInterfaces supported
         mock_check_support.side_effect = [False, True]
@@ -94,7 +94,7 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
+    @patch("badfish.main.Badfish.check_supported_network_interfaces")
     def test_ls_interfaces_ethernet_not_supported(self, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
         mock_check_support.side_effect = [False, False]
@@ -125,7 +125,7 @@ class TestLsInterfaces(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.check_supported_network_interfaces")
+    @patch("badfish.main.Badfish.check_supported_network_interfaces")
     def test_ls_interfaces_none_supported(self, mock_check_support, mock_get, mock_post, mock_delete):
         # Mock the support checks: both NetworkAdapters and EthernetInterfaces not supported
         mock_check_support.side_effect = [False, False]

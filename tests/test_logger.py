@@ -2,7 +2,7 @@ import os
 import tempfile
 from logging import INFO, ERROR, DEBUG, LogRecord
 
-from src.badfish.helpers.logger import BadfishHandler, BadfishLogger
+from badfish.helpers.logger import BadfishHandler, BadfishLogger
 import yaml
 from unittest.mock import patch
 

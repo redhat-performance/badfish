@@ -164,7 +164,7 @@ class TestExportSCP(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_EXPORT_SCP_NO_LOCATION
 
-    @patch("src.badfish.main.get_now", fixed_datetime)
+    @patch("badfish.main.get_now", fixed_datetime)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
@@ -254,7 +254,7 @@ class TestImportSCP(TestBase):
         _, err = self.badfish_call()
         assert err == RESPONSE_EXPORT_SCP_NO_LOCATION
 
-    @patch("src.badfish.main.get_now", fixed_datetime)
+    @patch("badfish.main.get_now", fixed_datetime)
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")

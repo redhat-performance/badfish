@@ -69,12 +69,12 @@ class TestLsProcessors(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.get_processor_summary")
-    @patch("src.badfish.main.Badfish.get_processor_details")
+    @patch("badfish.main.Badfish.get_processor_summary")
+    @patch("badfish.main.Badfish.get_processor_details")
     def test_ls_processors_details_not_found(
         self, mock_get_proc_details, mock_get_proc_summary, mock_get, mock_post, mock_delete
     ):
-        from src.badfish.main import BadfishException
+        from badfish.main import BadfishException
 
         # Mock successful processor summary (the data from PROCESSOR_SUMMARY_RESP)
         processor_summary = {

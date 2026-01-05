@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import aiohttp
 import pytest
 
-from src.badfish.helpers.http_client import HTTPClient
-from src.badfish.helpers.exceptions import BadfishException
+from badfish.helpers.http_client import HTTPClient
+from badfish.helpers.exceptions import BadfishException
 
 
 class DummyLogger:

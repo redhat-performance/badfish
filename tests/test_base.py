@@ -5,8 +5,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase
 
-from src.badfish.main import main
-from src.badfish.helpers.exceptions import BadfishException
+from badfish.main import main
+from badfish.helpers.exceptions import BadfishException
 from tests import config
 
 

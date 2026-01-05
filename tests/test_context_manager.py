@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from src.badfish.main import Badfish, badfish_factory
-from src.badfish.helpers.exceptions import BadfishException
+from badfish.main import Badfish, badfish_factory
+from badfish.helpers.exceptions import BadfishException
 
 
 class MockLogger:
@@ -386,7 +386,7 @@ class TestExecuteBadfishSessionCleanup:
     @pytest.mark.asyncio
     async def test_execute_badfish_session_cleanup_success(self):
         """Test successful session cleanup in execute_badfish."""
-        from src.badfish.main import execute_badfish
+        from badfish.main import execute_badfish
 
         logger = MockLogger()
         args = {
@@ -451,7 +451,7 @@ class TestExecuteBadfishSessionCleanup:
             "set_nic_attribute": None,
         }
 
-        with patch("src.badfish.main.badfish_factory") as mock_factory:
+        with patch("badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance
             mock_badfish = MagicMock()
             mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
@@ -469,7 +469,7 @@ class TestExecuteBadfishSessionCleanup:
     @pytest.mark.asyncio
     async def test_execute_badfish_session_cleanup_failure(self):
         """Test session cleanup failure in execute_badfish."""
-        from src.badfish.main import execute_badfish
+        from badfish.main import execute_badfish
 
         logger = MockLogger()
         args = {
@@ -534,7 +534,7 @@ class TestExecuteBadfishSessionCleanup:
             "set_nic_attribute": None,
         }
 
-        with patch("src.badfish.main.badfish_factory") as mock_factory:
+        with patch("badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance
             mock_badfish = MagicMock()
             mock_badfish.session_id = "/redfish/v1/SessionService/Sessions/123"
@@ -556,7 +556,7 @@ class TestExecuteBadfishSessionCleanup:
     @pytest.mark.asyncio
     async def test_execute_badfish_no_session_cleanup(self):
         """Test execute_badfish when no session exists to clean up."""
-        from src.badfish.main import execute_badfish
+        from badfish.main import execute_badfish
 
         logger = MockLogger()
         args = {
@@ -621,7 +621,7 @@ class TestExecuteBadfishSessionCleanup:
             "set_nic_attribute": None,
         }
 
-        with patch("src.badfish.main.badfish_factory") as mock_factory:
+        with patch("badfish.main.badfish_factory") as mock_factory:
             # Mock badfish instance with no session_id
             mock_badfish = MagicMock()
             mock_badfish.session_id = None
@@ -639,7 +639,7 @@ class TestExecuteBadfishSessionCleanup:
     @pytest.mark.asyncio
     async def test_execute_badfish_no_badfish_instance(self):
         """Test execute_badfish when badfish instance is None."""
-        from src.badfish.main import execute_badfish
+        from badfish.main import execute_badfish
 
         logger = MockLogger()
         args = {
@@ -704,7 +704,7 @@ class TestExecuteBadfishSessionCleanup:
             "set_nic_attribute": None,
         }
 
-        with patch("src.badfish.main.badfish_factory") as mock_factory:
+        with patch("badfish.main.badfish_factory") as mock_factory:
             # Mock badfish_factory to raise an exception
             mock_factory.side_effect = BadfishException("Connection failed")
 

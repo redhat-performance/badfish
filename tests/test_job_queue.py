@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from src.badfish.helpers.exceptions import BadfishException
+from badfish.helpers.exceptions import BadfishException
 from tests.config import (
     BLANK_RESP,
     INIT_RESP,
@@ -204,7 +204,7 @@ class TestCheckJob(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    @patch("src.badfish.main.Badfish.get_request")
+    @patch("badfish.main.Badfish.get_request")
     def test_check_job_error(self, mock_get_req_call, mock_get, mock_post, mock_delete):
         # The check_schedule_job_status method only makes one call to get_request
         # which should return None to simulate the error condition

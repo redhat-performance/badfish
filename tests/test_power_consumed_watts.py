@@ -31,7 +31,7 @@ class TestPowerConsumed(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_power_consumed_404(self, mock_get, mock_post, mock_delete):
         # Mock the get_request method to return a 404 response that properly triggers vendor error
-        with patch("src.badfish.main.Badfish.get_request") as mock_get_request:
+        with patch("badfish.main.Badfish.get_request") as mock_get_request:
             from tests.test_base import MockResponse
 
             # Mock get_request to return 404 for power endpoint
