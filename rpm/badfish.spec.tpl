@@ -1,6 +1,6 @@
 %global project badfish
 %global org     redhat-performance
-%global sum     Badfish is a Redfish-based API tool for managing bare-metal systems via the Redfish API
+%global sum     Tool for managing bare-metal systems via the Redfish API
 %global desc    Badfish is a vendor-agnostic, redfish-based API tool used to consolidate \
 management of IPMI and out-of-band interfaces for common server hardware \
 vendors.  Badfish is also a popular song from Sublime, this may be a \
