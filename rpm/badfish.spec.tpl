@@ -17,24 +17,23 @@ URL:            https://github.com/%{org}/%{project}
 Source:         %{url}/releases/download/v%{version}/badfish-%{version}.tar.gz
 
 BuildArch:      noarch
-BuildRequires:  %{py3_dist setuptools}
-BuildRequires:  %{py3_dist pip}
 BuildRequires:  python3-devel
 BuildRequires:  zlib-devel
+# Test dependencies
 BuildRequires:  python3dist(pytest)
 BuildRequires:  python3dist(pytest-asyncio)
 BuildRequires:  python3dist(pyyaml)
 BuildRequires:  python3dist(aiohttp)
-BuildRequires:  python3dist(tox)
 Provides:       badfish = %{version}-%{release}
-%generate_buildrequires
-%pyproject_buildrequires
 
 %description
 %{desc}
 
 %prep
 %autosetup -n %{name}-%{version}
+
+%generate_buildrequires
+%pyproject_buildrequires
 
 %build
 %pyproject_wheel
