@@ -18,7 +18,6 @@ Source:         %{url}/releases/download/v%{version}/badfish-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
-BuildRequires:  zlib-devel
 # Test dependencies
 BuildRequires:  python3dist(pytest)
 BuildRequires:  python3dist(pytest-asyncio)
