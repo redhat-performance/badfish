@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v1.2.0 (2026-02-11)
+
+### Features
+
+- Support auth via env vars.
+  ([`0f86700`](https://github.com/sadsfae/badfish/commit/0f86700d452d77c5ccc5d26e57658f27788f8ca5))
+
+* support the following env variables for safer badfishing:
+
+- BADFISH_PASSWORD - BADFISH_USERNAME - BADFISH_NEW_PASSWORD - BADFISH_OLD_PASSWORD
+
+fixes: https://github.com/redhat-performance/badfish/issues/496
+
+
 ## v1.1.0 (2026-02-04)
 
 ### Bug Fixes
