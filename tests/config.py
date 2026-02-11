@@ -1,12 +1,6 @@
 import base64
 import os
 
-# Set environment variables to suppress "unsafe" warnings in logs
-os.environ["BADFISH_USERNAME"] = "dummy"
-os.environ["BADFISH_PASSWORD"] = "dummy"
-os.environ["BADFISH_NEW_PASSWORD"] = "dummy"
-os.environ["BADFISH_OLD_PASSWORD"] = "dummy"
-
 MOCK_HOST = "f01-h01-000-r630.host.io"
 MOCK_USER = "mock_user"
 MOCK_PASS = "mock_pass"
@@ -15,9 +9,6 @@ BAD_DEVICE_NAME = "BadIF.Slot.x-y-z"
 DEVICE_NIC_I = "NIC.Integrated.1"
 DEVICE_NIC_S = "NIC.Slot.1"
 MAC_ADDRESS = "40:A6:B7:0C:01:A0"
-
-# Warning constant is empty as we expect env vars to be set
-WARN_UNSAFE = ""
 
 
 def render_device_dict(index, device):
@@ -66,66 +57,60 @@ BOOT_SEQ_RESPONSE_OPTICAL = [
     render_device_dict(3, DEVICE_OPTICAL_1),
 ]
 
-# Boot order lists do NOT have indentation in the logs
 RESPONSE_WITHOUT = (
-    f"{WARN_UNSAFE}- INFO     - Current boot order:\n"
+    "- INFO     - Current boot order:\n"
     "- INFO     - 1: NIC.Integrated.1-2-1\n"
     "- INFO     - 2: HardDisk.List.1-1\n"
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 RESPONSE_NO_MATCH = (
-    f"{WARN_UNSAFE}- INFO     - Current boot order:\n"
-    "- INFO     - 1: HardDisk.List.1-1\n"
-    "- INFO     - 2: NIC.Integrated.1-2-1\n"
-    "- INFO     - 3: NIC.Slot.2-1-1\n"
-)
-WARN_NO_MATCH = f"{WARN_UNSAFE}- WARNING  - Current boot order does not match any of the given.\n" + (
     "- INFO     - Current boot order:\n"
     "- INFO     - 1: HardDisk.List.1-1\n"
     "- INFO     - 2: NIC.Integrated.1-2-1\n"
     "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
-RESPONSE_DIRECTOR = f"{WARN_UNSAFE}- WARNING  - Current boot order is set to: director.\n"
+WARN_NO_MATCH = "- WARNING  - Current boot order does not match any of the given.\n%s" % RESPONSE_NO_MATCH
+RESPONSE_DIRECTOR = "- WARNING  - Current boot order is set to: director.\n"
 
-RESPONSE_FOREMAN = f"{WARN_UNSAFE}- WARNING  - Current boot order is set to: foreman.\n"
+RESPONSE_FOREMAN = "- WARNING  - Current boot order is set to: foreman.\n"
 INTERFACES_PATH = os.path.join(os.path.dirname(__file__), "../config/idrac_interfaces.yml")
 
 # test_boot_to constants
-ERROR_DEV_NO_MATCH = f"{WARN_UNSAFE}- ERROR    - Device %s does not match any of the available boot devices for host %s\n" % (
+ERROR_DEV_NO_MATCH = "- ERROR    - Device %s does not match any of the available boot devices for host %s\n" % (
     BAD_DEVICE_NAME,
     MOCK_HOST,
 )
 TOGGLE_DEV_OK = (
-    f"{WARN_UNSAFE}- INFO     - %s has now been disabled\n"
+    "- INFO     - %s has now been disabled\n"
     "- WARNING  - Actions resource not found\n"
     "- ERROR    - Power state not found. Try to racreset.\n" % DEVICE_NIC_2["name"]
 )
 TOGGLE_DEV_NO_MATCH = (
-    f"{WARN_UNSAFE}- WARNING  - Accepted device names:\n"
+    "- WARNING  - Accepted device names:\n"
     "- WARNING  - NIC.Integrated.1-2-1\n"
     "- WARNING  - HardDisk.List.1-1\n"
     "- WARNING  - NIC.Slot.2-1-1\n"
     "- ERROR    - Boot device name not found\n"
 )
 RESPONSE_BOOT_TO = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_CUSTOM = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
+    "- WARNING  - Job queue already cleared for iDRAC host01.example.com, DELETE command will not execute.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_BAD_TYPE = (
-    f"{WARN_UNSAFE}- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+    "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 )
 RESPONSE_BOOT_TO_SERVICE_UNAVAILABLE = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 503.\n"
     "- INFO     - Retrying to send one time boot.\n"
     "- INFO     - Command passed to set BIOS attribute pending values.\n"
 )
 RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 400.\n"
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- WARNING  - Actions resource not found\n"
@@ -135,32 +120,32 @@ RESPONSE_BOOT_TO_SERVICE_BAD_REQUEST = (
     "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_BOOT_TO_SERVICE_ERR_HANDLER = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- ERROR    - Command failed, error code is: 403.\n"
     "- ERROR    - Error reading response from host.\n"
 )
 
-RESPONSE_BOOT_TO_BAD_FILE = f"{WARN_UNSAFE}- ERROR    - No such file or directory: bad/bad/file.\n"
-RESPONSE_BOOT_TO_NO_FILE = f"{WARN_UNSAFE}- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
-RESPONSE_BOOT_TO_BAD_MAC = f"{WARN_UNSAFE}- ERROR    - MAC Address does not match any of the existing\n"
+RESPONSE_BOOT_TO_BAD_FILE = "- ERROR    - No such file or directory: bad/bad/file.\n"
+RESPONSE_BOOT_TO_NO_FILE = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
+RESPONSE_BOOT_TO_BAD_MAC = "- ERROR    - MAC Address does not match any of the existing\n"
 
 # test_reboot_only
 RESPONSE_REBOOT_ONLY_SUCCESS = (
-    f"{WARN_UNSAFE}- INFO     - Command passed to GracefulRestart server, code return is 204.\n"
+    "- INFO     - Command passed to GracefulRestart server, code return is 204.\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
 RESPONSE_REBOOT_ONLY_FAILED_SEND_RESET = (
-    f"{WARN_UNSAFE}- ERROR    - Command failed to GracefulRestart server, status code is: 400.\n"
+    "- ERROR    - Command failed to GracefulRestart server, status code is: 400.\n"
     "- ERROR    - Error reading response from host.\n"
 )
 RESPONSE_REBOOT_ONLY_SUCCESS_WITH_NG_RT = (
-    f"{WARN_UNSAFE}- INFO     - Command passed to RestartNow server, code return is 204.\n"
+    "- INFO     - Command passed to RestartNow server, code return is 204.\n"
     "- INFO     - Polling for host state: Not Down\n"
     "- INFO     - Command passed to On server, code return is 204.\n"
 )
 RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE = (
-    f"{WARN_UNSAFE}- WARNING  - Command failed to GracefulRestart server, host appears to be already in that state.\n"
+    "- WARNING  - Command failed to GracefulRestart server, host appears to be already in that state.\n"
     "- INFO     - Polling for host state: Off\n"
     "- WARNING  - Unable to graceful shutdown the server, will perform forced shutdown now.\n"
     "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
@@ -168,41 +153,41 @@ RESPONSE_REBOOT_ONLY_FAILED_GRACE_AND_FORCE = (
 )
 
 # test_power
-RESPONSE_POWER_ON_OK = f"{WARN_UNSAFE}- INFO     - Command passed to On server, code return is 204.\n"
-RESPONSE_POWER_OFF_OK = f"{WARN_UNSAFE}- INFO     - Command passed to ForceOff server, code return is 204.\n"
-RESPONSE_POWER_OFF_NO_STATE = f"{WARN_UNSAFE}- ERROR    - Power state not found. Try to racreset.\n"
+RESPONSE_POWER_ON_OK = "- INFO     - Command passed to On server, code return is 204.\n"
+RESPONSE_POWER_OFF_OK = "- INFO     - Command passed to ForceOff server, code return is 204.\n"
+RESPONSE_POWER_OFF_NO_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
 RESPONSE_POWER_OFF_ALREADY = (
-    f"{WARN_UNSAFE}- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
+    "- WARNING  - Command failed to ForceOff server, host appears to be already in that state.\n"
 )
-RESPONSE_POWER_OFF_MISS_STATE = f"{WARN_UNSAFE}- ERROR    - Power state not found. Try to racreset.\n"
-RESPONSE_POWER_ON_NOT = f"{WARN_UNSAFE}- WARNING  - Command failed to On server, host appears to be already in that state.\n"
-RESPONSE_POWER_OFF_NONE = f"{WARN_UNSAFE}- WARNING  - Power state appears to be already set to 'off'.\n"
+RESPONSE_POWER_OFF_MISS_STATE = "- ERROR    - Power state not found. Try to racreset.\n"
+RESPONSE_POWER_ON_NOT = "- WARNING  - Command failed to On server, host appears to be already in that state.\n"
+RESPONSE_POWER_OFF_NONE = "- WARNING  - Power state appears to be already set to 'off'.\n"
 # test_power_consumed_watts
 POWER_CONSUMED_RESP = '{"PowerControl":[{"PowerConsumedWatts":"69"}]}'
 NO_POWER = '{"PowerControl":[]}'
-RESPONSE_POWER_CONSUMED_OK = f"{WARN_UNSAFE}- INFO     - Current watts consumed: 69\n"
-RESPONSE_NO_POWER_CONSUMED = f"{WARN_UNSAFE}- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n"
-RESPONSE_POWER_CONSUMED_VAL_ERR = f"{WARN_UNSAFE}- ERROR    - Power value outside operating range.\n"
+RESPONSE_POWER_CONSUMED_OK = "- INFO     - Current watts consumed: 69\n"
+RESPONSE_NO_POWER_CONSUMED = "- INFO     - Current watts consumed: N/A. Try to `--racreset`.\n"
+RESPONSE_POWER_CONSUMED_VAL_ERR = "- ERROR    - Power value outside operating range.\n"
 # test_reset_%s
 RESPONSE_RESET = (
-    f"{WARN_UNSAFE}- INFO     - Status code %s returned for POST command to reset %s.\n"
+    "- INFO     - Status code %s returned for POST command to reset %s.\n"
     "- INFO     - %s will now reset and be back online within a few minutes.\n"
 )
-RESPONSE_RESET_FAIL = f"{WARN_UNSAFE}- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
-RESPONSE_RESET_WRONG_VENDOR = f"{WARN_UNSAFE}- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
+RESPONSE_RESET_FAIL = "- ERROR    - Status code 400 returned, error is: \nBad Request.\n"
+RESPONSE_RESET_WRONG_VENDOR = "- WARNING  - Vendor isn't a %s, if you are trying this on a %s, use %s instead.\n"
 
 # test_change_boot
 RESPONSE_CHANGE_NO_BOOT_PREFIX = (
-    f"{WARN_UNSAFE}- WARNING  - Could not retrieve Bios Attributes.\n" "- WARNING  - Assuming boot mode is Bios.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n" "- WARNING  - Assuming boot mode is Bios.\n"
 )
 RESPONSE_CHANGE_BOOT = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
     "- WARNING  - Actions resource not found\n"
     "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS = (
-    f"{WARN_UNSAFE}- WARNING  - Could not retrieve Bios Attributes.\n"
+    "- WARNING  - Could not retrieve Bios Attributes.\n"
     "- WARNING  - Assuming boot mode is Bios.\n"
     f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
@@ -213,15 +198,15 @@ RESPONSE_CHANGE_BOOT_WITH_BIOS_WARNINGS = (
     "- WARNING  - Actions resource not found\n"
     "- ERROR    - Power state not found. Try to racreset.\n"
 )
-RESPONSE_CHANGE_BOOT_INCORRECT_PATH = f"{WARN_UNSAFE}- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
+RESPONSE_CHANGE_BOOT_INCORRECT_PATH = "- ERROR    - No such file or directory: 'INCORRECT PATH'.\n"
 RESPONSE_CHANGE_BOOT_PATCH_ERROR = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
     "- ERROR    - There was something wrong with your request.\n"
     "- ERROR    - Error reading response from host.\n"
 )
 RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
     "- WARNING  - Some interfaces are not valid boot devices. Ignoring: NIC.Slot.2-1-1, HardDisk.List.1-1\n"
     "- WARNING  - No changes were made since the boot order already matches the requested.\n"
@@ -229,14 +214,14 @@ RESPONSE_CHANGE_BOOT_LESS_VALID_DEVICES = (
     "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_CHANGE_BOOT_PXE = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not "
     "execute.\n"
     '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
     "- WARNING  - Actions resource not found\n"
     "- ERROR    - Power state not found. Try to racreset.\n"
 )
 RESPONSE_CHANGE_BOOT_UEFI = (
-    f"{WARN_UNSAFE}- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
+    f"- WARNING  - Job queue already cleared for iDRAC {MOCK_HOST}, DELETE command will not execute.\n"
     "- WARNING  - Could not retrieve Bios Attributes.\n"
     "- WARNING  - Could not retrieve Bios Attributes.\n"
     "- WARNING  - Could not retrieve Bios Attributes.\n"
@@ -252,10 +237,10 @@ RESPONSE_CHANGE_BOOT_UEFI = (
     "- ERROR    - Attribute not found\n"
 )
 RESPONSE_CHANGE_BAD_TYPE = (
-    f"{WARN_UNSAFE}- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
+    "- ERROR    - Expected values for -t argument are: ['custom', 'director', 'foreman', 'uefi']\n"
 )
-RESPONSE_CHANGE_TO_SAME = f"{WARN_UNSAFE}- WARNING  - No changes were made since the boot order already matches the requested.\n"
-RESPONSE_CHANGE_NO_INT = f"{WARN_UNSAFE}- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
+RESPONSE_CHANGE_TO_SAME = "- WARNING  - No changes were made since the boot order already matches the requested.\n"
+RESPONSE_CHANGE_NO_INT = "- ERROR    - You must provide a path to the interfaces yaml via `-i` optional argument.\n"
 
 ROOT_RESP = (
     '{"Managers":{"@odata.id":"/redfish/v1/Managers"},"Systems":{"@odata.id":"/redfish/v1/Systems"}, '
@@ -290,20 +275,16 @@ INIT_RESP_SUPERMICRO = [
 RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = (
     f"- ERROR    - Failed to authenticate. Verify your credentials for {MOCK_HOST}\n"
 )
-# Note: The warning is logged AFTER parse args but BEFORE factory init. If factory init fails, warning is still there.
-# Assuming the tests calling factory failures also pass args.
-RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED = f"{WARN_UNSAFE}" + RESPONSE_INIT_CREDENTIALS_UNAUTHORIZED
-
-RESPONSE_INIT_CREDENTIALS_FAILED_COMS = f"{WARN_UNSAFE}- ERROR    - Failed to communicate with {MOCK_HOST}\n"
-RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = f"{WARN_UNSAFE}- ERROR    - Failed to authenticate. Verify your credentials.\n"
-RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = f"{WARN_UNSAFE}- ERROR    - Systems resource not found\n"
+RESPONSE_INIT_CREDENTIALS_FAILED_COMS = f"- ERROR    - Failed to communicate with {MOCK_HOST}\n"
+RESPONSE_INIT_SYSTEMS_RESOURCE_UNAUTHORIZED = "- ERROR    - Failed to authenticate. Verify your credentials.\n"
+RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = "- ERROR    - Systems resource not found\n"
 
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
-RESPONSE_POWER_STATE_ON = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
-RESPONSE_POWER_STATE_DOWN = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
-RESPONSE_POWER_STATE_EMPTY = f"{WARN_UNSAFE}- INFO     - Power state:\n- INFO     -     {MOCK_HOST}: 'Down'\n"
+RESPONSE_POWER_STATE_ON = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'On'\n"
+RESPONSE_POWER_STATE_DOWN = "- INFO     - Power state:\n" f"- INFO     -     {MOCK_HOST}: 'Down'\n"
+RESPONSE_POWER_STATE_EMPTY = f"- INFO     - Power state:\n- INFO     -     {MOCK_HOST}: 'Down'\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_MODE_RESP_UEFI = '{"Attributes": {"BootMode": "UEFI"}}'
@@ -360,7 +341,7 @@ NETWORK_DEV_FUNC_DET_RESP = (
 )
 NETWORK_PORTS_RESP = '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
 RESPONSE_LS_INTERFACES = (
-    f"{WARN_UNSAFE}- INFO     - NIC.Integrated.1-1:\n"
+    "- INFO     - NIC.Integrated.1-1:\n"
     "- INFO     -     Id: NIC.Integrated.1-1\n"
     "- INFO     -     LinkStatus: Down\n"
     "- INFO     -     LinkSpeedMbps: 1000\n"
@@ -374,7 +355,7 @@ RESPONSE_LS_INTERFACES = (
     "- INFO     -     Vendor: Intel\n"
 )
 RESPONSE_LS_ETHERNET = (
-    f"{WARN_UNSAFE}- INFO     - NIC.Slot.1-1-1:\n"
+    "- INFO     - NIC.Slot.1-1-1:\n"
     "- INFO     -     Name: System Ethernet Interface\n"
     "- INFO     -     MACAddress: F8:BC:12:22:89:E1\n"
     "- INFO     -     Health: OK\n"
@@ -385,26 +366,24 @@ RESPONSE_LS_ETHERNET = (
     "- INFO     -     Health: OK\n"
     "- INFO     -     SpeedMbps: 10240\n"
 )
-RESPONSE_LS_INTERFACES_NOT_SUPPORTED = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
-RESPONSE_LS_INTERFACES_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting network interfaces\n"
+RESPONSE_LS_INTERFACES_NOT_SUPPORTED = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_INTERFACES_VALUE_ERROR = "- ERROR    - There was something wrong getting network interfaces\n"
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = f"{WARN_UNSAFE}- INFO     - Found active jobs:\n" f"- INFO     -     JobID: {JOB_ID}\n"
-RESPONSE_LS_JOBS_EMPTY = f"{WARN_UNSAFE}- INFO     - Found active jobs: None\n"
-RESPONSE_CLEAR_JOBS = f"{WARN_UNSAFE}- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
+RESPONSE_LS_JOBS = f"- INFO     - Found active jobs:\n" f"- INFO     -     JobID: {JOB_ID}\n"
+RESPONSE_LS_JOBS_EMPTY = "- INFO     - Found active jobs: None\n"
+RESPONSE_CLEAR_JOBS = f"- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 RESPONSE_CHECK_JOB = (
-    f"{WARN_UNSAFE}- INFO     - JobID: {JOB_ID}\n"
+    f"- INFO     - JobID: {JOB_ID}\n"
     "- INFO     - Name: Task\n"
     "- INFO     - Message: Job completed successfully.\n"
     "- INFO     - PercentComplete: 100\n"
 )
-RESPONSE_CHECK_JOB_BAD = (
-    f"{WARN_UNSAFE}- WARNING  - Job status response missing Message field\n"
-)
-RESPONSE_CHECK_JOB_ERROR = f"{WARN_UNSAFE}- ERROR    - Command failed to check job status\n"
+RESPONSE_CHECK_JOB_BAD = ""
+RESPONSE_CHECK_JOB_ERROR = "- ERROR    - Command failed to check job status\n"
 
-DELLJOBSERVICE_UNSUPPORTED = f"{WARN_UNSAFE}- WARNING  - iDRAC version installed does not support DellJobService\n"
+DELLJOBSERVICE_UNSUPPORTED = "- WARNING  - iDRAC version installed does not support DellJobService\n"
 RESPONSE_CLEAR_JOBS_UNSUPPORTED = f"{RESPONSE_CLEAR_JOBS}"
 RESPONSE_CLEAR_JOBS_LIST = (
     f"{RESPONSE_CLEAR_JOBS}- WARNING  - Unexpected status 200 when deleting session for {MOCK_HOST}.\n"
@@ -415,7 +394,7 @@ RESPONSE_CLEAR_JOBS_LIST_EXCEPTION = (
 RESPONSE_DELETE_JOBS_UNSUPPORTED_EXCEPTION = (
     f"{RESPONSE_CLEAR_JOBS}- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
 )
-RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = f"{WARN_UNSAFE}- ERROR    - Error reading response from host.\n"
+RESPONSE_DELETE_JOBS_SUPPORTED_EXCEPTION = "- ERROR    - Error reading response from host.\n"
 
 FIRMWARE_INVENTORY_RESP = (
     '{"Members": ['
@@ -445,7 +424,7 @@ FIRMWARE_INVENTORY_2_RESP = (
 )
 FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = '{"error": "Something went wrong when getting firmware inventory"}'
 RESPONSE_FIRMWARE_INVENTORY = (
-    f"{WARN_UNSAFE}- INFO     - Installed-0-16.25.40.62:\n"
+    "- INFO     - Installed-0-16.25.40.62:\n"
     "- INFO     -     Id: Installed-0-16.25.40.62\n"
     "- INFO     -     Name: Mellanox ConnectX-5\n"
     "- INFO     -     ReleaseDate: 00:00:00Z\n"
@@ -462,9 +441,9 @@ RESPONSE_FIRMWARE_INVENTORY = (
     "- INFO     -     Updateable: True\n"
     "- INFO     -     Version: 19.5.12\n"
 )
-RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = f"{WARN_UNSAFE}- ERROR    - Not able to access Firmware inventory.\n"
+RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = "- ERROR    - Not able to access Firmware inventory.\n"
 RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE = (
-    f"{WARN_UNSAFE}- INFO     - Installed-0-16.25.40.62:\n"
+    "- INFO     - Installed-0-16.25.40.62:\n"
     "- INFO     -     Id: Installed-0-16.25.40.62\n"
     "- INFO     -     Name: Mellanox ConnectX-5\n"
     "- INFO     -     ReleaseDate: 00:00:00Z\n"
@@ -502,7 +481,7 @@ MEMORY_B2_RESP = (
     '"OperatingSpeedMhz": 2933}'
 )
 RESPONSE_LS_MEMORY = (
-    f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
+    "- INFO     - Memory Summary:\n"
     "- INFO     -     MemoryMirroring: System\n"
     "- INFO     -     TotalSystemMemoryGiB: 384\n"
     "- INFO     - DIMM A5:\n"
@@ -518,22 +497,22 @@ RESPONSE_LS_MEMORY = (
     "- INFO     -     MemoryDeviceType: DDR4\n"
     "- INFO     -     OperatingSpeedMhz: 2933\n"
 )
-RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting memory summary\n"
+RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting memory summary\n"
 MEMORY_SUMMARY_RESP_FAULTY = (
     '{"MemorySum": {'
     '"MemoryMirroring": "System",'
     '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"},'
     '"TotalSystemMemoryGiB": 384}}'
 )
-RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = "- ERROR    - Server does not support this functionality\n"
 RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND = (
-    f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
+    "- INFO     - Memory Summary:\n"
     "- INFO     -     MemoryMirroring: System\n"
     "- INFO     -     TotalSystemMemoryGiB: 384\n"
     "- ERROR    - Server does not support this functionality\n"
 )
 RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR = (
-    f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
+    "- INFO     - Memory Summary:\n"
     "- INFO     -     MemoryMirroring: System\n"
     "- INFO     -     TotalSystemMemoryGiB: 384\n"
     "- ERROR    - There was something wrong getting memory details\n"
@@ -562,7 +541,7 @@ PROCESSOR_CPU_RESP = (
     '"TotalThreads": 40}'
 )
 RESPONSE_LS_PROCESSORS = (
-    f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
+    "- INFO     - Processor Summary:\n"
     "- INFO     -     Count: 2\n"
     "- INFO     -     LogicalProcessorCount: 80\n"
     "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
@@ -590,17 +569,17 @@ PROCESSOR_SUMMARY_RESP_FAULTY = (
     '"Model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",'
     '"Status": {"Health": "Unknown","HealthRollup": "Unknown","State": "Enabled"}}}'
 )
-RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
-RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting processor summary\n"
+RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting processor summary\n"
 RESPONSE_LS_PROCESSORS_DETAILS_NOT_FOUND = (
-    f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
+    "- INFO     - Processor Summary:\n"
     "- INFO     -     Count: 2\n"
     "- INFO     -     LogicalProcessorCount: 80\n"
     "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- ERROR    - Server does not support this functionality\n"
 )
 RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
-    f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
+    "- INFO     - Processor Summary:\n"
     "- INFO     -     Count: 2\n"
     "- INFO     -     LogicalProcessorCount: 80\n"
     "- INFO     -     Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
@@ -632,7 +611,7 @@ GPU_DATA_RESP2 = (
 )
 GPU_DATA_RESP_FAULTY = '{"GPU":"" }'
 RESPONSE_LS_GPU = (
-    f"{WARN_UNSAFE}- INFO     - GPU Summary:\n"
+    "- INFO     - GPU Summary:\n"
     "- INFO     -   Model: AMD Instinct MI300X (Count: 2)\n"
     "- INFO     - Current GPU's on host:\n"
     "- INFO     -   ProcAccelerator.Slot.21-1:\n"
@@ -645,13 +624,13 @@ RESPONSE_LS_GPU = (
     "- INFO     -     ProcessorType: Accelerator\n"
 )
 
-RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = f"{WARN_UNSAFE}- INFO     - GPU Summary:\n- INFO     - Current GPU's on host:\n- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
-RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting GPU summary values.\n"
-RESPONSE_LS_GPU_SUMMARY_BAD_JSON = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting GPU data\n"
-RESPONSE_LS_GPU_DETAILS_NOT_FOUND = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting host GPU details\n"
+RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = f"- INFO     - GPU Summary:\n- INFO     - Current GPU's on host:\n- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
+RESPONSE_LS_GPU_SUMMARY_VALUE_ERROR = "- ERROR    - There was something wrong getting GPU summary values.\n"
+RESPONSE_LS_GPU_SUMMARY_BAD_JSON = "- ERROR    - There was something wrong getting GPU data\n"
+RESPONSE_LS_GPU_DETAILS_NOT_FOUND = "- ERROR    - There was something wrong getting host GPU details\n"
 RESPONSE_LS_GPU_DETAILS_VALUE_ERROR = (
-    f"{WARN_UNSAFE}- INFO     - GPU Summary:\n"
-    "- INFO     -      Model: AMD Instinct MI300X OAM\n"
+    "- INFO     - GPU Summary:\n"
+    "- INFO     -     Model: AMD Instinct MI300X OAM\n"
     "- INFO     - Current GPU's on host:\n"
     "- ERROR    - There was something wrong getting host GPU detailed values.\n"
 )
@@ -675,12 +654,12 @@ SYSTEM_SERIAL_NUMBER_RESP = """
     "Model":"SYS-5039MS-HUH4F" }
 """
 EMPTY_OEM_RESP = '{"Oem":{}}'
-RESPONSE_LS_SERIAL_SERVICE_TAG = f"{WARN_UNSAFE}- INFO     - ServiceTag:\n" "- INFO     -     f01-h01-000-r630.host.io: HXVMC42\n"
+RESPONSE_LS_SERIAL_SERVICE_TAG = "- INFO     - ServiceTag:\n" "- INFO     -     f01-h01-000-r630.host.io: HXVMC42\n"
 RESPONSE_LS_SERIAL_NUMBER = (
-    f"{WARN_UNSAFE}- INFO     - Serial Number:\n" "- INFO     -     f01-h01-000-r630.host.io: S211337X8693420\n"
+    "- INFO     - Serial Number:\n" "- INFO     -     f01-h01-000-r630.host.io: S211337X8693420\n"
 )
-RESPONSE_LS_SERIAL_UNSUPPORTED = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
-RESPONSE_LS_SERIAL_SOMETHING_WRONG = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting serial summary\n"
+RESPONSE_LS_SERIAL_UNSUPPORTED = "- ERROR    - Server does not support this functionality\n"
+RESPONSE_LS_SERIAL_SOMETHING_WRONG = "- ERROR    - There was something wrong getting serial summary\n"
 
 BLANK_RESP = '"OK"'
 TASK_OK_RESP = '{"Message": "Job completed successfully.","Id": "%s","Name": "Task","PercentComplete": "100"}' % JOB_ID
@@ -690,19 +669,19 @@ SCREENSHOT_RESP = '{"ServerScreenShotFile": "%s"}' % str(SCREENSHOT_64)
 MOCK_HOST_SHORT_FQDN = MOCK_HOST.split(".")[0]
 SCREENSHOT_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.png"
 GIF_NAME = f"{MOCK_HOST_SHORT_FQDN}_screenshot_now.gif"
-SCREENSHOT_NOT_SUPPORTED = f"{WARN_UNSAFE}- ERROR    - The system does not support screenshots.\n"
+SCREENSHOT_NOT_SUPPORTED = "- ERROR    - The system does not support screenshots.\n"
 SCREENSHOT_BAD_REQUEST = (
-    f"{WARN_UNSAFE}- ERROR    - POST command failed to get the server screenshot.\n"
+    "- ERROR    - POST command failed to get the server screenshot.\n"
     "- ERROR    - {'ServerScreenShotFile': \"%s\"}\n" % str(SCREENSHOT_64)
 )
-SCREENSHOT_FALSE_OK = f"{WARN_UNSAFE}- ERROR    - Error reading response from host.\n"
+SCREENSHOT_FALSE_OK = "- ERROR    - Error reading response from host.\n"
 SCREENSHOT_GIF_FALSE_OK = (
-    f"{WARN_UNSAFE}- ERROR    - POST command failed to get the server screenshot.\n"
+    "- ERROR    - POST command failed to get the server screenshot.\n"
     "- ERROR    - Error reading response from host.\n"
 )
 
-VMEDIA_CONFIG_NO_RESOURCE = f"{WARN_UNSAFE}- ERROR    - Not able to access virtual media resource.\n"
-VMEDIA_CONFIG_NO_CONFIG = f"{WARN_UNSAFE}- ERROR    - Not able to access virtual media config.\n"
+VMEDIA_CONFIG_NO_RESOURCE = "- ERROR    - Not able to access virtual media resource.\n"
+VMEDIA_CONFIG_NO_CONFIG = "- ERROR    - Not able to access virtual media config.\n"
 VMEDIA_GET_VM_CONFIG_RESP_DELL = """
 {
     "@odata.context":"/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
@@ -758,7 +737,7 @@ VMEDIA_GET_VM_CONFIG_RESP_SM_WITH_MEMBERS = """
     }
 }
 """
-VMEDIA_GET_VM_CONFIG_EMPTY_RESP_SM = f"{WARN_UNSAFE}- INFO     - No virtual media mounted.\n"
+VMEDIA_GET_VM_CONFIG_EMPTY_RESP_SM = "- INFO     - No virtual media mounted.\n"
 VMEDIA_GET_MEMBERS_RESP_DELL = """
 {"Members": [
     {"@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk"},
@@ -782,8 +761,8 @@ VMEDIA_MEMBER_CD_RESP = """
   "Name":"Virtual CD"
 }
 """
-VMEDIA_CHECK_GOOD_DELL = f"""\
-{WARN_UNSAFE}- INFO     - RemovableDisk:\n\
+VMEDIA_CHECK_GOOD_DELL = """\
+- INFO     - RemovableDisk:\n\
 - INFO     -     Name: Virtual Removable Disk\n\
 - INFO     -     ImageName: None\n\
 - INFO     -     Inserted: False\n\
@@ -792,38 +771,38 @@ VMEDIA_CHECK_GOOD_DELL = f"""\
 - INFO     -     ImageName: TestImage\n\
 - INFO     -     Inserted: True\n\
 """
-VMEDIA_CHECK_GOOD_SM = f"""\
-{WARN_UNSAFE}- INFO     - CD:\n\
+VMEDIA_CHECK_GOOD_SM = """\
+- INFO     - CD:\n\
 - INFO     -     Name: Virtual CD\n\
 - INFO     -     ImageName: TestImage\n\
 - INFO     -     Inserted: True\n\
 """
 VMEDIA_GET_ENDPOINT_FALSE = '{"VirtualMedia":false}'
 VMEDIA_GET_ENDPOINT_EMPTY = '{"VirtualMedia": {"@odata.id":false}}'
-VMEDIA_CHECK_EMPTY = f"""\
-{WARN_UNSAFE}- WARNING  - No active VirtualMedia found\n\
+VMEDIA_CHECK_EMPTY = """\
+- WARNING  - No active VirtualMedia found\n\
 """
 
-VMEDIA_MOUNT_SUCCESS = f"{WARN_UNSAFE}- INFO     - Image mounting operation was successful.\n"
-VMEDIA_MOUNT_NOT_ALLOWED = f"{WARN_UNSAFE}- ERROR    - Virtual media mounting is not allowed on this server.\n"
+VMEDIA_MOUNT_SUCCESS = "- INFO     - Image mounting operation was successful.\n"
+VMEDIA_MOUNT_NOT_ALLOWED = "- ERROR    - Virtual media mounting is not allowed on this server.\n"
 VMEDIA_MOUNT_ALREADY_FILLED = (
-    f"{WARN_UNSAFE}- ERROR    - Couldn't mount virtual media, because there is virtual media mounted already.\n"
+    "- ERROR    - Couldn't mount virtual media, because there is virtual media mounted already.\n"
 )
-VMEDIA_MOUNT_SOMETHING_WRONG = f"{WARN_UNSAFE}- ERROR    - There was something wrong trying to mount virtual media.\n"
+VMEDIA_MOUNT_SOMETHING_WRONG = "- ERROR    - There was something wrong trying to mount virtual media.\n"
 
-VMEDIA_UNMOUNT_SUCCESS = f"{WARN_UNSAFE}- INFO     - Image unmount operation was successful.\n"
-VMEDIA_UNMOUNT_NOT_ALLOWED = f"{WARN_UNSAFE}- ERROR    - Virtual media unmounting is not allowed on this server.\n"
-VMEDIA_UNMOUNT_EMPTY = f"{WARN_UNSAFE}- ERROR    - Couldn't unmount virtual media, because there isn't any virtual media mounted.\n"
-VMEDIA_UNMOUNT_SOMETHING_WRONG = f"{WARN_UNSAFE}- ERROR    - There was something wrong trying to unmount virtual media.\n"
+VMEDIA_UNMOUNT_SUCCESS = "- INFO     - Image unmount operation was successful.\n"
+VMEDIA_UNMOUNT_NOT_ALLOWED = "- ERROR    - Virtual media unmounting is not allowed on this server.\n"
+VMEDIA_UNMOUNT_EMPTY = "- ERROR    - Couldn't unmount virtual media, because there isn't any virtual media mounted.\n"
+VMEDIA_UNMOUNT_SOMETHING_WRONG = "- ERROR    - There was something wrong trying to unmount virtual media.\n"
 
-VMEDIA_BOOT_TO_NO_MEDIA = f"{WARN_UNSAFE}- ERROR    - No virtual CD is inserted.\n"
+VMEDIA_BOOT_TO_NO_MEDIA = "- ERROR    - No virtual CD is inserted.\n"
 VMEDIA_BOOT_TO_MISSING = (
-    f"{WARN_UNSAFE}- ERROR    - Device Optical.iDRACVirtual.1-1 does not match any of the "
+    "- ERROR    - Device Optical.iDRACVirtual.1-1 does not match any of the "
     f"available boot devices for host {MOCK_HOST}\n"
     "- ERROR    - Command failed to set next onetime boot to virtual media. No virtual optical media boot device.\n"
 )
-VMEDIA_BOOT_TO_SM_PASS = f"{WARN_UNSAFE}- INFO     - Command passed to set next onetime boot device to virtual media.\n"
-VMEDIA_BOOT_TO_SM_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to set next onetime boot device to virtual media.\n"
+VMEDIA_BOOT_TO_SM_PASS = "- INFO     - Command passed to set next onetime boot device to virtual media.\n"
+VMEDIA_BOOT_TO_SM_FAIL = "- ERROR    - Command failed to set next onetime boot device to virtual media.\n"
 BOOT_SOURCE_OVERRIDE_TARGET_USBCD = """
 {
     "Boot": {
@@ -847,14 +826,14 @@ BOOT_SOURCE_OVERRIDE_TARGET_CD = """
     }
 }
 """
-VMEDIA_CHECK_DISC_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting values for VirtualMedia\n"
-VMEDIA_NO_ENDPOINT_ERROR = f"{WARN_UNSAFE}- ERROR    - No VirtualMedia endpoint found\n"
+VMEDIA_CHECK_DISC_VALUE_ERROR = "- ERROR    - There was something wrong getting values for VirtualMedia\n"
+VMEDIA_NO_ENDPOINT_ERROR = "- ERROR    - No VirtualMedia endpoint found\n"
 
 VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_CHECK = (
-    f"{WARN_UNSAFE}- ERROR    - There was something wrong trying to check remote image attach status.\n"
+    "- ERROR    - There was something wrong trying to check remote image attach status.\n"
 )
-VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT = f"{WARN_UNSAFE}- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
-VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH = f"{WARN_UNSAFE}- INFO     - Command to detach remote ISO was successful.\n"
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_BOOT = "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+VMEDIA_OS_DEPLOYMENT_NOT_SUPPORTED_DETACH = "- INFO     - Command to detach remote ISO was successful.\n"
 VMEDIA_REMOTE_CHECK_RESP = """
 {
     "@Message.ExtendedInfo": [{
@@ -871,9 +850,9 @@ VMEDIA_REMOTE_CHECK_RESP = """
     "ISOAttachStatus":"Attached"
 }
 """
-VMEDIA_REMOTE_CHECK_GOOD = f"{WARN_UNSAFE}- INFO     - Current ISO attach status: Attached\n"
-VMEDIA_REMOTE_CHECK_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to get attach status of the remote mounted ISO.\n"
-VMEDIA_REMOTE_CHECK_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong trying to check remote image attach status.\n"
+VMEDIA_REMOTE_CHECK_GOOD = "- INFO     - Current ISO attach status: Attached\n"
+VMEDIA_REMOTE_CHECK_FAIL = "- ERROR    - Command failed to get attach status of the remote mounted ISO.\n"
+VMEDIA_REMOTE_CHECK_ERROR = "- ERROR    - There was something wrong trying to check remote image attach status.\n"
 VMEDIA_REMOTE_BOOT_TASK_RESP = """
 {
     "@odata.context":"/redfish/v1/$metadata#Task.Task",
@@ -917,24 +896,24 @@ VMEDIA_REMOTE_BOOT_TASK_FAILED_RESP = """
 }
 """
 VMEDIA_REMOTE_BOOT_GOOD = (
-    f"{WARN_UNSAFE}- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
     "- INFO     - OSDeployment task status is OK.\n"
 )
-VMEDIA_REMOTE_BOOT_WRONG_PATH = f"{WARN_UNSAFE}- ERROR    - Wrong NFS path format.\n"
-VMEDIA_REMOTE_BOOT_COMMAND_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
+VMEDIA_REMOTE_BOOT_WRONG_PATH = "- ERROR    - Wrong NFS path format.\n"
+VMEDIA_REMOTE_BOOT_COMMAND_FAIL = "- ERROR    - Command failed to boot to remote ISO. No job was created.\n"
 VMEDIA_REMOTE_BOOT_TASK_FAIL = (
-    f"{WARN_UNSAFE}- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
     "- ERROR    - OSDeployment task failed and couldn't be completed.\n"
 )
 VMEDIA_REMOTE_BOOT_SOMETHING_WRONG = (
-    f"{WARN_UNSAFE}- INFO     - Command for booting to remote ISO was successful, job was created.\n"
+    "- INFO     - Command for booting to remote ISO was successful, job was created.\n"
     "- ERROR    - There was something wrong trying to check remote image attach status.\n"
 )
-VMEDIA_REMOTE_DETACH_GOOD = f"{WARN_UNSAFE}- INFO     - Command to detach remote ISO was successful.\n"
-VMEDIA_REMOTE_DETACH_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to detach remote mounted ISO.\n"
+VMEDIA_REMOTE_DETACH_GOOD = "- INFO     - Command to detach remote ISO was successful.\n"
+VMEDIA_REMOTE_DETACH_FAIL = "- ERROR    - Command failed to detach remote mounted ISO.\n"
 
 BIOS_PASS_SET_GOOD = f"""\
-{WARN_UNSAFE}- INFO     - Command passed to set BIOS password.
+- INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID: {JOB_ID}
@@ -942,12 +921,12 @@ BIOS_PASS_SET_GOOD = f"""\
 - INFO     - Message: Job completed successfully.
 - INFO     - PercentComplete: 100
 """
-BIOS_PASS_SET_MISS_ARG = f"""\
-{WARN_UNSAFE}- ERROR    - Missing argument: `--new-password`
+BIOS_PASS_SET_MISS_ARG = """\
+- ERROR    - Missing argument: `--new-password`
 """
 BIOS_PASS_RM_GOOD = (
-    f"""\
-{WARN_UNSAFE}- INFO     - Command passed to set BIOS password.
+    """\
+- INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
 - INFO     - JobID: %s
@@ -957,21 +936,21 @@ BIOS_PASS_RM_GOOD = (
 """
     % JOB_ID
 )
-BIOS_PASS_RM_MISS_ARG = f"""\
-{WARN_UNSAFE}- ERROR    - Missing argument: `--old-password`
+BIOS_PASS_RM_MISS_ARG = """\
+- ERROR    - Missing argument: `--old-password`
 """
-BIOS_PASS_CHANGE_NOT_SUPPORTED = f"{WARN_UNSAFE}- ERROR    - BIOS password change not supported on this system.\n"
+BIOS_PASS_CHANGE_NOT_SUPPORTED = "- ERROR    - BIOS password change not supported on this system.\n"
 BIOS_PASS_CHANGE_CMD_FAILED = (
-    f"{WARN_UNSAFE}- WARNING  - Command failed to set BIOS password\n" "- ERROR    - Error reading response from host.\n"
+    "- WARNING  - Command failed to set BIOS password\n" "- ERROR    - Error reading response from host.\n"
 )
 BIOS_PASS_SET_CHECK_JOB_STATUS_BAD_CODE = (
-    f"{WARN_UNSAFE}- INFO     - Command passed to set BIOS password.\n"
+    "- INFO     - Command passed to set BIOS password.\n"
     "- WARNING  - Host will now be rebooted for changes to take place.\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
     "- WARNING  - Job status response missing Message field\n"
 )
 BIOS_PASS_SET_CHECK_JOB_STATUS_FAIL_MSG = (
-    f"{WARN_UNSAFE}- INFO     - Command passed to set BIOS password.\n"
+    "- INFO     - Command passed to set BIOS password.\n"
     "- WARNING  - Host will now be rebooted for changes to take place.\n"
     "- INFO     - Command passed to On server, code return is 200.\n"
 )
@@ -1025,27 +1004,27 @@ BIOS_REGISTRY_2 = {
     "WriteOnly": "False",
 }
 BIOS_REGISTRY_OK = BIOS_REGISTRY_BASE % str([BIOS_REGISTRY_1, BIOS_REGISTRY_2])
-BIOS_SET_OK = f"""\
-{WARN_UNSAFE}- INFO     - Command passed to set BIOS attribute pending values.
+BIOS_SET_OK = """\
+- INFO     - Command passed to set BIOS attribute pending values.
 - INFO     - Command passed to GracefulRestart server, code return is 200.
 - INFO     - Polling for host state: Not Down
 - INFO     - Command passed to On server, code return is 200.
 """
 BIOS_SET_BAD_VALUE = (
-    f"""\
-{WARN_UNSAFE}- WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
+    """\
+- WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
 - ERROR    - Value not accepted
 """
     % ATTRIBUTE_OK
 )
-BIOS_SET_BAD_ATTR = f"""\
-{WARN_UNSAFE}- WARNING  - Could not retrieve Bios Attributes.
+BIOS_SET_BAD_ATTR = """\
+- WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - NotThere not found. Please check attribute name.
 - ERROR    - Attribute not found
 """
-BIOS_GET_ALL_OK = f"""{WARN_UNSAFE}- INFO     - {ATTRIBUTE_OK}: {ATTR_VALUE_OK}\n"""
-BIOS_GET_ONE_OK = f"""\
-{WARN_UNSAFE}- INFO     - AttributeName: ProcC1E
+BIOS_GET_ALL_OK = f"""- INFO     - {ATTRIBUTE_OK}: {ATTR_VALUE_OK}\n"""
+BIOS_GET_ONE_OK = """\
+- INFO     - AttributeName: ProcC1E
 - INFO     - CurrentValue: Enabled
 - INFO     - DisplayName: C1E
 - INFO     - DisplayOrder: 9604
@@ -1056,29 +1035,29 @@ BIOS_GET_ONE_OK = f"""\
 - INFO     - ReadOnly: False
 - INFO     - ResetRequired: True
 - INFO     - Type: Enumeration
-- INFO     - Value: [{{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}, {{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}]
+- INFO     - Value: [{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}, {'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}]
 - INFO     - WarningText: None
 - INFO     - WriteOnly: False
 """
 BIOS_GET_ONE_BAD = (
-    f"""\
-{WARN_UNSAFE}- WARNING  - Could not retrieve Bios Attributes.
+    """\
+- WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - Unable to locate the Bios attribute: %s
 """
     % ATTRIBUTE_BAD
 )
-NEXT_BOOT_PXE_OK = f'{WARN_UNSAFE}- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
+NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
 NEXT_BOOT_PXE_BAD = (
-    f"{WARN_UNSAFE}- ERROR    - Command failed, error code is 400.\n" "- ERROR    - Error reading response from host.\n"
+    "- ERROR    - Command failed, error code is 400.\n" "- ERROR    - Error reading response from host.\n"
 )
 
-SRIOV_ALREADY = f"{WARN_UNSAFE}- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
-SRIOV_STATE = f"{WARN_UNSAFE}- INFO     - Enabled\n"
+SRIOV_ALREADY = "- WARNING  - SRIOV mode is already in that state. IGNORING.\n"
+SRIOV_STATE = "- INFO     - Enabled\n"
 
-IMAGE_SAVED = f"""{WARN_UNSAFE}- INFO     - Image saved: %s\n"""
+IMAGE_SAVED = """- INFO     - Image saved: %s\n"""
 
-KEYBOARD_INTERRUPT = f"- WARNING  - Badfish terminated\n"
-WRONG_BADFISH_EXECUTION = f"- WARNING  - There was something wrong executing Badfish\n"
+KEYBOARD_INTERRUPT = "- WARNING  - Badfish terminated\n"
+WRONG_BADFISH_EXECUTION = "- WARNING  - There was something wrong executing Badfish\n"
 KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION_HOST_LIST = (
     "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
@@ -1089,20 +1068,12 @@ SUCCESSFUL_HOST_LIST = (
     "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
     "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
-NO_HOST_ERROR = (
-    f"- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
-)
-
-# New constant for host list warning
-WARN_UNSAFE_HOST = ""
-
+NO_HOST_ERROR = "- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    f"{WARN_UNSAFE_HOST}"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
-    f"{WARN_UNSAFE_HOST}"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO     - ************************************************\n"
     "[badfish.helpers.logger] - INFO     - RESULTS:\n"
@@ -1176,8 +1147,8 @@ SCP_MESSAGE_PERCENTAGE_STATE = """\
 """
 
 # TEST SCP RESPONSES
-RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = f"""\
-{WARN_UNSAFE}- INFO     - The allowable SCP Export targets are:
+RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = """\
+- INFO     - The allowable SCP Export targets are:
 - INFO     - ALL
 - INFO     - IDRAC
 - INFO     - BIOS
@@ -1185,13 +1156,13 @@ RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = f"""\
 - INFO     - RAID
 """
 RESPONSE_GET_SCP_TARGETS_WITHOUT_ALLOWABLES_ERR = (
-    f"{WARN_UNSAFE}- ERROR    - Couldn't find a list of possible targets, but Export with SCP should be allowed.\n"
+    "- ERROR    - Couldn't find a list of possible targets, but Export with SCP should be allowed.\n"
 )
-RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = f"{WARN_UNSAFE}- ERROR    - iDRAC on this system doesn't seem to support SCP Export.\n"
-RESPONSE_GET_SCP_TARGETS_WRONG = f"{WARN_UNSAFE}- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
+RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = "- ERROR    - iDRAC on this system doesn't seem to support SCP Export.\n"
+RESPONSE_GET_SCP_TARGETS_WRONG = "- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
 
 RESPONSE_EXPORT_SCP_PASS = f"""\
-{WARN_UNSAFE}- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
 - INFO     - Exporting Server Configuration Profile., percent complete: 15
 - INFO     - Exporting Server Configuration Profile., percent complete: 30
 - INFO     - Exporting Server Configuration Profile., percent complete: 45
@@ -1202,25 +1173,25 @@ RESPONSE_EXPORT_SCP_PASS = f"""\
 - INFO     - SCP export went through successfully.
 - INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
 """
-RESPONSE_EXPORT_SCP_STATUS_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to export system configuration.\n"
-RESPONSE_EXPORT_SCP_NO_LOCATION = f"{WARN_UNSAFE}- ERROR    - Failed to find a job ID in headers of the response.\n"
+RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration.\n"
+RESPONSE_EXPORT_SCP_NO_LOCATION = "- ERROR    - Failed to find a job ID in headers of the response.\n"
 RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
-{WARN_UNSAFE}- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
 - INFO     - Unable to get job status message, trying again.
 - INFO     - Exporting Server Configuration Profile., percent complete: 1
 - ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
 """
-RESPONSE_IMPORT_SCP_INVALID_FILEPATH = f"{WARN_UNSAFE}- ERROR    - File doesn't exist or couldn't be opened.\n"
-RESPONSE_IMPORT_SCP_STATUS_FAIL = f"{WARN_UNSAFE}- ERROR    - Command failed to import system configuration.\n"
+RESPONSE_IMPORT_SCP_INVALID_FILEPATH = "- ERROR    - File doesn't exist or couldn't be opened.\n"
+RESPONSE_IMPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to import system configuration.\n"
 RESPONSE_IMPORT_SCP_TIME_OUT = f"""\
-{WARN_UNSAFE}- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
 - INFO     - Unable to locate OEM data in JSON response, trying again.
 - INFO     - Unable to get job status message, trying again.
 - INFO     - Importing Server Configuration Profile., percent complete: 1
 - ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
 """
 RESPONSE_IMPORT_SCP_FAIL_STATE = f"""\
-{WARN_UNSAFE}- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
 - INFO     - Importing Server Configuration Profile., percent complete: 20
 - INFO     - Importing Server Configuration Profile., percent complete: 40
 - INFO     - Importing Server Configuration Profile., percent complete: 60
@@ -1229,7 +1200,7 @@ RESPONSE_IMPORT_SCP_FAIL_STATE = f"""\
 """
 
 RESPONSE_IMPORT_SCP_PASS = f"""\
-{WARN_UNSAFE}- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for importing server configuration, successfully created. Job ID: {JOB_ID}
 - INFO     - Importing Server Configuration Profile., percent complete: 15
 - INFO     - Importing Server Configuration Profile., percent complete: 30
 - INFO     - Importing Server Configuration Profile., percent complete: 45
@@ -1293,8 +1264,8 @@ GET_NIC_FQQDS_SLOT = """{
     "Name":"Network Device Function Collection"
 }
 """
-RESPONSE_GET_NIC_FQQDS_OK = f"""\
-{WARN_UNSAFE}- INFO     - NIC.Embedded.1:
+RESPONSE_GET_NIC_FQQDS_OK = """\
+- INFO     - NIC.Embedded.1:
 - INFO     -     1: NIC.Embedded.1-1-1
 - INFO     -     2: NIC.Embedded.2-1-1
 - INFO     - NIC.Integrated.1:
@@ -1304,9 +1275,9 @@ RESPONSE_GET_NIC_FQQDS_OK = f"""\
 - INFO     -     1: NIC.Slot.3-1-1
 - INFO     -     2: NIC.Slot.3-2-1
 """
-RESPONSE_VENDOR_UNSUPPORTED = f"{WARN_UNSAFE}- ERROR    - Operation not supported by vendor."
-RESPONSE_FIRMWARE_VERSION_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to get iDRAC Firmware Version."
-RESPONSE_GET_NIC_FQQDS_INVALID = f"{WARN_UNSAFE}- ERROR    - Was unable to get NIC FQDDs, invalid server response.\n"
+RESPONSE_VENDOR_UNSUPPORTED = "- ERROR    - Operation not supported by vendor."
+RESPONSE_FIRMWARE_VERSION_ERROR = "- ERROR    - Was unable to get iDRAC Firmware Version."
+RESPONSE_GET_NIC_FQQDS_INVALID = "- ERROR    - Was unable to get NIC FQDDs, invalid server response.\n"
 GET_NIC_ATTR_LIST = """\
 {
     "@Redfish.Settings":{
@@ -1362,8 +1333,8 @@ GET_NIC_ATTR_LIST = """\
     "Name":"DellNetworkAttributes"
 }
 """
-RESPONSE_GET_NIC_ATTR_LIST_OK = f"""\
-{WARN_UNSAFE}- INFO     - NIC.Embedded.1-1-1
+RESPONSE_GET_NIC_ATTR_LIST_OK = """\
+- INFO     - NIC.Embedded.1-1-1
 - INFO     -     ChipMdl: BCM5720 A0
 - INFO     -     PCIDeviceID: 165F
 - INFO     -     BusDeviceFunction: 04:00:00
@@ -1396,7 +1367,7 @@ RESPONSE_GET_NIC_ATTR_LIST_OK = f"""\
 - INFO     -     VLanMode: Disabled
 - INFO     -     PermitTotalPortShutdown: Disabled
 """
-RESPONSE_GET_NIC_ATTR_LIST_INVALID = f"{WARN_UNSAFE}- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.\n"
+RESPONSE_GET_NIC_ATTR_LIST_INVALID = "- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.\n"
 GET_FW_VERSION = """\
 {
     "FirmwareVersion":"5.10.50.00"
@@ -2301,63 +2272,61 @@ GET_NIC_ATTRS = """
     ]
 }
 """
-RESPONSE_GET_NIC_ATTR_SPECIFIC = f"""\
-{WARN_UNSAFE}- INFO     - AttributeName: WakeOnLan
-- INFO     -     CurrentValue: Enabled
-- INFO     -     DisplayName: Wake On LAN
-- INFO     -     DisplayOrder: 306
-- INFO     -     HelpText: None
-- INFO     -     Hidden: False
-- INFO     -     Immutable: False
-- INFO     -     MenuPath: ./
-- INFO     -     Oem: {{'Dell': {{'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}}}
-- INFO     -     ReadOnly: False
-- INFO     -     ResetRequired: True
-- INFO     -     Type: Enumeration
-- INFO     -     Value: [{{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}, {{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}]
-- INFO     -     WarningText: None
-- INFO     -     WriteOnly: False
+RESPONSE_GET_NIC_ATTR_SPECIFIC = """\
+- INFO     - AttributeName: WakeOnLan
+- INFO     - CurrentValue: Enabled
+- INFO     - DisplayName: Wake On LAN
+- INFO     - DisplayOrder: 306
+- INFO     - HelpText: None
+- INFO     - Hidden: False
+- INFO     - Immutable: False
+- INFO     - MenuPath: ./
+- INFO     - Oem: {'Dell': {'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}
+- INFO     - ReadOnly: False
+- INFO     - ResetRequired: True
+- INFO     - Type: Enumeration
+- INFO     - Value: [{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}, {'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}]
+- INFO     - WarningText: None
+- INFO     - WriteOnly: False
 """
-RESPONSE_NIC_ATTR_GET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to get network attribute info."
-RESPONSE_NIC_ATTR_SET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to set a network attribute."
-RESPONSE_UNSOPPORTED_IDRAC_VERSION = f"{WARN_UNSAFE}- ERROR    - Unsupported iDRAC version."
+RESPONSE_NIC_ATTR_GET_ERROR = "- ERROR    - Was unable to get network attribute info."
+RESPONSE_NIC_ATTR_SET_ERROR = "- ERROR    - Was unable to set a network attribute."
+RESPONSE_UNSOPPORTED_IDRAC_VERSION = "- ERROR    - Unsupported iDRAC version."
 RESPONSE_GET_NIC_ATTR_SPECIFIC_VERSION_UNSUPPORTED = f"""\
 {RESPONSE_UNSOPPORTED_IDRAC_VERSION}
 {RESPONSE_NIC_ATTR_GET_ERROR}
 """
 RESPONSE_GET_NIC_ATTR_SPECIFIC_REGISTRY_FAIL = f"""\
-{WARN_UNSAFE}- ERROR    - Was unable to get network attribute registry.
+- ERROR    - Was unable to get network attribute registry.
 {RESPONSE_NIC_ATTR_GET_ERROR}
 """
 RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL = f"""\
-{WARN_UNSAFE}- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.
+- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.
 {RESPONSE_NIC_ATTR_GET_ERROR}
 """
-RESPONSE_SET_NIC_ATTR_ALREADY_OK = f"{WARN_UNSAFE}- WARNING  - This attribute already is set to this value. Skipping.\n"
-RESPONSE_SET_NIC_ATTR_OK = f"""\
-{WARN_UNSAFE}- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
-- INFO     - Command passed to On server, code return is 200.
-"""
-RESPONSE_SET_NIC_ATTR_RETRY_OK = f"""\
-{WARN_UNSAFE}- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 503.
-- INFO     - Retrying to send the patch command.
+RESPONSE_SET_NIC_ATTR_ALREADY_OK = "- WARNING  - This attribute already is set to this value. Skipping.\n"
+RESPONSE_SET_NIC_ATTR_OK = """\
 - INFO     - Patch command to set network attribute values and create next reboot job PASSED.
 - INFO     - Command passed to On server, code return is 200.
 """
-RESPONSE_SET_NIC_ATTR_BAD_VALUE = f"""\
-{WARN_UNSAFE}- ERROR    - Value not allowed for this attribute.
+RESPONSE_SET_NIC_ATTR_RETRY_OK = f"""\
+- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 503.
+- INFO     - Retrying to send the patch command.
+{RESPONSE_SET_NIC_ATTR_OK}"""
+RESPONSE_SET_NIC_ATTR_BAD_VALUE = """\
+- ERROR    - Value not allowed for this attribute.
 - ERROR    - Was unable to set a network attribute.
 """
 RESPONSE_SET_NIC_ATTR_INT_MAXED = f"""\
-{WARN_UNSAFE}- ERROR    - Value not allowed for this attribute. (Incorrect number bounds)
-- ERROR    - Was unable to set a network attribute.
+- ERROR    - Value not allowed for this attribute. (Incorrect number bounds)
+{RESPONSE_NIC_ATTR_SET_ERROR}
 """
 RESPONSE_SET_NIC_ATTR_STR_MAXED = f"""\
-{WARN_UNSAFE}- ERROR    - Value not allowed for this attribute. (Incorrect string length)
-- ERROR    - Was unable to set a network attribute.
+- ERROR    - Value not allowed for this attribute. (Incorrect string length)
+{RESPONSE_NIC_ATTR_SET_ERROR}
 """
-RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK = f"""\
-{WARN_UNSAFE}- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 400.
+RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK = """\
+- ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 400.
 - INFO     - Retrying to send the patch command.
 - WARNING  - Job queue already cleared for iDRAC f01-h01-000-r630.host.io, DELETE command will not execute.
 - INFO     - Status code 200 returned for POST command to reset iDRAC.
