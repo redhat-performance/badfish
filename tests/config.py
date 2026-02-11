@@ -396,7 +396,9 @@ RESPONSE_CHECK_JOB = (
     "- INFO      - Message: Job completed successfully.\n"
     "- INFO      - PercentComplete: 100\n"
 )
-RESPONSE_CHECK_JOB_BAD = ""
+RESPONSE_CHECK_JOB_BAD = (
+    f"{WARN_UNSAFE}- WARNING  - Job status response missing Message field\n"
+)
 RESPONSE_CHECK_JOB_ERROR = f"{WARN_UNSAFE}- ERROR    - Command failed to check job status\n"
 
 DELLJOBSERVICE_UNSUPPORTED = f"{WARN_UNSAFE}- WARNING  - iDRAC version installed does not support DellJobService\n"
@@ -1087,11 +1089,22 @@ SUCCESSFUL_HOST_LIST = (
 NO_HOST_ERROR = (
     f"{WARN_UNSAFE}- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 )
+
+# New constant for host list warning
+WARN_UNSAFE_HOST = (
+    "[{host}] - WARNING  - Passing secrets via command line arguments is unsafe. "
+    "Please use environment variables (BADFISH_USERNAME, BADFISH_PASSWORD, "
+    "BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD).\n"
+).format(host=MOCK_HOST.split(".")[0])
+
 HOST_LIST_EXTRAS = (
+    f"{WARN_UNSAFE_HOST}"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO      - ************************************************\n"
+    f"{WARN_UNSAFE_HOST}"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO      - ************************************************\n"
+    f"{WARN_UNSAFE_HOST}"
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
     "[f01-h01-000-r630] - INFO      - ************************************************\n"
     "[badfish.helpers.logger] - INFO      - RESULTS:\n"
