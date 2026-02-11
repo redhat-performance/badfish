@@ -1,6 +1,12 @@
 import base64
 import os
 
+# Set environment variables to suppress "unsafe" warnings in logs
+os.environ["BADFISH_USERNAME"] = "dummy"
+os.environ["BADFISH_PASSWORD"] = "dummy"
+os.environ["BADFISH_NEW_PASSWORD"] = "dummy"
+os.environ["BADFISH_OLD_PASSWORD"] = "dummy"
+
 MOCK_HOST = "f01-h01-000-r630.host.io"
 MOCK_USER = "mock_user"
 MOCK_PASS = "mock_pass"
@@ -10,12 +16,8 @@ DEVICE_NIC_I = "NIC.Integrated.1"
 DEVICE_NIC_S = "NIC.Slot.1"
 MAC_ADDRESS = "40:A6:B7:0C:01:A0"
 
-# Warning constant - exact spacing matches logger output
-WARN_UNSAFE = (
-    "- WARNING  - Passing secrets via command line arguments is unsafe. "
-    "Please use environment variables (BADFISH_USERNAME, BADFISH_PASSWORD, "
-    "BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD).\n"
-)
+# Warning constant is empty as we expect env vars to be set
+WARN_UNSAFE = ""
 
 
 def render_device_dict(index, device):
@@ -66,21 +68,21 @@ BOOT_SEQ_RESPONSE_OPTICAL = [
 
 RESPONSE_WITHOUT = (
     f"{WARN_UNSAFE}- INFO     - Current boot order:\n"
-    "- INFO     -      1: NIC.Integrated.1-2-1\n"
-    "- INFO     -      2: HardDisk.List.1-1\n"
-    "- INFO     -      3: NIC.Slot.2-1-1\n"
+    "- INFO     - 1: NIC.Integrated.1-2-1\n"
+    "- INFO     - 2: HardDisk.List.1-1\n"
+    "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 RESPONSE_NO_MATCH = (
     f"{WARN_UNSAFE}- INFO     - Current boot order:\n"
-    "- INFO     -      1: HardDisk.List.1-1\n"
-    "- INFO     -      2: NIC.Integrated.1-2-1\n"
-    "- INFO     -      3: NIC.Slot.2-1-1\n"
+    "- INFO     - 1: HardDisk.List.1-1\n"
+    "- INFO     - 2: NIC.Integrated.1-2-1\n"
+    "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 WARN_NO_MATCH = f"{WARN_UNSAFE}- WARNING  - Current boot order does not match any of the given.\n" + (
     "- INFO     - Current boot order:\n"
-    "- INFO     -      1: HardDisk.List.1-1\n"
-    "- INFO     -      2: NIC.Integrated.1-2-1\n"
-    "- INFO     -      3: NIC.Slot.2-1-1\n"
+    "- INFO     - 1: HardDisk.List.1-1\n"
+    "- INFO     - 2: NIC.Integrated.1-2-1\n"
+    "- INFO     - 3: NIC.Slot.2-1-1\n"
 )
 RESPONSE_DIRECTOR = f"{WARN_UNSAFE}- WARNING  - Current boot order is set to: director.\n"
 
@@ -298,9 +300,9 @@ RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND = f"{WARN_UNSAFE}- ERROR    - Systems r
 STATE_OFF_RESP = '{"PowerState": "Off"}'
 STATE_ON_RESP = '{"PowerState": "On"}'
 STATE_DOWN_RESP = '{"PowerState": "Down"}'
-RESPONSE_POWER_STATE_ON = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -       {MOCK_HOST}: 'On'\n"
-RESPONSE_POWER_STATE_DOWN = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -       {MOCK_HOST}: 'Down'\n"
-RESPONSE_POWER_STATE_EMPTY = f"{WARN_UNSAFE}- INFO     - Power state:\n- INFO     -       {MOCK_HOST}: 'Down'\n"
+RESPONSE_POWER_STATE_ON = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -      {MOCK_HOST}: 'On'\n"
+RESPONSE_POWER_STATE_DOWN = f"{WARN_UNSAFE}- INFO     - Power state:\n" f"- INFO     -      {MOCK_HOST}: 'Down'\n"
+RESPONSE_POWER_STATE_EMPTY = f"{WARN_UNSAFE}- INFO     - Power state:\n- INFO     -      {MOCK_HOST}: 'Down'\n"
 
 BOOT_MODE_RESP = '{"Attributes": {"BootMode": "Bios"}}'
 BOOT_MODE_RESP_UEFI = '{"Attributes": {"BootMode": "UEFI"}}'
@@ -358,36 +360,36 @@ NETWORK_DEV_FUNC_DET_RESP = (
 NETWORK_PORTS_RESP = '{"Id": "%s-1", "LinkStatus": "Down", "SupportedLinkCapabilities": [{"LinkSpeedMbps": 1000}]}'
 RESPONSE_LS_INTERFACES = (
     f"{WARN_UNSAFE}- INFO     - NIC.Integrated.1-1:\n"
-    "- INFO     -       Id: NIC.Integrated.1-1\n"
-    "- INFO     -       LinkStatus: Down\n"
-    "- INFO     -       LinkSpeedMbps: 1000\n"
-    "- INFO     -       MACAddress: B0:26:28:D8:68:C0\n"
-    "- INFO     -       Vendor: Intel\n"
+    "- INFO     -      Id: NIC.Integrated.1-1\n"
+    "- INFO     -      LinkStatus: Down\n"
+    "- INFO     -      LinkSpeedMbps: 1000\n"
+    "- INFO     -      MACAddress: B0:26:28:D8:68:C0\n"
+    "- INFO     -      Vendor: Intel\n"
     "- INFO     - NIC.Slot.1-1:\n"
-    "- INFO     -       Id: NIC.Slot.1-1\n"
-    "- INFO     -       LinkStatus: Down\n"
-    "- INFO     -       LinkSpeedMbps: 1000\n"
-    "- INFO     -       MACAddress: B0:26:28:D8:68:C0\n"
-    "- INFO     -       Vendor: Intel\n"
+    "- INFO     -      Id: NIC.Slot.1-1\n"
+    "- INFO     -      LinkStatus: Down\n"
+    "- INFO     -      LinkSpeedMbps: 1000\n"
+    "- INFO     -      MACAddress: B0:26:28:D8:68:C0\n"
+    "- INFO     -      Vendor: Intel\n"
 )
 RESPONSE_LS_ETHERNET = (
     f"{WARN_UNSAFE}- INFO     - NIC.Slot.1-1-1:\n"
-    "- INFO     -       Name: System Ethernet Interface\n"
-    "- INFO     -       MACAddress: F8:BC:12:22:89:E1\n"
-    "- INFO     -       Health: OK\n"
-    "- INFO     -       SpeedMbps: 10240\n"
+    "- INFO     -      Name: System Ethernet Interface\n"
+    "- INFO     -      MACAddress: F8:BC:12:22:89:E1\n"
+    "- INFO     -      Health: OK\n"
+    "- INFO     -      SpeedMbps: 10240\n"
     "- INFO     - NIC.Integrated.1-1-1:\n"
-    "- INFO     -       Name: System Ethernet Interface\n"
-    "- INFO     -       MACAddress: F8:BC:12:22:89:E0\n"
-    "- INFO     -       Health: OK\n"
-    "- INFO     -       SpeedMbps: 10240\n"
+    "- INFO     -      Name: System Ethernet Interface\n"
+    "- INFO     -      MACAddress: F8:BC:12:22:89:E0\n"
+    "- INFO     -      Health: OK\n"
+    "- INFO     -      SpeedMbps: 10240\n"
 )
 RESPONSE_LS_INTERFACES_NOT_SUPPORTED = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
 RESPONSE_LS_INTERFACES_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting network interfaces\n"
 
 INTERFACES_RESP = f'{{"Id":"NIC.Integrated.1-2-1","MACAddress":"{MAC_ADDRESS}"}}'
 
-RESPONSE_LS_JOBS = f"{WARN_UNSAFE}- INFO     - Found active jobs:\n" f"- INFO     -       JobID: {JOB_ID}\n"
+RESPONSE_LS_JOBS = f"{WARN_UNSAFE}- INFO     - Found active jobs:\n" f"- INFO     -      JobID: {JOB_ID}\n"
 RESPONSE_LS_JOBS_EMPTY = f"{WARN_UNSAFE}- INFO     - Found active jobs: None\n"
 RESPONSE_CLEAR_JOBS = f"{WARN_UNSAFE}- INFO     - Job queue for iDRAC {MOCK_HOST} successfully cleared.\n"
 RESPONSE_CHECK_JOB = (
@@ -443,32 +445,32 @@ FIRMWARE_INVENTORY_2_RESP = (
 FIRMWARE_INVENTORY_RESP_CONTAINING_ERROR = '{"error": "Something went wrong when getting firmware inventory"}'
 RESPONSE_FIRMWARE_INVENTORY = (
     f"{WARN_UNSAFE}- INFO     - Installed-0-16.25.40.62:\n"
-    "- INFO     -       Id: Installed-0-16.25.40.62\n"
-    "- INFO     -       Name: Mellanox ConnectX-5\n"
-    "- INFO     -       ReleaseDate: 00:00:00Z\n"
-    "- INFO     -       SoftwareId: 0\n"
-    "- INFO     -       Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     -       Updateable: True\n"
-    "- INFO     -       Version: 16.25.40.62\n"
+    "- INFO     -      Id: Installed-0-16.25.40.62\n"
+    "- INFO     -      Name: Mellanox ConnectX-5\n"
+    "- INFO     -      ReleaseDate: 00:00:00Z\n"
+    "- INFO     -      SoftwareId: 0\n"
+    "- INFO     -      Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -      Updateable: True\n"
+    "- INFO     -      Version: 16.25.40.62\n"
     "- INFO     - Installed-0-19.5.12:\n"
-    "- INFO     -       Id: Installed-0-19.5.12\n"
-    "- INFO     -       Name: Intel(R) Ethernet Network Adapter\n"
-    "- INFO     -       ReleaseDate: 00:00:00Z\n"
-    "- INFO     -       SoftwareId: 0\n"
-    "- INFO     -       Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     -       Updateable: True\n"
-    "- INFO     -       Version: 19.5.12\n"
+    "- INFO     -      Id: Installed-0-19.5.12\n"
+    "- INFO     -      Name: Intel(R) Ethernet Network Adapter\n"
+    "- INFO     -      ReleaseDate: 00:00:00Z\n"
+    "- INFO     -      SoftwareId: 0\n"
+    "- INFO     -      Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -      Updateable: True\n"
+    "- INFO     -      Version: 19.5.12\n"
 )
 RESPONSE_FIRMWARE_INVENTORY_NOT_ABLE_TO_ACCESS = f"{WARN_UNSAFE}- ERROR    - Not able to access Firmware inventory.\n"
 RESPONSE_FIRMWARE_INVENTORY_NONE_RESPONSE = (
     f"{WARN_UNSAFE}- INFO     - Installed-0-16.25.40.62:\n"
-    "- INFO     -       Id: Installed-0-16.25.40.62\n"
-    "- INFO     -       Name: Mellanox ConnectX-5\n"
-    "- INFO     -       ReleaseDate: 00:00:00Z\n"
-    "- INFO     -       SoftwareId: 0\n"
-    "- INFO     -       Status: {'Health': 'OK', 'State': 'Enabled'}\n"
-    "- INFO     -       Updateable: True\n"
-    "- INFO     -       Version: 16.25.40.62\n"
+    "- INFO     -      Id: Installed-0-16.25.40.62\n"
+    "- INFO     -      Name: Mellanox ConnectX-5\n"
+    "- INFO     -      ReleaseDate: 00:00:00Z\n"
+    "- INFO     -      SoftwareId: 0\n"
+    "- INFO     -      Status: {'Health': 'OK', 'State': 'Enabled'}\n"
+    "- INFO     -      Updateable: True\n"
+    "- INFO     -      Version: 16.25.40.62\n"
 )
 
 MEMORY_MEMBERS_RESP = (
@@ -500,20 +502,20 @@ MEMORY_B2_RESP = (
 )
 RESPONSE_LS_MEMORY = (
     f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
-    "- INFO     -       MemoryMirroring: System\n"
-    "- INFO     -       TotalSystemMemoryGiB: 384\n"
+    "- INFO     -      MemoryMirroring: System\n"
+    "- INFO     -      TotalSystemMemoryGiB: 384\n"
     "- INFO     - DIMM A5:\n"
-    "- INFO     -       CapacityMiB: 32768\n"
-    "- INFO     -       Description: DIMM A5\n"
-    "- INFO     -       Manufacturer: Hynix Semiconductor\n"
-    "- INFO     -       MemoryDeviceType: DDR4\n"
-    "- INFO     -       OperatingSpeedMhz: 2933\n"
+    "- INFO     -      CapacityMiB: 32768\n"
+    "- INFO     -      Description: DIMM A5\n"
+    "- INFO     -      Manufacturer: Hynix Semiconductor\n"
+    "- INFO     -      MemoryDeviceType: DDR4\n"
+    "- INFO     -      OperatingSpeedMhz: 2933\n"
     "- INFO     - DIMM B2:\n"
-    "- INFO     -       CapacityMiB: 32768\n"
-    "- INFO     -       Description: DIMM B2\n"
-    "- INFO     -       Manufacturer: Hynix Semiconductor\n"
-    "- INFO     -       MemoryDeviceType: DDR4\n"
-    "- INFO     -       OperatingSpeedMhz: 2933\n"
+    "- INFO     -      CapacityMiB: 32768\n"
+    "- INFO     -      Description: DIMM B2\n"
+    "- INFO     -      Manufacturer: Hynix Semiconductor\n"
+    "- INFO     -      MemoryDeviceType: DDR4\n"
+    "- INFO     -      OperatingSpeedMhz: 2933\n"
 )
 RESPONSE_LS_MEMORY_SUMMARY_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting memory summary\n"
 MEMORY_SUMMARY_RESP_FAULTY = (
@@ -525,14 +527,14 @@ MEMORY_SUMMARY_RESP_FAULTY = (
 RESPONSE_LS_MEMORY_SUMMARY_PROC_DATA_ERROR = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
 RESPONSE_LS_MEMORY_DETAILS_NOT_FOUND = (
     f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
-    "- INFO     -       MemoryMirroring: System\n"
-    "- INFO     -       TotalSystemMemoryGiB: 384\n"
+    "- INFO     -      MemoryMirroring: System\n"
+    "- INFO     -      TotalSystemMemoryGiB: 384\n"
     "- ERROR    - Server does not support this functionality\n"
 )
 RESPONSE_LS_MEMORY_DETAILS_VALUE_ERROR = (
     f"{WARN_UNSAFE}- INFO     - Memory Summary:\n"
-    "- INFO     -       MemoryMirroring: System\n"
-    "- INFO     -       TotalSystemMemoryGiB: 384\n"
+    "- INFO     -      MemoryMirroring: System\n"
+    "- INFO     -      TotalSystemMemoryGiB: 384\n"
     "- ERROR    - There was something wrong getting memory details\n"
 )
 
@@ -560,25 +562,25 @@ PROCESSOR_CPU_RESP = (
 )
 RESPONSE_LS_PROCESSORS = (
     f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
-    "- INFO     -       Count: 2\n"
-    "- INFO     -       LogicalProcessorCount: 80\n"
-    "- INFO     -       Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      Count: 2\n"
+    "- INFO     -      LogicalProcessorCount: 80\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- INFO     - CPU.Socket.1:\n"
-    "- INFO     -       Name: CPU 1\n"
-    "- INFO     -       InstructionSet: x86-64\n"
-    "- INFO     -       Manufacturer: Intel\n"
-    "- INFO     -       MaxSpeedMHz: 4000\n"
-    "- INFO     -       Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
-    "- INFO     -       TotalCores: 20\n"
-    "- INFO     -       TotalThreads: 40\n"
+    "- INFO     -      Name: CPU 1\n"
+    "- INFO     -      InstructionSet: x86-64\n"
+    "- INFO     -      Manufacturer: Intel\n"
+    "- INFO     -      MaxSpeedMHz: 4000\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      TotalCores: 20\n"
+    "- INFO     -      TotalThreads: 40\n"
     "- INFO     - CPU.Socket.2:\n"
-    "- INFO     -       Name: CPU 2\n"
-    "- INFO     -       InstructionSet: x86-64\n"
-    "- INFO     -       Manufacturer: Intel\n"
-    "- INFO     -       MaxSpeedMHz: 4000\n"
-    "- INFO     -       Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
-    "- INFO     -       TotalCores: 20\n"
-    "- INFO     -       TotalThreads: 40\n"
+    "- INFO     -      Name: CPU 2\n"
+    "- INFO     -      InstructionSet: x86-64\n"
+    "- INFO     -      Manufacturer: Intel\n"
+    "- INFO     -      MaxSpeedMHz: 4000\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      TotalCores: 20\n"
+    "- INFO     -      TotalThreads: 40\n"
 )
 PROCESSOR_SUMMARY_RESP_FAULTY = (
     '{"ProcessorSum": {'
@@ -591,16 +593,16 @@ RESPONSE_LS_PROCESSORS_SUMMARY_PROC_DATA_ERROR = f"{WARN_UNSAFE}- ERROR    - Ser
 RESPONSE_LS_PROCESSORS_SUMMARY_VALUE_ERROR = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting processor summary\n"
 RESPONSE_LS_PROCESSORS_DETAILS_NOT_FOUND = (
     f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
-    "- INFO     -       Count: 2\n"
-    "- INFO     -       LogicalProcessorCount: 80\n"
-    "- INFO     -       Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      Count: 2\n"
+    "- INFO     -      LogicalProcessorCount: 80\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- ERROR    - Server does not support this functionality\n"
 )
 RESPONSE_LS_PROCESSORS_DETAILS_VALUE_ERROR = (
     f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
-    "- INFO     -       Count: 2\n"
-    "- INFO     -       LogicalProcessorCount: 80\n"
-    "- INFO     -       Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      Count: 2\n"
+    "- INFO     -      LogicalProcessorCount: 80\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
     "- ERROR    - There was something wrong getting processor details\n"
 )
 GPU_SUMMARY_RESP = '{"GPUSummary":"AMD Instinct MI300X": 2,}'
@@ -633,13 +635,13 @@ RESPONSE_LS_GPU = (
     "- INFO     -    Model: AMD Instinct MI300X (Count: 2)\n"
     "- INFO     - Current GPU's on host:\n"
     "- INFO     -    ProcAccelerator.Slot.21-1:\n"
-    "- INFO     -       Model: AMD Instinct MI300X\n"
-    "- INFO     -       Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
-    "- INFO     -       ProcessorType: Accelerator\n"
+    "- INFO     -      Model: AMD Instinct MI300X\n"
+    "- INFO     -      Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
+    "- INFO     -      ProcessorType: Accelerator\n"
     "- INFO     -    ProcAccelerator.Slot.22-1:\n"
-    "- INFO     -       Model: AMD Instinct MI300X\n"
-    "- INFO     -       Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
-    "- INFO     -       ProcessorType: Accelerator\n"
+    "- INFO     -      Model: AMD Instinct MI300X\n"
+    "- INFO     -      Manufacturer: Advanced Micro Devices, Inc. [AMD/ATI]\n"
+    "- INFO     -      ProcessorType: Accelerator\n"
 )
 
 RESPONSE_LS_GPU_SUMMARY_DATA_ERROR = f"{WARN_UNSAFE}- INFO     - GPU Summary:\n- INFO     - Current GPU's on host:\n- WARNING  - Failed to delete session for {MOCK_HOST}: Failed to communicate with server.\n"
@@ -648,7 +650,7 @@ RESPONSE_LS_GPU_SUMMARY_BAD_JSON = f"{WARN_UNSAFE}- ERROR    - There was somethi
 RESPONSE_LS_GPU_DETAILS_NOT_FOUND = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting host GPU details\n"
 RESPONSE_LS_GPU_DETAILS_VALUE_ERROR = (
     f"{WARN_UNSAFE}- INFO     - GPU Summary:\n"
-    "- INFO     -       Model: AMD Instinct MI300X OAM\n"
+    "- INFO     -      Model: AMD Instinct MI300X OAM\n"
     "- INFO     - Current GPU's on host:\n"
     "- ERROR    - There was something wrong getting host GPU detailed values.\n"
 )
@@ -672,9 +674,9 @@ SYSTEM_SERIAL_NUMBER_RESP = """
     "Model":"SYS-5039MS-HUH4F" }
 """
 EMPTY_OEM_RESP = '{"Oem":{}}'
-RESPONSE_LS_SERIAL_SERVICE_TAG = f"{WARN_UNSAFE}- INFO     - ServiceTag:\n" "- INFO     -       f01-h01-000-r630.host.io: HXVMC42\n"
+RESPONSE_LS_SERIAL_SERVICE_TAG = f"{WARN_UNSAFE}- INFO     - ServiceTag:\n" "- INFO     -      f01-h01-000-r630.host.io: HXVMC42\n"
 RESPONSE_LS_SERIAL_NUMBER = (
-    f"{WARN_UNSAFE}- INFO     - Serial Number:\n" "- INFO     -       f01-h01-000-r630.host.io: S211337X8693420\n"
+    f"{WARN_UNSAFE}- INFO     - Serial Number:\n" "- INFO     -      f01-h01-000-r630.host.io: S211337X8693420\n"
 )
 RESPONSE_LS_SERIAL_UNSUPPORTED = f"{WARN_UNSAFE}- ERROR    - Server does not support this functionality\n"
 RESPONSE_LS_SERIAL_SOMETHING_WRONG = f"{WARN_UNSAFE}- ERROR    - There was something wrong getting serial summary\n"
@@ -781,19 +783,19 @@ VMEDIA_MEMBER_CD_RESP = """
 """
 VMEDIA_CHECK_GOOD_DELL = f"""\
 {WARN_UNSAFE}- INFO     - RemovableDisk:\n\
-- INFO     -       Name: Virtual Removable Disk\n\
-- INFO     -       ImageName: None\n\
-- INFO     -       Inserted: False\n\
+- INFO     -      Name: Virtual Removable Disk\n\
+- INFO     -      ImageName: None\n\
+- INFO     -      Inserted: False\n\
 - INFO     - CD:\n\
-- INFO     -       Name: Virtual CD\n\
-- INFO     -       ImageName: TestImage\n\
-- INFO     -       Inserted: True\n\
+- INFO     -      Name: Virtual CD\n\
+- INFO     -      ImageName: TestImage\n\
+- INFO     -      Inserted: True\n\
 """
 VMEDIA_CHECK_GOOD_SM = f"""\
 {WARN_UNSAFE}- INFO     - CD:\n\
-- INFO     -       Name: Virtual CD\n\
-- INFO     -       ImageName: TestImage\n\
-- INFO     -       Inserted: True\n\
+- INFO     -      Name: Virtual CD\n\
+- INFO     -      ImageName: TestImage\n\
+- INFO     -      Inserted: True\n\
 """
 VMEDIA_GET_ENDPOINT_FALSE = '{"VirtualMedia":false}'
 VMEDIA_GET_ENDPOINT_EMPTY = '{"VirtualMedia": {"@odata.id":false}}'
@@ -1091,11 +1093,7 @@ NO_HOST_ERROR = (
 )
 
 # New constant for host list warning
-WARN_UNSAFE_HOST = (
-    "[{host}] - WARNING  - Passing secrets via command line arguments is unsafe. "
-    "Please use environment variables (BADFISH_USERNAME, BADFISH_PASSWORD, "
-    "BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD).\n"
-).format(host=MOCK_HOST.split(".")[0])
+WARN_UNSAFE_HOST = ""
 
 HOST_LIST_EXTRAS = (
     "[f01-h01-000-r630] - ERROR    - ComputerSystem's Members array is either empty or missing\n"
@@ -1296,14 +1294,14 @@ GET_NIC_FQQDS_SLOT = """{
 """
 RESPONSE_GET_NIC_FQQDS_OK = f"""\
 {WARN_UNSAFE}- INFO     - NIC.Embedded.1:
-- INFO     -       1: NIC.Embedded.1-1-1
-- INFO     -       2: NIC.Embedded.2-1-1
+- INFO     -      1: NIC.Embedded.1-1-1
+- INFO     -      2: NIC.Embedded.2-1-1
 - INFO     - NIC.Integrated.1:
-- INFO     -       1: NIC.Integrated.1-1-1
-- INFO     -       2: NIC.Integrated.1-2-1
+- INFO     -      1: NIC.Integrated.1-1-1
+- INFO     -      2: NIC.Integrated.1-2-1
 - INFO     - NIC.Slot.3:
-- INFO     -       1: NIC.Slot.3-1-1
-- INFO     -       2: NIC.Slot.3-2-1
+- INFO     -      1: NIC.Slot.3-1-1
+- INFO     -      2: NIC.Slot.3-2-1
 """
 RESPONSE_VENDOR_UNSUPPORTED = f"{WARN_UNSAFE}- ERROR    - Operation not supported by vendor."
 RESPONSE_FIRMWARE_VERSION_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to get iDRAC Firmware Version."
@@ -1365,37 +1363,37 @@ GET_NIC_ATTR_LIST = """\
 """
 RESPONSE_GET_NIC_ATTR_LIST_OK = f"""\
 {WARN_UNSAFE}- INFO     - NIC.Embedded.1-1-1
-- INFO     -       ChipMdl: BCM5720 A0
-- INFO     -       PCIDeviceID: 165F
-- INFO     -       BusDeviceFunction: 04:00:00
-- INFO     -       MacAddr: C8:4B:D6:83:16:00
-- INFO     -       VirtMacAddr: C8:4B:D6:83:16:00
-- INFO     -       FCoEOffloadSupport: Unavailable
-- INFO     -       iSCSIOffloadSupport: Unavailable
-- INFO     -       iSCSIBootSupport: Unavailable
-- INFO     -       PXEBootSupport: Available
-- INFO     -       FCoEBootSupport: Unavailable
-- INFO     -       NicPartitioningSupport: Unavailable
-- INFO     -       FlexAddressing: Unavailable
-- INFO     -       TXBandwidthControlMaximum: Unavailable
-- INFO     -       TXBandwidthControlMinimum: Unavailable
-- INFO     -       EnergyEfficientEthernet: Available
-- INFO     -       FamilyVersion: 22.00.6
-- INFO     -       ControllerBIOSVersion: 1.39
-- INFO     -       EFIVersion: 21.6.29
-- INFO     -       BlnkLeds: 0
-- INFO     -       BannerMessageTimeout: 5
-- INFO     -       VLanId: 1
-- INFO     -       EEEControl: Enabled
-- INFO     -       LinkStatus: Disconnected
-- INFO     -       BootOptionROM: Enabled
-- INFO     -       LegacyBootProto: NONE
-- INFO     -       BootStrapType: AutoDetect
-- INFO     -       HideSetupPrompt: Disabled
-- INFO     -       LnkSpeed: AutoNeg
-- INFO     -       WakeOnLan: Enabled
-- INFO     -       VLanMode: Disabled
-- INFO     -       PermitTotalPortShutdown: Disabled
+- INFO     -      ChipMdl: BCM5720 A0
+- INFO     -      PCIDeviceID: 165F
+- INFO     -      BusDeviceFunction: 04:00:00
+- INFO     -      MacAddr: C8:4B:D6:83:16:00
+- INFO     -      VirtMacAddr: C8:4B:D6:83:16:00
+- INFO     -      FCoEOffloadSupport: Unavailable
+- INFO     -      iSCSIOffloadSupport: Unavailable
+- INFO     -      iSCSIBootSupport: Unavailable
+- INFO     -      PXEBootSupport: Available
+- INFO     -      FCoEBootSupport: Unavailable
+- INFO     -      NicPartitioningSupport: Unavailable
+- INFO     -      FlexAddressing: Unavailable
+- INFO     -      TXBandwidthControlMaximum: Unavailable
+- INFO     -      TXBandwidthControlMinimum: Unavailable
+- INFO     -      EnergyEfficientEthernet: Available
+- INFO     -      FamilyVersion: 22.00.6
+- INFO     -      ControllerBIOSVersion: 1.39
+- INFO     -      EFIVersion: 21.6.29
+- INFO     -      BlnkLeds: 0
+- INFO     -      BannerMessageTimeout: 5
+- INFO     -      VLanId: 1
+- INFO     -      EEEControl: Enabled
+- INFO     -      LinkStatus: Disconnected
+- INFO     -      BootOptionROM: Enabled
+- INFO     -      LegacyBootProto: NONE
+- INFO     -      BootStrapType: AutoDetect
+- INFO     -      HideSetupPrompt: Disabled
+- INFO     -      LnkSpeed: AutoNeg
+- INFO     -      WakeOnLan: Enabled
+- INFO     -      VLanMode: Disabled
+- INFO     -      PermitTotalPortShutdown: Disabled
 """
 RESPONSE_GET_NIC_ATTR_LIST_INVALID = f"{WARN_UNSAFE}- ERROR    - Was unable to get NIC attribute(s) info, invalid server response.\n"
 GET_FW_VERSION = """\
@@ -2304,20 +2302,20 @@ GET_NIC_ATTRS = """
 """
 RESPONSE_GET_NIC_ATTR_SPECIFIC = f"""\
 {WARN_UNSAFE}- INFO     - AttributeName: WakeOnLan
-- INFO     -       CurrentValue: Enabled
-- INFO     -       DisplayName: Wake On LAN
-- INFO     -       DisplayOrder: 306
-- INFO     -       HelpText: None
-- INFO     -       Hidden: False
-- INFO     -       Immutable: False
-- INFO     -       MenuPath: ./
-- INFO     -       Oem: {{'Dell': {{'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}}}
-- INFO     -       ReadOnly: False
-- INFO     -       ResetRequired: True
-- INFO     -       Type: Enumeration
-- INFO     -       Value: [{{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}, {{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}]
-- INFO     -       WarningText: None
-- INFO     -       WriteOnly: False
+- INFO     -      CurrentValue: Enabled
+- INFO     -      DisplayName: Wake On LAN
+- INFO     -      DisplayOrder: 306
+- INFO     -      HelpText: None
+- INFO     -      Hidden: False
+- INFO     -      Immutable: False
+- INFO     -      MenuPath: ./
+- INFO     -      Oem: {{'Dell': {{'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}}}
+- INFO     -      ReadOnly: False
+- INFO     -      ResetRequired: True
+- INFO     -      Type: Enumeration
+- INFO     -      Value: [{{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}, {{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}]
+- INFO     -      WarningText: None
+- INFO     -      WriteOnly: False
 """
 RESPONSE_NIC_ATTR_GET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to get network attribute info."
 RESPONSE_NIC_ATTR_SET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to set a network attribute."
