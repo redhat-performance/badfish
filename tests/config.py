@@ -10,13 +10,12 @@ DEVICE_NIC_I = "NIC.Integrated.1"
 DEVICE_NIC_S = "NIC.Slot.1"
 MAC_ADDRESS = "40:A6:B7:0C:01:A0"
 
-# New warning message constant
+# Warning constant - exact spacing matches logger output
 WARN_UNSAFE = (
     "- WARNING  - Passing secrets via command line arguments is unsafe. "
     "Please use environment variables (BADFISH_USERNAME, BADFISH_PASSWORD, "
     "BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD).\n"
 )
-
 
 def render_device_dict(index, device):
     device_dict = {
@@ -1074,8 +1073,8 @@ SRIOV_STATE = f"{WARN_UNSAFE}- INFO     - Enabled\n"
 
 IMAGE_SAVED = f"""{WARN_UNSAFE}- INFO     - Image saved: %s\n"""
 
-KEYBOARD_INTERRUPT = f"{WARN_UNSAFE}- WARNING  - Badfish terminated\n"
-WRONG_BADFISH_EXECUTION = f"{WARN_UNSAFE}- WARNING  - There was something wrong executing Badfish\n"
+KEYBOARD_INTERRUPT = f"- WARNING  - Badfish terminated\n"
+WRONG_BADFISH_EXECUTION = f"- WARNING  - There was something wrong executing Badfish\n"
 KEYBOARD_INTERRUPT_HOST_LIST = "[badfish.helpers.logger] - WARNING  - Badfish terminated\n"
 WRONG_BADFISH_EXECUTION_HOST_LIST = (
     "[badfish.helpers.logger] - WARNING  - There was something wrong executing Badfish\n"
@@ -1087,7 +1086,7 @@ SUCCESSFUL_HOST_LIST = (
     "[badfish.helpers.logger] - INFO     - S: SUCCESSFUL\n"
 )
 NO_HOST_ERROR = (
-    f"{WARN_UNSAFE}- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
+    f"- ERROR    - You must specify at least either a host (-H) or a host list (--host-list).\n"
 )
 
 # New constant for host list warning
