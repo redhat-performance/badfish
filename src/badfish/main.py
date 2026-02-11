@@ -2450,8 +2450,20 @@ class Badfish:
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
-    _username = _args["u"]
-    _password = _args["p"]
+    _username = _args.get("u") or os.environ.get("BADFISH_USERNAME")
+    _password = _args.get("p") or os.environ.get("BADFISH_PASSWORD")
+
+    if _args.get("p") or _args.get("new_password") or _args.get("old_password"):
+        logger.warning(
+            "Passing secrets via command line arguments is unsafe. "
+            "Please use environment variables (BADFISH_USERNAME, "
+            "BADFISH_PASSWORD, BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD)."
+        )
+
+    if not _username or not _password:
+        logger.error("Missing credentials. Please provide credentials via CLI arguments or environment variables.")
+        return _host, False
+
     host_type = _args["t"]
     interfaces_path = _args["i"]
     force = _args["force"]
@@ -2495,8 +2507,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     value = _args["value"]
     set_bios_password = _args["set_bios_password"]
     remove_bios_password = _args["remove_bios_password"]
-    new_password = _args["new_password"]
-    old_password = _args["old_password"]
+    new_password = _args["new_password"] or os.environ.get("BADFISH_NEW_PASSWORD") or ""
+    old_password = _args["old_password"] or os.environ.get("BADFISH_OLD_PASSWORD") or ""
     screenshot = _args["screenshot"]
     retries = int(_args["retries"])
     output = _args["output"]
