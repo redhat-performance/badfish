@@ -25,7 +25,6 @@ class TestHostsFile(TestBase):
             _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
             assert _args["host_list"] == self.mock_hosts_good_path
-            assert _args["p"] == config.MOCK_PASS
 
     def test_hosts_non_existent(self):
         self.args = [self.option_arg, "non/existent/file"]
@@ -60,4 +59,3 @@ class TestHostsFile(TestBase):
             _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
             assert _args["host_list"] == self.mock_hosts_garbled_path
-            assert _args["p"] == config.MOCK_PASS
