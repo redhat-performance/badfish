@@ -10,8 +10,8 @@ def create_parser():
         allow_abbrev=False,
     )
     parser.add_argument("-H", "--host", help="iDRAC host address")
-    parser.add_argument("-u", help="iDRAC username", required=True)
-    parser.add_argument("-p", help="iDRAC password", required=True)
+    parser.add_argument("-u", help="iDRAC username")
+    parser.add_argument("-p", help="iDRAC password")
     parser.add_argument("-i", help="Path to iDRAC interfaces yaml", default=None)
     parser.add_argument("-t", help="Type of host as defined on iDRAC interfaces yaml")
     parser.add_argument("-l", "--log", help="Optional argument for logging results to a file")
