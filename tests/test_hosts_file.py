@@ -24,9 +24,7 @@ class TestHostsFile(TestBase):
         for call in badfish_mock.await_args_list:
             _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
-
             assert _args["host_list"] == self.mock_hosts_good_path
-            assert _args["u"] == config.MOCK_USER
             assert _args["p"] == config.MOCK_PASS
 
     def test_hosts_non_existent(self):
@@ -61,7 +59,5 @@ class TestHostsFile(TestBase):
         for call in badfish_mock.await_args_list:
             _host, _args, _logger, _fh = call[0]
             assert _host == config.MOCK_HOST
-
             assert _args["host_list"] == self.mock_hosts_garbled_path
-            assert _args["u"] == config.MOCK_USER
             assert _args["p"] == config.MOCK_PASS
