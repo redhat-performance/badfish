@@ -17,6 +17,7 @@ WARN_UNSAFE = (
     "BADFISH_NEW_PASSWORD, BADFISH_OLD_PASSWORD).\n"
 )
 
+
 def render_device_dict(index, device):
     device_dict = {
         "Index": index,
@@ -558,26 +559,26 @@ PROCESSOR_CPU_RESP = (
     '"TotalThreads": 40}'
 )
 RESPONSE_LS_PROCESSORS = (
-    f"{WARN_UNSAFE}- INFO      - Processor Summary:\n"
-    "- INFO      -      Count: 2\n"
-    "- INFO      -      LogicalProcessorCount: 80\n"
-    "- INFO      -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
-    "- INFO      - CPU.Socket.1:\n"
-    "- INFO      -      Name: CPU 1\n"
-    "- INFO      -      InstructionSet: x86-64\n"
-    "- INFO      -      Manufacturer: Intel\n"
-    "- INFO      -      MaxSpeedMHz: 4000\n"
-    "- INFO      -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
-    "- INFO      -      TotalCores: 20\n"
-    "- INFO      -      TotalThreads: 40\n"
-    "- INFO      - CPU.Socket.2:\n"
-    "- INFO      -      Name: CPU 2\n"
-    "- INFO      -      InstructionSet: x86-64\n"
-    "- INFO      -      Manufacturer: Intel\n"
-    "- INFO      -      MaxSpeedMHz: 4000\n"
-    "- INFO      -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
-    "- INFO      -      TotalCores: 20\n"
-    "- INFO      -      TotalThreads: 40\n"
+    f"{WARN_UNSAFE}- INFO     - Processor Summary:\n"
+    "- INFO     -      Count: 2\n"
+    "- INFO     -      LogicalProcessorCount: 80\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     - CPU.Socket.1:\n"
+    "- INFO     -      Name: CPU 1\n"
+    "- INFO     -      InstructionSet: x86-64\n"
+    "- INFO     -      Manufacturer: Intel\n"
+    "- INFO     -      MaxSpeedMHz: 4000\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      TotalCores: 20\n"
+    "- INFO     -      TotalThreads: 40\n"
+    "- INFO     - CPU.Socket.2:\n"
+    "- INFO     -      Name: CPU 2\n"
+    "- INFO     -      InstructionSet: x86-64\n"
+    "- INFO     -      Manufacturer: Intel\n"
+    "- INFO     -      MaxSpeedMHz: 4000\n"
+    "- INFO     -      Model: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz\n"
+    "- INFO     -      TotalCores: 20\n"
+    "- INFO     -      TotalThreads: 40\n"
 )
 PROCESSOR_SUMMARY_RESP_FAULTY = (
     '{"ProcessorSum": {'
@@ -2304,20 +2305,20 @@ GET_NIC_ATTRS = """
 """
 RESPONSE_GET_NIC_ATTR_SPECIFIC = f"""\
 {WARN_UNSAFE}- INFO     - AttributeName: WakeOnLan
-- INFO     - CurrentValue: Enabled
-- INFO     - DisplayName: Wake On LAN
-- INFO     - DisplayOrder: 306
-- INFO     - HelpText: None
-- INFO     - Hidden: False
-- INFO     - Immutable: False
-- INFO     - MenuPath: ./
-- INFO     - Oem: {{'Dell': {{'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}}}
-- INFO     - ReadOnly: False
-- INFO     - ResetRequired: True
-- INFO     - Type: Enumeration
-- INFO     - Value: [{{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}, {{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}]
-- INFO     - WarningText: None
-- INFO     - WriteOnly: False
+- INFO     -      CurrentValue: Enabled
+- INFO     -      DisplayName: Wake On LAN
+- INFO     -      DisplayOrder: 306
+- INFO     -      HelpText: None
+- INFO     -      Hidden: False
+- INFO     -      Immutable: False
+- INFO     -      MenuPath: ./
+- INFO     -      Oem: {{'Dell': {{'@odata.type': '#DellOemAttributeRegistry.v1_0_0.Attributes', 'GroupDisplayName': 'NIC Configuration', 'GroupName': 'NICConfig'}}}}
+- INFO     -      ReadOnly: False
+- INFO     -      ResetRequired: True
+- INFO     -      Type: Enumeration
+- INFO     -      Value: [{{'ValueDisplayName': 'Disabled', 'ValueName': 'Disabled'}}, {{'ValueDisplayName': 'Enabled', 'ValueName': 'Enabled'}}]
+- INFO     -      WarningText: None
+- INFO     -      WriteOnly: False
 """
 RESPONSE_NIC_ATTR_GET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to get network attribute info."
 RESPONSE_NIC_ATTR_SET_ERROR = f"{WARN_UNSAFE}- ERROR    - Was unable to set a network attribute."
