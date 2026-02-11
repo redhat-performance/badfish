@@ -253,9 +253,9 @@ curl  https://raw.githubusercontent.com/redhat-performance/badfish/master/config
 > [!IMPORTANT]
 > While you can pass `-u` and `-p` for user and password you should set environment variables instead.
 >
-> export BADFISH_USERNAME="my_username"
+> `export BADFISH_USERNAME="my_username"`
 >
-> export BADFISH_PASSWORD="my_password"
+> `export BADFISH_PASSWORD="my_password"`
 
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
