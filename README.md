@@ -218,13 +218,19 @@ podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST --reboot-only
 
 While we strongly recommend using the [podman](#via-podman) method of calling Badfish inside a virtual environment you can still do it directly from the repository via virtualenv but you would need to prepend the call to Badfish with the setting of the `PYTHONPATH` environment variable pointing at the path of your Badfish repository.
 
-```
+```bash
 virtualenv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-PYTHONPATH={BADFISH_REPO_PATH} python3 src/badfish/main.py -h
 ```
+
+* You'll need to set `PYTHONPATH` to the BADFISHREPO/src to run this way:
+
+```bash
+PYTHONPATH="./src" python3 src/badfish/main.py -h
+```
+
 
 We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within your virtualenv without more symlinks or workarounds.
 
