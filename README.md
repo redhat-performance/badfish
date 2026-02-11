@@ -197,7 +197,9 @@ Badfish happily runs in a container image using Podman or Docker (likely, but no
 podman pull quay.io/quads/badfish
 ```
 ```bash
-podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST -u $USER -p $PASS --reboot-only
+export BADFISH_USERNAME="my_username"
+export BADFISH_PASSWORD="my_password"
+podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST --reboot-only
 ```
 > [!IMPORTANT]
 >
@@ -242,17 +244,24 @@ curl  https://raw.githubusercontent.com/redhat-performance/badfish/master/config
 
 ## Common Operations
 
+> [!IMPORTANT]
+> While you can pass `-u` and `-p` for user and password you should set environment variables instead.
+>
+> export BADFISH_USERNAME="my_username"
+>
+> export BADFISH_PASSWORD="my_password"
+
 ### Enforcing an OpenStack Director-style interface order
 In our performance/scale R&D environments TripleO-based OpenStack deployments require a specific 10/25/40GbE NIC to be the primary boot device for PXE, followed by disk, and then followed by the rest of the interfaces.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t director
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml -t director
 ```
 
 ### Enforcing a Foreman-style interface order
 Foreman and Red Hat Satellite (as of 6.x based on Foreman) require managed systems to first always PXE from the interface that is Foreman-managed (DHCP/PXE).  If the system is not set to build it will simply boot to local disk.  In our setup we utilize a specific NIC for this interface based on system type.
 
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml -t foreman
 ```
 
 ### Enforcing a Custom interface order
@@ -293,19 +302,19 @@ src/main.py --host-list /tmp/hosts -u root -p password -i config/idrac_interface
 ### Forcing a one time boot to a specific device
 To force systems to perform a one-time boot to a specific device on the next subsequent reboot you can use the ```--boot-to``` option and pass as an argument the device you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface string.  You can obtain the device list via the `--check-boot` directive below.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to NIC.Integrated.1-3-1
+badfish -H mgmt-your-server.example.com  --boot-to NIC.Integrated.1-3-1
 ```
 
 ### Forcing a one time boot to a specific mac address
 To force systems to perform a one-time boot to a specific mac address on the next subsequent reboot you can use the ```--boot-to-mac``` option and pass as an argument the device mac address for a specific NIC that you want the one-time boot to be set to. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from that interface.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to-mac A9:BB:4B:50:CA:54
+badfish -H mgmt-your-server.example.com  --boot-to-mac A9:BB:4B:50:CA:54
 ```
 
 ### Forcing a one time boot to a specific type
 To force systems to perform a one-time boot to a specific type on the next subsequent reboot you can use the ```--boot-to-type``` option and pass as an argument the device type, as defined on the iDRAC interfaces yaml, that you want the one-time boot to be set to. For this action you must also include the path to your interfaces yaml. This will change the one time boot BIOS attributes OneTimeBootMode and OneTimeBootSeqDev and on the next reboot it will attempt to PXE boot or boot from the first interface defined for that host type on the interfaces yaml file.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --boot-to-type foreman
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml --boot-to-type foreman
 ```
 
 **Note** `--boot-to`, `--boot-to-type`, and `--boot-to-mac` require you to manually perform a reboot action, these simply just batch what the system will boot to on the next boot.  For this you can use either `--power-cycle` or `--reboot-only`.
@@ -315,31 +324,31 @@ To force systems to perform a one-time boot to PXE, simply pass the `--pxe` flag
 
 For Dell systems please use either  `--boot-to`, `--boot-to-mac` or `--boot-to-type` for temporary PXE to a specific interface or change the boot order permanently to achieve your desired effect.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --pxe
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml --pxe
 ```
 
 ### Rebooting a system
 In certain cases you might need to only reboot the host, for this case we included the ```--reboot-only``` flag which will force a GracefulRestart on the target host. Note that this option is not to be used with any other option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --reboot-only
+badfish -H mgmt-your-server.example.com  --reboot-only
 ```
 
 ### Power cycling a system
 For a hard reset you can use ```--power-cycle``` flag which will run a ForceOff instruction on the target host. Note that this option is not to be used with any other option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --power-cycle
+badfish -H mgmt-your-server.example.com  --power-cycle
 ```
 
 ### Power State Control
 You can also turn a server on or off by using options `--power-on` and `--power-off` respectively.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --power-on
+badfish -H mgmt-your-server.example.com  --power-on
 ```
 
 ### Check Power State
 For checking the current power state of a server you can run badfish with the `--power-state` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --power-state
+badfish -H mgmt-your-server.example.com  --power-state
 ```
 Partial Output:
 ```
@@ -359,7 +368,7 @@ Partial Output:
 ### Resetting iDRAC
 For the replacement of `racadm racreset`, the optional argument `--racreset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the iDRAC itself.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --racreset
+badfish -H mgmt-your-server.example.com  --racreset
 ```
 > [!NOTE]
 > Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
@@ -367,7 +376,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --racreset
 ### Resetting BMC
 For the replacement of `ipmitool bmc reset` or `ipmiutil reset`, the optional argument `--bmc-reset` was added. When this argument is passed to ```badfish```, a graceful restart is triggered on the BMC itself.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --bmc-reset
+badfish -H mgmt-your-server.example.com  --bmc-reset
 ```
 > [!NOTE]
 > Supermicro specific command, for Dell servers there is an equivalent of `--racreset`
@@ -378,127 +387,127 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --bmc-reset
 
 You can restore BIOS default settings by calling Badfish with the option `--factory-reset`.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --factory-reset
+badfish -H mgmt-your-server.example.com  --factory-reset
 ```
 
 ### Check current boot order
 To check the current boot order of a specific host you can use the ```--check-boot``` option which will return an ordered list of boot devices. Additionally you can pass the ```-i``` option which will in turn print on screen what type of host does the current boot order match as those defined on the iDRAC interfaces yaml.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml --check-boot
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml --check-boot
 ```
 
 ### Toggle boot device
 If you would like to enable or disable a boot device you can use ```--toggle-boot-device``` argument which takes the device name as input and will toggle the `Enabled` state from True to False and vice versa.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --toggle-boot-device NIC.Integrated.1-3-1```
+badfish -H mgmt-your-server.example.com  --toggle-boot-device NIC.Integrated.1-3-1```
 ```
 
 ### Variable number of retries
 At certain points during the execution of ```badfish``` the program might come across a non responsive resources and will automatically retry to establish connection. We have included a default value of 15 retries after failed attempts but this can be customized via the ```--retries``` optional argument which takes as input an integer with the number of desired retries.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --retries 20
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml -t foreman --retries 20
 ```
 
 ### Firmware inventory
 If you would like to get a detailed list of all the devices supported by iDRAC you can run ```badfish``` with the ```--firware-inventory``` option which will return a list of devices with additional device info.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory
+badfish -H mgmt-your-server.example.com  --firmware-inventory
 ```
 
 ### Delta of firmware inventories
 If you would like to get a delta between firmware inventories of two servers, you can do so with the `--delta` option. This option takes a second host address as its argument. Only the firmware that's on both servers and has different versions will get displayed.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --firmware-inventory --delta mgmt-your-other-server.example.com
+badfish -H mgmt-your-server.example.com  --firmware-inventory --delta mgmt-your-other-server.example.com
 ```
 
 ### Clear Job Queue
 If you would like to clear all the jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--clear-jobs``` option which query for all active jobs in the iDRAC queue and will post a request to clear the queue.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs
+badfish -H mgmt-your-server.example.com  --clear-jobs
 ```
 
 You can also force the clearing of Dell iDRAC job queues by passing the `--force` option.
 
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --clear-jobs --force
+badfish -H mgmt-your-server.example.com  --clear-jobs --force
 ```
 
 ### List Job Queue
 If you would like to list all active jobs that are queued on the remote iDRAC you can run ```badfish``` with the ```--ls-jobs``` option which query for all active jobs in the iDRAC queue and will return a list with all active items.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-jobs
+badfish -H mgmt-your-server.example.com  --ls-jobs
 ```
 
 ### Check Job Status
 If you would like to the status of an existing LifeCycle controller job you can run ```badfish``` with the ```--check-job``` option and passing the job id which can be obtained via ```--ls-jobs```. This will return a detail of the specific job with status and percentage of completion.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --check-job JID_340568202796
+badfish -H mgmt-your-server.example.com  --check-job JID_340568202796
 ```
 
 ### Set Bios Password
 If you would like to set the bios password you can run ```badfish``` with the ```--set-bios-password``` option and passing the new password with ```--new-password```. If a password is already set you must pass this with ```--old-password``` otherwise optional.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-password --new-password new_pass --old-password old_pass
+badfish -H mgmt-your-server.example.com  --set-bios-password --new-password new_pass --old-password old_pass
 ```
 
 ### Remove Bios Password
 If you would like to remove the bios password you can run ```badfish``` with the ```--remove-bios-password``` option and passing the existing password with ```--old-password```.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --remove-bios-password --old-password old_pass
+badfish -H mgmt-your-server.example.com  --remove-bios-password --old-password old_pass
 ```
 
 ### List Network Interfaces
 For getting a list of network interfaces with individual metadata for each you can run ```badfish``` with the ```--ls-interfaces``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-interfaces
+badfish -H mgmt-your-server.example.com  --ls-interfaces
 ```
 
 ### List Memory
 For getting a detailed list of memory devices you can run ```badfish``` with the ```--ls-memory``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-memory
+badfish -H mgmt-your-server.example.com  --ls-memory
 ```
 
 ### List Processors
 For getting a detailed list of processors you can run ```badfish``` with the ```--ls-processors``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-processors
+badfish -H mgmt-your-server.example.com  --ls-processors
 ```
 
 ### List Serial Number or Service Tag
 For getting the system's serial number or on Dell servers the service tag (equivalent to `racadm getsvctag`) you can run ```badfish``` with the ```--ls-serial``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --ls-serial
+badfish -H mgmt-your-server.example.com  --ls-serial
 ```
 
 ### Check Virtual Media
 If you would like to check for any active virtual media you can run ```badfish``` with the ```--check-virtual-media``` option which query for all active virtual devices.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --check-virtual-media
+badfish -H mgmt-your-server.example.com  --check-virtual-media
 ```
 
 ### Mount Virtual Media
 If you would like to mount an ISO from network you can run ```badfish``` with the ```--mount-virtual-media``` option which post a request for mounting the ISO virtual media (Virtual CD). Full address to the ISO is needed as an argument.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --mount-virtual-media http://storage.example.com/folder/linux.iso
+badfish -H mgmt-your-server.example.com  --mount-virtual-media http://storage.example.com/folder/linux.iso
 ```
 
 ### Unmount Virtual Media
 If you would like to unmount all active virtual media you can run ```badfish``` with the ```--unmount-virtual-media``` option which post a request for unmounting all active virtual devices.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --unmount-virtual-media
+badfish -H mgmt-your-server.example.com  --unmount-virtual-media
 ```
 
 ### Boot to Virtual Media
 If you would like to boot to virtual media (Virtual CD) you can run ```badfish``` with the ```--boot-to-virtual-media``` option which sets the onetime next boot device to virtual CD.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-to-virtual-media
+badfish -H mgmt-your-server.example.com  --boot-to-virtual-media
 ```
 
 ### Check Remote Image
 If you would like to check the attach status of a remote ISO in DellOSDeployment service you can run ```badfish``` with the ```--check-remote-image``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
+badfish -H mgmt-your-server.example.com  --check-remote-image
 ```
 > [!NOTE]
 > This is only supported on DELL devices.
@@ -506,7 +515,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --check-remote-image
 ### Boot to Remote Image
 If you would like to boot to a remote ISO on NFS with DellOSDeployment service you can run ```badfish``` with the ```--boot-remote-image``` option which will attach the image and reboot the server to it. Expects the NFS path to the ISO as the argument.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
+badfish -H mgmt-your-server.example.com  --boot-remote-image nfs-storage.example.com:/mnt/folder/linux.iso
 ```
 > [!NOTE]
 > This is only supported on DELL devices.
@@ -514,7 +523,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --boot-remote-image 
 ### Detach Remote Image
 If you would like to detach an ISO from DellOSDeployment service you can run ```badfish``` with the ```--detach-remote-image``` option.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-image
+badfish -H mgmt-your-server.example.com  --detach-remote-image
 ```
 > [!NOTE]
 > This is only supported on DELL devices.
@@ -522,7 +531,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --detach-remote-imag
 ### Get SRIOV mode
 For checking if the global SRIOV mode is enabled you can use ```--get-sriov```
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
+badfish -H mgmt-your-server.example.com  --get-sriov
 ```
 > [!NOTE]
 > This is only supported on DELL devices.
@@ -531,11 +540,11 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-sriov
 For changing the mode of the SRIOV glabal BIOS attribute, we have included 2 new arguments.
 In case the setting is in disabled mode, you can enable it by passing ```--enable-sriov```
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --enable-sriov
+badfish -H mgmt-your-server.example.com  --enable-sriov
 ```
 On the contrary, if you would like to disable the SRIOV mode, you can now pass ```--disable-sriov```
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
+badfish -H mgmt-your-server.example.com  --disable-sriov
 ```
 > [!NOTE]
 > This is only supported on DELL devices.
@@ -543,13 +552,13 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --disable-sriov
 ### Get FQDDs for all nics
 To get a list of all FQDDs for all NICs on the server you can run badfish with ```--get-nic-fqdds```.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-fqdds
+badfish -H mgmt-your-server.example.com  --get-nic-fqdds
 ```
 
 ### Get NIC attributes
 To get a list of all NIC attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-nic-attribute``` passing the desired FQDD and this will return a list off all NIC attributes with their current value set.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-attribute NIC.Integrated.1-1-1
+badfish -H mgmt-your-server.example.com  --get-nic-attribute NIC.Integrated.1-1-1
 ```
 
 ### Set NIC attribute
@@ -558,25 +567,25 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-nic-attribute 
 
 To change the value of a NIC attribute you can use ```--set-nic-attribute``` with the desired FQDD, passing both ```--attribute``` and desired ```--value```.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
+badfish -H mgmt-your-server.example.com  --set-nic-attribute NIC.Integrated.1-1-1 --attribute LegacyBootProto --value PXE
 ```
 
 ### Get BIOS attributes
 To get a list of all BIOS attributes we can potentially modify (some might be set as read-only), you can run badfish with ```--get-bios-attribute``` alone and this will return a list off all BIOS attributes with their current value set.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute
+badfish -H mgmt-your-server.example.com  --get-bios-attribute
 ```
 
 ### Get specific BIOS attribute
 In case you would like to get a more detailed view on the parameters for a BIOS attribute you can run ```--get-bios-attribute``` including the specific name of the attribute via ```--attribute```.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute --attribute ProcC1E
+badfish -H mgmt-your-server.example.com  --get-bios-attribute --attribute ProcC1E
 ```
 
 ### Set BIOS attribute
 To change the value of a bios attribute you can use ```--set-bios-attribute``` passing both ```--attribute``` and ```--value```.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute ProcC1E --value Enabled
+badfish -H mgmt-your-server.example.com  --set-bios-attribute --attribute ProcC1E --value Enabled
 ```
 > [!NOTE]
 > You can get the list of allowed values you can pass for that attribute by looking at the attribute details via ```--get-bios-attribute``` for that specific one.
@@ -590,15 +599,15 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 #### Querying bootmode
 * First determine what bootmode state your server is using before proceeding.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-bios-attribute --attribute BootMode
+badfish -H mgmt-your-server.example.com  --get-bios-attribute --attribute BootMode
 ```
 #### Setting UEFI mode
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Uefi
+badfish -H mgmt-your-server.example.com  --set-bios-attribute --attribute BootMode --value Uefi
 ```
 ### Setting BIOS mode
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute --attribute BootMode --value Bios
+badfish -H mgmt-your-server.example.com  --set-bios-attribute --attribute BootMode --value Bios
 ```
 
 > [!IMPORTANT]
@@ -608,13 +617,13 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --set-bios-attribute
 ### Get server screenshot
 If you would like to get a screenshot with the current state of the server you can now run badfish with ```--screenshot``` which will capture this and store it in the current directory in png format.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --screenshot
+badfish -H mgmt-your-server.example.com  --screenshot
 ```
 
 ### Targets for server configuration profile
 If you want to get a list of allowed targets for SCP export or import you can get that with the `--get-scp-targets` command, takes either `Export` or `Import` as an argument.
 ```
-badfish -H mgmt-your-server.example.com -u root -p yourpass --get-scp-targets (Export | Import)
+badfish -H mgmt-your-server.example.com  --get-scp-targets (Export | Import)
 ```
 > [!NOTE]
 > This is only supported on Dell devices.
@@ -623,7 +632,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --get-scp-targets (E
 ### Export server configuration profile
 If you would like to export a SCP as a JSON file for either some specific targets or all of them, you can run badfish with `--export-scp` and specify a path where the config should be saved to with its argument. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Read only arguments can be included with the `--scp-include-read-only` flag.
 ```
-badfish -H mgmt-your-server.example.com -u root -p yourpass --export-scp "./" --scp-targets IDRAC,BIOS --scp-include-read-only
+badfish -H mgmt-your-server.example.com  --export-scp "./" --scp-targets IDRAC,BIOS --scp-include-read-only
 ```
 > [!NOTE]
 > This is only supported on Dell devices.
@@ -631,7 +640,7 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --export-scp "./" --
 ### Import server configuration profile
 If you would like to import a SCP in a JSON file for either some specific targets or all of them, you can run badfish with `--import-scp`. Targets can be specified with `--scp-targets` flag that takes a comma separated list of targets as an argument. Command will reboot the server and return it to a state at the launch start of import.
 ```
-badfish -H mgmt-your-server.example.com -u root -p yourpass --import-scp "./example_export.json" --scp-targets IDRAC,BIOS
+badfish -H mgmt-your-server.example.com  --import-scp "./example_export.json" --scp-targets IDRAC,BIOS
 ```
 > [!NOTE]
 > This is only supported on Dell devices.
@@ -639,19 +648,19 @@ badfish -H mgmt-your-server.example.com -u root -p yourpass --import-scp "./exam
 ### Bulk actions via text file with list of hosts
 In the case you would like to execute a common badfish action on a list of hosts, you can pass the optional argument ```--host-list``` in place of ```-H``` with the path to a text file with the hosts you would like to action upon and any addtional arguments defining a common action for all these hosts.
 ```bash
-badfish --host-list /tmp/bad-hosts -u root -p yourpass --clear-jobs
+badfish --host-list /tmp/bad-hosts  --clear-jobs
 ```
 
 ### Verbose output
 If you would like to see a more detailed output on console you can use the ```--verbose``` option and get a additional debug logs. > [!NOTE] this is the default log level for the ```--log``` argument.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --verbose
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml -t foreman --verbose
 ```
 
 ### Log to file
 If you would like to log the output of ```badfish``` you can use the ```--log``` option and pass the path to where you want ```badfish``` to log it's output to.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
+badfish -H mgmt-your-server.example.com  -i config/idrac_interfaces.yml -t foreman --log /tmp/bad.log
 ```
 
 ### Formatted output
@@ -663,7 +672,7 @@ If you would like to easier query some information listed by badfish, you can te
 - `--check-virtual-media`
 - `--power-state`.
 ```bash
-badfish -H mgmt-your-server.example.com -u root -p yourpass --output json/yaml --firmware-inventory
+badfish -H mgmt-your-server.example.com  --output json/yaml --firmware-inventory
 ```
 
 ## iDRAC and Data Format

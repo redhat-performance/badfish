@@ -2461,10 +2461,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         )
 
     if not _username or not _password:
-        logger.error(
-            "Missing credentials. Please provide credentials via CLI "
-            "arguments or environment variables."
-        )
+        logger.error("Missing credentials. Please provide credentials via CLI arguments or environment variables.")
         return _host, False
 
     host_type = _args["t"]
