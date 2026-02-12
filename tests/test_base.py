@@ -76,28 +76,6 @@ class TestBase(AioHTTPTestCase):
             if mock_pass is not None:
                 env_vars["BADFISH_PASSWORD"] = mock_pass
 
-            # Filter self.args for other secrets to avoid warnings
-            cleaned_args = []
-            skip_next = False
-            for i, arg in enumerate(self.args):
-                if skip_next:
-                    skip_next = False
-                    continue
-
-                if arg == "--new-password" and i + 1 < len(self.args):
-                    env_vars["BADFISH_NEW_PASSWORD"] = self.args[i + 1]
-                    skip_next = True
-                elif arg == "--old-password" and i + 1 < len(self.args):
-                    env_vars["BADFISH_OLD_PASSWORD"] = self.args[i + 1]
-                    skip_next = True
-                elif arg == "-p" and i + 1 < len(self.args):
-                    env_vars["BADFISH_PASSWORD"] = self.args[i + 1]
-                    skip_next = True
-                else:
-                    cleaned_args.append(arg)
-
-            argv.extend(cleaned_args)
-
         with patch.dict(os.environ, env_vars):
             try:
                 main(argv)
