@@ -75,6 +75,7 @@ class TestBase(AioHTTPTestCase):
                 env_vars["BADFISH_USERNAME"] = mock_user
             if mock_pass is not None:
                 env_vars["BADFISH_PASSWORD"] = mock_pass
+            argv.extend(self.args)
 
         with patch.dict(os.environ, env_vars):
             try:

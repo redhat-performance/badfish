@@ -2453,10 +2453,10 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     _username = _args.get("u") or os.environ.get("BADFISH_USERNAME")
     _password = _args.get("p") or os.environ.get("BADFISH_PASSWORD")
 
-    if _args.get("p") or _args.get("new_password") or _args.get("old_password"):
+    if _args.get("p"):
         logger.warning(
-            "Passing secrets via command line arguments is unsafe. "
-            "Please use environment variables (BADFISH_USERNAME, BADFISH_PASSWORD)."
+            "Passing secrets via command line arguments can be unsafe. "
+            "Consider using environment variables (BADFISH_USERNAME, BADFISH_PASSWORD)."
         )
 
     if not _username or not _password:

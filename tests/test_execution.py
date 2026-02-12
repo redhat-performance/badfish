@@ -98,7 +98,7 @@ class TestInitialization(TestBase):
     # Explicitly use CLI secrets to trigger the warning
         _, err = self.badfish_call(use_cli_secrets=True)
 
-        assert "Passing secrets via command line arguments is unsafe" in err
+        assert "Passing secrets via command line arguments can be unsafe" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
