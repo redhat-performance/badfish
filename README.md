@@ -26,6 +26,7 @@
         * [Via Virtualenv](#via-virtualenv)
         * [Via RPM System Package](#via-rpm-system-package)
       * [Common Operations](#common-operations)
+         * [Use Environment Variables for Secrets](#using-environment-variables-for-secrets)
          * [Enforcing an OpenStack Director-style interface order](#enforcing-an-openstack-director-style-interface-order)
          * [Enforcing a Foreman-style interface order](#enforcing-a-foreman-style-interface-order)
          * [Enforcing a Custom interface order](#enforcing-a-custom-interface-order)
@@ -199,8 +200,17 @@ podman pull quay.io/quads/badfish
 ```bash
 export BADFISH_USERNAME="my_username"
 export BADFISH_PASSWORD="my_password"
-podman run -it --rm --dns $DNS_IP quay.io/quads/badfish -H $HOST --reboot-only
+podman run -it --rm --dns 1.2.3.4 quay.io/quads/badfish -H mgmt-host01.example.com --reboot-only
 ```
+
+If you want to pass your user/pass variables only in podman:
+
+```bash
+BADFISH_USERNAME=my_username BADFISH_PASSWORD=my_password \
+   podman run -it --env BADFISH_USERNAME --env BADFISH_PASSWORD --rm --dns 1.2.3.4 \
+   quay.io/quads/badfish -H mgmt-host01.example.com --reboot-only
+```
+
 > [!IMPORTANT]
 >
 > If you are running Badfish against a host inside a VPN to an address without public resolution you must specify your VPN DNS server ip address with `--dns`
@@ -231,9 +241,6 @@ pip install -r requirements.txt
 PYTHONPATH="./src" python3 src/badfish/main.py -h
 ```
 
-
-We will likely add more libaries in the future and [can't guarantee](https://github.com/redhat-performance/JetSki/issues/186#issuecomment-982666646) these will be visible within your virtualenv without more symlinks or workarounds.
-
 ### Via RPM System Package
 If you choose to install Badfish via RPM package then it'll be located in `/usr/bin/badfish` and you don't need to do much else beyond know the correct command syntax for your required operations.
 
@@ -250,6 +257,7 @@ curl  https://raw.githubusercontent.com/redhat-performance/badfish/master/config
 
 ## Common Operations
 
+### Use Environment Variables for Secrets
 > [!IMPORTANT]
 > While you can pass `-u` and `-p` for user and password you should set environment variables instead.
 >
