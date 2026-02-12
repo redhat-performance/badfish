@@ -2450,8 +2450,19 @@ class Badfish:
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
-    _username = _args["u"]
-    _password = _args["p"]
+    _username = _args.get("u") or os.environ.get("BADFISH_USERNAME")
+    _password = _args.get("p") or os.environ.get("BADFISH_PASSWORD")
+
+    if _args.get("p"):
+        logger.warning(
+            "Passing secrets via command line arguments can be unsafe. "
+            "Consider using environment variables (BADFISH_USERNAME, BADFISH_PASSWORD)."
+        )
+
+    if not _username or not _password:
+        logger.error("Missing credentials. Please provide credentials via CLI arguments or environment variables.")
+        return _host, False
+
     host_type = _args["t"]
     interfaces_path = _args["i"]
     force = _args["force"]

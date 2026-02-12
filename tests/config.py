@@ -2347,3 +2347,5 @@ RESPONSE_GET_NIC_ATTR_FW_EXC = f"""\
 {RESPONSE_UNSOPPORTED_IDRAC_VERSION}
 {RESPONSE_NIC_ATTR_GET_ERROR}
 """
+MANAGER_INSTANCE_RESP = '{"Jobs":{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/Jobs"}}'
+JOBS_RESP = '{"Members":[]}'
