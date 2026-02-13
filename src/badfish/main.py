@@ -2415,7 +2415,7 @@ class Badfish:
             )
             self.logger.debug(uri)
         except (IndexError, ValueError):
-            self.logger.error("Invalid FQDD suplied.")
+            self.logger.error("Invalid FQDD supplied.")
             return False
 
         headers = {"content-type": "application/json"}
