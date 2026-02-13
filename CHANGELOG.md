@@ -1,6 +1,111 @@
 # CHANGELOG
 
 
+## v1.2.0 (2026-02-13)
+
+### Bug Fixes
+
+- Apply black fixes, more test cov for nic attr
+  ([`b31e537`](https://github.com/redhat-performance/badfish/commit/b31e5376c9d6fbce4325634cae3667ee92404aac))
+
+- Incorrect credentials are masked by traceback
+  ([`54fa694`](https://github.com/redhat-performance/badfish/commit/54fa6945063cc5cde2379855fd55074b498fc04b))
+
+* find_session_uri masks a proper error message when someone passes incorrect credentials (either by
+  vars or user/pass). * response body seems to be a JSON object and not a redfish root object and we
+  are not generating a useful error, instead the user gets a traceback that masks the real cause.
+
+before (see https://github.com/redhat-performance/badfish/issues/517)
+
+after
+
+-=>>PYTHONPATH="./src" python3 src/badfish/main.py -H mgmt-d23-h31-000-r650.example.com -u root -p
+  awrongpassword --power-state - WARNING - Passing secrets via command line arguments can be unsafe.
+  Consider using environment variables (BADFISH_USERNAME, BADFISH_PASSWORD). - ERROR - Failed to
+  authenticate. Verify your credentials for mgmt-d23-h31-000-r650.example.com
+
+* Also remove asyncio import from tests/test_main_coverage.py as it wasn't being utilized.
+
+fixes: https://github.com/redhat-performance/badfish/issues/517
+
+### Chores
+
+- Address mock whitespace in tests
+  ([`05b409b`](https://github.com/redhat-performance/badfish/commit/05b409b293ab1e20c58f3950b659e2577c4f80f7))
+
+- Fix debug logger typo
+  ([`0116cb7`](https://github.com/redhat-performance/badfish/commit/0116cb74f87f5203ca2016f6752c9c35a0210928))
+
+- Fix indentation
+  ([`073efca`](https://github.com/redhat-performance/badfish/commit/073efcad3314706620ed6f4efe5f9554d080e472))
+
+- Fix last coverage lines
+  ([`f2d4637`](https://github.com/redhat-performance/badfish/commit/f2d4637b36e42cd4dc16b68db279154a39225299))
+
+- Fix tests spacing on returns
+  ([`a113725`](https://github.com/redhat-performance/badfish/commit/a113725d27b688d00c9b3645c7176bf1717ba2e6))
+
+- Fully revert old_password,new_password env
+  ([`3de528b`](https://github.com/redhat-performance/badfish/commit/3de528bc26bb51bc527acba234f0178778063567))
+
+- Further tests adjustment
+  ([`0741776`](https://github.com/redhat-performance/badfish/commit/0741776c3f7bfa4f48d21cd0e7eaf1ec3ba53e77))
+
+- I grow weary of adjusting test intricacies
+  ([`3c68a68`](https://github.com/redhat-performance/badfish/commit/3c68a68739920a78522d97fa63c5a6617cfba799))
+
+- Refactor test_main_coverage.py for black
+  ([`42d4911`](https://github.com/redhat-performance/badfish/commit/42d4911becd3d1090e16fa78fd2e81a2d5f5e631))
+
+- Remove new/reset/old password handling
+  ([`1e9298e`](https://github.com/redhat-performance/badfish/commit/1e9298ee9c11bf2a4afcbe1e972b24be50aa0a90))
+
+* This is clumsy and very unlikely these values will be an env variable. * Nothing keeps people from
+  securing it with a temporary export but it is not in scope for using stored env vars which tend to
+  be static or change rarely and thus makes more sense to concentrate on for this feature.
+
+- Revert, fix up only affected tests
+  ([`848a4e8`](https://github.com/redhat-performance/badfish/commit/848a4e817007c16274e6d9fd67aa98b65cfe36d3))
+
+- Set test vars in config.py
+  ([`4ec3b1d`](https://github.com/redhat-performance/badfish/commit/4ec3b1d423fe0b7c415980585349df9d0233aacb))
+
+- Spacing again on tests
+  ([`4661d74`](https://github.com/redhat-performance/badfish/commit/4661d74704715cf7a4b30cfffcea6f552c2b5cf7))
+
+- Test modifications
+  ([`d3568f0`](https://github.com/redhat-performance/badfish/commit/d3568f077f42f42e03fa4405dbed182eac07019e))
+
+- Try to fix failing tests and tox
+  ([`b1e14b2`](https://github.com/redhat-performance/badfish/commit/b1e14b2f4e8b7e2bdde59dd3f6427dfdf8386b44))
+
+- Try two on aligning spacing for log msgs
+  ([`0a67bda`](https://github.com/redhat-performance/badfish/commit/0a67bda956acada5d1043b55f925318b7b0bc222))
+
+- Update doc examples by suggest
+  ([`52f721b`](https://github.com/redhat-performance/badfish/commit/52f721bb9fe714a5cc885b73c571b59098f03653))
+
+* incorpoate some suggestions from @stephane-chazelas
+
+- We should not need mock user/pass now
+  ([`805cdad`](https://github.com/redhat-performance/badfish/commit/805cdad4c3a388684f4e22f57b1bd374d6dca447))
+
+- Whitespace and unsafe_secrets for tests
+  ([`01ff58a`](https://github.com/redhat-performance/badfish/commit/01ff58a0a8be85b3624da05a91d4ae55193cd038))
+
+### Features
+
+- Support auth via env vars
+  ([`38cc4e0`](https://github.com/redhat-performance/badfish/commit/38cc4e098d3371cba51072c79ebbc8d77e9d7038))
+
+* Add these new vars for safer badfishing - BADFISH_PASSWORD - BADFISH_USERNAME -
+  BADFISH_NEW_PASSWORD - BADFISH_OLD_PASSWORD
+
+* Update venv example for PYTHONPATH
+
+fixes: https://github.com/redhat-performance/badfish/issues/496
+
+
 ## v1.1.1 (2026-02-03)
 
 ### Bug Fixes
