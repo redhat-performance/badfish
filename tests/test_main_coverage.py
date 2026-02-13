@@ -22,13 +22,12 @@ async def test_missing_credentials():
     logger = MagicMock(spec=logging.Logger)
     format_handler = None
 
-    with patch('os.environ.get', side_effect=lambda k: None):
+    with patch("os.environ.get", side_effect=lambda k: None):
         result = await execute_badfish(host, args, logger, format_handler)
 
     assert result == (host, False)
     logger.error.assert_called_once_with(
-        "Missing credentials. Please provide credentials via CLI arguments "
-        "or environment variables."
+        "Missing credentials. Please provide credentials via CLI arguments " "or environment variables."
     )
 
 
@@ -45,8 +44,7 @@ async def test_init_401_unauthorized(mock_args):
     mock_response.text = AsyncMock(return_value='{"error": "Unauthorized"}')
 
     # Patch 'badfish' (not src.badfish) to match the import above
-    with patch("badfish.main.HTTPClient.get_request",
-               new_callable=AsyncMock) as mock_get:
+    with patch("badfish.main.HTTPClient.get_request", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_response
 
         result = await execute_badfish(host, mock_args, logger, None)
@@ -75,8 +73,7 @@ async def test_init_key_error_missing_version(mock_args):
     mock_response.text = AsyncMock(return_value='{"OtherKey": "Value"}')
 
     # Patch 'badfish' (not src.badfish) to match the import above
-    with patch("badfish.main.HTTPClient.get_request",
-               new_callable=AsyncMock) as mock_get:
+    with patch("badfish.main.HTTPClient.get_request", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_response
 
         result = await execute_badfish(host, mock_args, logger, None)

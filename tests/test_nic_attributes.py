@@ -83,7 +83,7 @@ class TestNICFQDDs(TestBase):
             self.option_arg,
         ]
         _, err = self.badfish_call()
-        assert err == RESPONSE_VENDOR_UNSUPPORTED + '\n'
+        assert err == RESPONSE_VENDOR_UNSUPPORTED + "\n"
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -161,7 +161,11 @@ class TestGetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_get_nic_attr_info_ok(self, mock_get, mock_post, mock_delete):
-        responses = INIT_RESP + [GET_FW_VERSION, GET_NIC_ATTR_REGISTRY, GET_NIC_ATTR_LIST]
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST,
+        ]
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
@@ -174,7 +178,6 @@ class TestGetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.get")
     @patch("badfish.main.Badfish.get_idrac_fw_version")
     def test_get_nic_attr_fw_bad(self, mock_get_fw, mock_get, mock_post, mock_delete):
-
         async def fake_get_fw():
             # Emit via Badfish logger name to match formatting
             from logging import getLogger

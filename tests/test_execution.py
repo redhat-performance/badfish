@@ -95,7 +95,7 @@ class TestInitialization(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
 
-    # Explicitly use CLI secrets to trigger the warning
+        # Explicitly use CLI secrets to trigger the warning
         _, err = self.badfish_call(use_cli_secrets=True)
 
         assert "Passing secrets via command line arguments can be unsafe" in err
