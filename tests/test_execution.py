@@ -13,8 +13,11 @@ from tests.config import (
     RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND,
     ROOT_RESP,
     SUCCESSFUL_HOST_LIST,
+    SYS_RESP,
     WRONG_BADFISH_EXECUTION,
     WRONG_BADFISH_EXECUTION_HOST_LIST,
+    MANAGER_INSTANCE_RESP,
+    JOBS_RESP,
 )
 from tests.test_base import TestBase
 
@@ -81,6 +84,21 @@ class TestHostListExecution(TestBase):
 
 class TestInitialization(TestBase):
     args = ["--ls-jobs"]
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_cli_secrets_warning(self, mock_get, mock_post, mock_delete):
+        """Test that passing credentials via CLI triggers a warning."""
+        responses = [ROOT_RESP] * 4 + [SYS_RESP, MAN_RESP, MANAGER_INSTANCE_RESP, JOBS_RESP]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+
+        # Explicitly use CLI secrets to trigger the warning
+        _, err = self.badfish_call(use_cli_secrets=True)
+
+        assert "Passing secrets via command line arguments can be unsafe" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

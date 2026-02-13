@@ -1,4 +1,5 @@
 import sys
+import os
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
@@ -49,25 +50,35 @@ class TestBase(AioHTTPTestCase):
         yield
 
     def badfish_call(
-        self,
-        mock_host=config.MOCK_HOST,
-        mock_user=config.MOCK_USER,
-        mock_pass=config.MOCK_PASS,
+        self, mock_host=config.MOCK_HOST, mock_user=config.MOCK_USER, mock_pass=config.MOCK_PASS, use_cli_secrets=False
     ):
         argv = []
+        env_vars = os.environ.copy()
 
         if mock_host is not None:
             argv.extend(("-H", mock_host))
-        if mock_user is not None:
-            argv.extend(("-u", mock_user))
-        if mock_pass is not None:
-            argv.extend(("-p", mock_pass))
 
-        argv.extend(self.args)
-        try:
-            main(argv)
-        except BadfishException:
-            pass
+        if use_cli_secrets:
+            # Legacy behavior: Pass secrets via CLI args to test warning logic
+            if mock_user is not None:
+                argv.extend(("-u", mock_user))
+            if mock_pass is not None:
+                argv.extend(("-p", mock_pass))
+            argv.extend(self.args)
+        else:
+            # Default behavior for tests: Use Env Vars to suppress warnings
+            if mock_user is not None:
+                env_vars["BADFISH_USERNAME"] = mock_user
+            if mock_pass is not None:
+                env_vars["BADFISH_PASSWORD"] = mock_pass
+            argv.extend(self.args)
+
+        with patch.dict(os.environ, env_vars):
+            try:
+                main(argv)
+            except BadfishException:
+                pass
+
         out, err = self._capsys.readouterr()
         return out, err
 

@@ -382,9 +382,15 @@ class Badfish:
         if not response:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
+        if response.status == 401:
+            raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
+
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
-        redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        try:
+            redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        except KeyError:
+            raise BadfishException("Was unable to get Redfish Version. Please verify credentials/host.")
         session_uri = None
         if redfish_version >= 160:
             session_uri = "/redfish/v1/SessionService/Sessions"
@@ -2405,7 +2411,7 @@ class Badfish:
             )
             self.logger.debug(uri)
         except (IndexError, ValueError):
-            self.logger.error("Invalid FQDD suplied.")
+            self.logger.error("Invalid FQDD supplied.")
             return False
 
         headers = {"content-type": "application/json"}
@@ -2450,8 +2456,19 @@ class Badfish:
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
-    _username = _args["u"]
-    _password = _args["p"]
+    _username = _args.get("u") or os.environ.get("BADFISH_USERNAME")
+    _password = _args.get("p") or os.environ.get("BADFISH_PASSWORD")
+
+    if _args.get("p"):
+        logger.warning(
+            "Passing secrets via command line arguments can be unsafe. "
+            "Consider using environment variables (BADFISH_USERNAME, BADFISH_PASSWORD)."
+        )
+
+    if not _username or not _password:
+        logger.error("Missing credentials. Please provide credentials via CLI arguments or environment variables.")
+        return _host, False
+
     host_type = _args["t"]
     interfaces_path = _args["i"]
     force = _args["force"]

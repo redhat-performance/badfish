@@ -13,6 +13,4 @@ with open(version_file, "r", encoding="utf-8") as f:
     else:
         raise RuntimeError("Unable to find version string in src/badfish/__init__.py")
 
-setuptools.setup(
-    version=current_version
-)
+setuptools.setup(version=current_version)
