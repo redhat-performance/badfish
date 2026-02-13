@@ -382,9 +382,19 @@ class Badfish:
         if not response:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
+        if response.status == 401:
+            raise BadfishException(
+                f"Failed to authenticate. Verify your credentials for {self.host}"
+            )
+
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
-        redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        try:
+            redfish_version = int(data["RedfishVersion"].replace(".", ""))
+        except KeyError:
+            raise BadfishException(
+                "Was unable to get Redfish Version. Please verify credentials/host."
+            )
         session_uri = None
         if redfish_version >= 160:
             session_uri = "/redfish/v1/SessionService/Sessions"
