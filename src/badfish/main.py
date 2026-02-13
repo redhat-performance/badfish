@@ -383,18 +383,14 @@ class Badfish:
             raise BadfishException(f"Failed to communicate with {self.host}")
 
         if response.status == 401:
-            raise BadfishException(
-                f"Failed to authenticate. Verify your credentials for {self.host}"
-            )
+            raise BadfishException(f"Failed to authenticate. Verify your credentials for {self.host}")
 
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
         try:
             redfish_version = int(data["RedfishVersion"].replace(".", ""))
         except KeyError:
-            raise BadfishException(
-                "Was unable to get Redfish Version. Please verify credentials/host."
-            )
+            raise BadfishException("Was unable to get Redfish Version. Please verify credentials/host.")
         session_uri = None
         if redfish_version >= 160:
             session_uri = "/redfish/v1/SessionService/Sessions"
@@ -2415,7 +2411,7 @@ class Badfish:
             )
             self.logger.debug(uri)
         except (IndexError, ValueError):
-            self.logger.error("Invalid FQDD suplied.")
+            self.logger.error("Invalid FQDD supplied.")
             return False
 
         headers = {"content-type": "application/json"}

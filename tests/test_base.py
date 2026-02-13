@@ -50,11 +50,7 @@ class TestBase(AioHTTPTestCase):
         yield
 
     def badfish_call(
-        self,
-        mock_host=config.MOCK_HOST,
-        mock_user=config.MOCK_USER,
-        mock_pass=config.MOCK_PASS,
-        use_cli_secrets=False
+        self, mock_host=config.MOCK_HOST, mock_user=config.MOCK_USER, mock_pass=config.MOCK_PASS, use_cli_secrets=False
     ):
         argv = []
         env_vars = os.environ.copy()
