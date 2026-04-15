@@ -2154,19 +2154,18 @@ class Badfish:
             if str(ct)[0:7] >= "0:05:00":
                 self.logger.error("Job has been timed out, took longer than 5 minutes, command failed.")
                 return False
-            else:
-                try:
-                    if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
-                        percentage = int(data["Oem"]["Dell"]["PercentComplete"])
-                        self.logger.info(
-                            "%s, percent complete: %s"
-                            % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
-                        )
-                    await asyncio.sleep(1)
-                except (ValueError, AttributeError, KeyError):
-                    self.logger.info("Unable to get job status message, trying again.")
-                    await asyncio.sleep(1)
-                continue
+            try:
+                if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
+                    percentage = int(data["Oem"]["Dell"]["PercentComplete"])
+                    self.logger.info(
+                        "%s, percent complete: %s"
+                        % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
+                    )
+                await asyncio.sleep(1)
+            except (ValueError, AttributeError, KeyError):
+                self.logger.info("Unable to get job status message, trying again.")
+                await asyncio.sleep(1)
+            continue
         return True
 
     async def import_scp(self, file_path, targets="ALL"):
