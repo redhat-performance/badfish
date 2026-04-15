@@ -124,6 +124,7 @@ class TestExportSCP(TestBase):
             SCP_MESSAGE_PERCENTAGE % ("Ex", 45),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 60),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 90),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
             open(self.example_path, "r").read(),
