@@ -1,38 +1,38 @@
 name: Lint
 
 on:
-  pull_request:
-    types: [opened, edited]
-    branches: [development, master]
+    pull_request:
+        types: [opened, edited]
+        branches: [development, master]
 
-  push:
-    branches: [development, master]
+    push:
+        branches: [development, master]
 
 permissions:
     checks: write
 
 jobs:
-  run-linters:
-    name: Run linters
-    runs-on: ubuntu-latest
+    run-linters:
+        name: Run linters
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
+        steps:
+            - name: Check out Git repository
+              uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.12.12
+            - name: Set up Python
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.12.13
 
-      - name: Install Python dependencies
-        run: pip install black flake8
+            - name: Install Python dependencies
+              run: pip install black flake8
 
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          black: true
-          black_dir: src/
-          flake8: true
-          flake8_dir: src/
-          flake8_args: "--ignore D203,E501,E203,W503"
+            - name: Run linters
+              uses: wearerequired/lint-action@v2
+              with:
+                  black: true
+                  black_dir: src/
+                  flake8: true
+                  flake8_dir: src/
+                  flake8_args: "--ignore D203,E501,E203,W503"
