@@ -2165,7 +2165,6 @@ class Badfish:
             except (ValueError, AttributeError, KeyError):
                 self.logger.info("Unable to get job status message, trying again.")
                 await asyncio.sleep(1)
-            continue
         return True
 
     async def import_scp(self, file_path, targets="ALL"):
