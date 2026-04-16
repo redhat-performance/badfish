@@ -1,4 +1,5 @@
 import json
+import ssl
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -320,3 +321,145 @@ async def test_delete_session_paths_and_cleanup():
     client.delete_request = AsyncMock(side_effect=raise_exc)
     await client.delete_session()
     assert any("Failed to delete session" in m for m in logger.warn_msgs)
+
+
+# SSL Certificate Verification Tests
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_get_raw_ssl_error_raises(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.get_raw("https://x")
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_get_raw_ssl_error_continue_returns_none(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    resp = await client.get_raw("https://x", _continue=True)
+    assert resp is None
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_get_raw_client_connector_certificate_error_raises(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    # Simulate ClientConnectorCertificateError
+    mock_get.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.get_raw("https://x")
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.post", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_post_request_ssl_error_raises(mock_post):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.post_request("https://x", {}, {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.post")
+async def test_post_request_client_connector_certificate_error_raises(mock_post):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_post.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.post_request("https://x", {}, {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_patch_request_ssl_error_raises(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.patch_request("https://x", {}, {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_patch_request_ssl_error_continue_returns_none(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    resp = await client.patch_request("https://x", {}, {}, _continue=True)
+    assert resp is None
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch")
+async def test_patch_request_client_connector_certificate_error_raises(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_patch.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.patch_request("https://x", {}, {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.delete", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_delete_request_ssl_error_raises(mock_delete):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.delete_request("https://x", {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.delete")
+async def test_delete_request_client_connector_certificate_error_raises(mock_delete):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_delete.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.delete_request("https://x", {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_insecure_flag_sets_ssl_false(mock_get):
+    """Test that insecure=True properly disables SSL verification"""
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=True)
+    set_mock_response(mock_get, 200, "{}")
+    await client.get_raw("https://x")
+
+    # Check that ssl=False was passed
+    called_with_ssl_false = False
+    for args, kwargs in mock_get.call_args_list:
+        if kwargs.get("ssl") is False:
+            called_with_ssl_false = True
+            break
+    assert called_with_ssl_false, "insecure=True should set ssl=False"
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_secure_flag_sets_ssl_true(mock_get):
+    """Test that insecure=False properly enables SSL verification"""
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    set_mock_response(mock_get, 200, "{}")
+    await client.get_raw("https://x")
+
+    # Check that ssl=True was passed
+    called_with_ssl_true = False
+    for args, kwargs in mock_get.call_args_list:
+        if kwargs.get("ssl") is True:
+            called_with_ssl_true = True
+            break
+    assert called_with_ssl_true, "insecure=False should set ssl=True"
