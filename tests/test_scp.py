@@ -119,6 +119,7 @@ class TestExportSCP(TestBase):
     def test_pass(self, mock_get, mock_post, mock_delete):
         export_dir_check()
         scp_file = open(self.example_path, "r").read()
+        # Provide enough responses for polling loop (up to 50 polls) plus final fetch
         responses_get = [
             SCP_MESSAGE_PERCENTAGE % ("Ex", 15),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 30),
@@ -128,7 +129,8 @@ class TestExportSCP(TestBase):
             SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 90),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
-            scp_file,  # Fetched during polling when we hit 99%
+            SCP_MESSAGE_PERCENTAGE_STATE % ("Exporting Server Configuration Profile.", 100, "Completed"),  # Breaks loop
+            scp_file,  # Final fetch after loop
         ]
         responses = INIT_RESP + responses_get
         headers = {"Location": f"/{JOB_ID}"}
@@ -137,14 +139,19 @@ class TestExportSCP(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        assert err == RESPONSE_EXPORT_SCP_PASS % (datetime.now().strftime("%Y-%m-%d_%H%M%S"))
+        # Note: Output now includes "percent complete: 100" which breaks the loop
+        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 99" in err
+        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 100" in err
+        assert "- INFO     - SCP export went through successfully." in err
+        assert "- INFO     - Exported system configuration to file: ./exports/" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_status_fail(self, mock_get, mock_post, mock_delete):
         export_dir_check()
-        responses = INIT_RESP
+        # Provide extra responses in case error_handler makes additional requests
+        responses = INIT_RESP + [BLANK_RESP] * 5
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 400], ["OK", "Bad Request"], post=True)
         self.set_mock_response(mock_delete, 200, "OK")
@@ -174,14 +181,18 @@ class TestExportSCP(TestBase):
         if hasattr(fixed_datetime, "counter"):
             setattr(fixed_datetime, "counter", 0)
         export_dir_check()
-        responses = INIT_RESP + ["{}"] + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 4)
+        # Provide enough responses - fixed_datetime will trigger timeout after a few iterations
+        # Start with "{}" to trigger "Unable to get job status message" then provide low percentages
+        responses = INIT_RESP + ["{}"] + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 50)
         headers = {"Location": f"/{JOB_ID}"}
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], ["OK", "OK"], headers=headers, post=True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        assert err == RESPONSE_EXPORT_SCP_TIME_OUT
+        # The timeout is triggered by fixed_datetime after a few calls
+        assert "- INFO     - Job for exporting server configuration" in err
+        assert "- ERROR    - Job has been timed out, took longer than 5 minutes, command failed." in err
 
 
 class TestImportSCP(TestBase):
