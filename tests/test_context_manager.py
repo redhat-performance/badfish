@@ -124,6 +124,22 @@ class TestContextManager:
                 mock_delete.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_badfish_factory_without_logger(self):
+        """Test badfish_factory creates a default logger when none is provided."""
+        with patch.object(Badfish, "init", new_callable=AsyncMock) as mock_init:
+            with patch.object(Badfish, "delete_session", new_callable=AsyncMock):
+                # Call badfish_factory WITHOUT a logger argument
+                badfish = await badfish_factory(MOCK_HOST, MOCK_USERNAME, MOCK_PASSWORD)
+
+                assert isinstance(badfish, Badfish)
+                assert badfish.host == MOCK_HOST
+                assert badfish.username == MOCK_USERNAME
+                assert badfish.password == MOCK_PASSWORD
+                # Verify a logger was created
+                assert badfish.logger is not None
+                mock_init.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_context_manager_session_cleanup(self):
         """Test that session cleanup happens even with exceptions."""
         logger = MockLogger()

@@ -1136,6 +1136,12 @@ SCP_MESSAGE_PERCENTAGE_STATE = """\
     }
 }
 """
+SCP_EXPORT_JOB_FAILED = """\
+{
+    "JobState": "Failed",
+    "Message": "Export operation failed due to internal error"
+}
+"""
 
 # TEST SCP RESPONSES
 RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = """\
@@ -1164,6 +1170,12 @@ RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
 - INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
 - INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
 - ERROR    - Export job completed but SystemConfiguration not found in response.
+"""
+RESPONSE_EXPORT_SCP_JOB_FAILED = f"""\
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- ERROR    - Export job failed with state: Failed
+- ERROR    - Message: Export operation failed due to internal error
 """
 RESPONSE_IMPORT_SCP_INVALID_FILEPATH = "- ERROR    - File doesn't exist or couldn't be opened.\n"
 RESPONSE_IMPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to import system configuration.\n"
