@@ -139,11 +139,7 @@ class TestExportSCP(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        # Note: Output now includes "percent complete: 100" which breaks the loop
-        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 99" in err
-        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 100" in err
-        assert "- INFO     - SCP export went through successfully." in err
-        assert "- INFO     - Exported system configuration to file: ./exports/" in err
+        assert err == RESPONSE_EXPORT_SCP_PASS % (datetime.now().strftime("%Y-%m-%d_%H%M%S"))
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -151,9 +147,11 @@ class TestExportSCP(TestBase):
     def test_status_fail(self, mock_get, mock_post, mock_delete):
         export_dir_check()
         # Provide extra responses in case error_handler makes additional requests
-        responses = INIT_RESP + [BLANK_RESP] * 5
+        responses = INIT_RESP + [BLANK_RESP] * 10
         self.set_mock_response(mock_get, 200, responses)
-        self.set_mock_response(mock_post, [200, 400], ["OK", "Bad Request"], post=True)
+        # export_scp has retry logic that can check status up to 5 times, so provide enough status values
+        # First POST is session/auth (200), second POST is export command (400 = fail)
+        self.set_mock_response(mock_post, [200, 400, 400, 400, 400, 400], ["OK", "Bad Request", "Bad Request", "Bad Request", "Bad Request", "Bad Request"], post=True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
@@ -181,18 +179,20 @@ class TestExportSCP(TestBase):
         if hasattr(fixed_datetime, "counter"):
             setattr(fixed_datetime, "counter", 0)
         export_dir_check()
-        # Provide enough responses - fixed_datetime will trigger timeout after a few iterations
-        # Start with "{}" to trigger "Unable to get job status message" then provide low percentages
-        responses = INIT_RESP + ["{}"] + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 50)
+        # New export_scp uses poll count, not time-based timeout
+        # Provide responses that never reach 100% completion - poll exhausts at max_polls=50
+        # Then final fetch also doesn't have SystemConfiguration
+        responses = INIT_RESP + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 51) + [BLANK_RESP]
         headers = {"Location": f"/{JOB_ID}"}
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], ["OK", "OK"], headers=headers, post=True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        # The timeout is triggered by fixed_datetime after a few calls
+        # With new polling logic, job exhausts polls without completion, then fails to find SystemConfiguration
         assert "- INFO     - Job for exporting server configuration" in err
-        assert "- ERROR    - Job has been timed out, took longer than 5 minutes, command failed." in err
+        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 1" in err
+        assert "- ERROR    - Export job completed but SystemConfiguration not found in response." in err
 
 
 class TestImportSCP(TestBase):

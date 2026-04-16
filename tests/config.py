@@ -1153,7 +1153,7 @@ RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = "- ERROR    - iDRAC on this system do
 RESPONSE_GET_SCP_TARGETS_WRONG = "- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
 
 RESPONSE_EXPORT_SCP_PASS = f"""\
-- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
 - INFO     - Exporting Server Configuration Profile., percent complete: 15
 - INFO     - Exporting Server Configuration Profile., percent complete: 30
 - INFO     - Exporting Server Configuration Profile., percent complete: 45
@@ -1161,10 +1161,11 @@ RESPONSE_EXPORT_SCP_PASS = f"""\
 - INFO     - Exporting Server Configuration Profile., percent complete: 75
 - INFO     - Exporting Server Configuration Profile., percent complete: 90
 - INFO     - Exporting Server Configuration Profile., percent complete: 99
-- INFO     - SCP export went through successfully.
+- INFO     - Exporting Server Configuration Profile., percent complete: 100
+- INFO     - SCP export completed successfully.
 - INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
 """
-RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration.\n"
+RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration. Status code: 400\n- ERROR    - Error reading response from host.\n"
 RESPONSE_EXPORT_SCP_NO_LOCATION = "- ERROR    - Failed to find a job ID in headers of the response.\n"
 RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
 - INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}

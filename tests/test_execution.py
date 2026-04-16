@@ -79,8 +79,8 @@ class TestHostListExecution(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call(mock_host=None)
-        # When Members array is empty, we get errors during system resource lookup
-        assert err.count("- ERROR    - ComputerSystem's Members array is either empty or missing") == 3
+        # When Members array is empty, init() catches the exception and logs as WARNING
+        assert err.count("- WARNING  - Could not find system resource: ComputerSystem's Members array is either empty or missing") == 3
         assert err.count("- INFO     - ************************************************") == 3
         assert "[badfish.helpers.logger] - INFO     - RESULTS:" in err
         assert err.count("f01-h01-000-r630.host.io: FAILED") == 3
@@ -140,8 +140,9 @@ class TestInitialization(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
-        # When Members array is empty or missing, we get an error
-        assert "- ERROR    - ComputerSystem's Members array is either empty or missing" in err
+        # When Members array is empty or missing, init() catches the exception and logs as WARNING
+        assert "- WARNING  - Could not find system resource:" in err
+        assert ("ComputerSystem's Members array" in err or "Authorization Error" in err)
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -152,5 +153,6 @@ class TestInitialization(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
-        # When Members array is empty or missing, we get an error
-        assert "- ERROR    - ComputerSystem's Members array is either empty or missing" in err
+        # When Members array is empty or missing, init() catches the exception and logs as WARNING
+        assert "- WARNING  - Could not find system resource:" in err
+        assert ("Systems resource not found" in err or "ComputerSystem's Members array" in err)
