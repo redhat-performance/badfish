@@ -2158,80 +2158,111 @@ class Badfish:
         self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
 
         # Poll for job completion with lightweight checks
-        # Note: iDRAC API status can be stale/cached, but we poll to consume test mocks
-        # and provide progress feedback. We don't strictly rely on status for completion.
+        # Note: iDRAC API has a caching bug - status can be stale and stuck at low percentages
+        # The actual job completes much faster than the API reports
+        # Strategy: Poll for progress feedback, but don't wait too long before checking for data
         start_time = get_now()
         percentage = 0
         poll_count = 0
-        max_polls = 50  # ~50 seconds with 1s sleeps
+        max_polls = 60  # Poll for ~1 minute, then start checking for data
         fail_states = ["Failed", "CompletedWithErrors"]
+        max_time_minutes = 30
+        stuck_count = 0  # Count how many times percentage doesn't change
+        max_stuck = 10  # If stuck for 10 polls, stop waiting for status updates
 
-        # First try Jobs endpoint (newer, cleaner API)
-        base_uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, job_id)
-        use_tasks_endpoint = False
+        # Tasks endpoint is where SystemConfiguration appears
+        tasks_uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
+
+        data = {}  # Initialize to avoid NameError if loop exits early
 
         while poll_count < max_polls:
+            # Check time-based timeout as well
+            elapsed = get_now() - start_time
+            if str(elapsed)[0:7] >= f"0:{max_time_minutes:02d}:00":
+                self.logger.error(f"Export job timed out after {max_time_minutes} minutes")
+                return False
             poll_count += 1
-            uri = base_uri
-            response = await self.get_request(uri)
+            response = await self.get_request(tasks_uri)
             raw = await response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
+            try:
+                data = json.loads(raw.strip())
+            except (json.JSONDecodeError, ValueError):
+                self.logger.debug(f"Poll {poll_count}: JSON parse error, retrying...")
+                await asyncio.sleep(1)
+                continue
 
-            # Check which endpoint format we're using
+            # Skip if data isn't a dict (malformed response)
+            if not isinstance(data, dict):
+                self.logger.debug(f"Poll {poll_count}: Got non-dict response, retrying...")
+                await asyncio.sleep(1)
+                continue
+
+            # Check if we have SystemConfiguration already (job finished and data ready)
+            if "SystemConfiguration" in data:
+                self.logger.info("Export job completed with configuration data available")
+                break
+
+            # Check status from Tasks endpoint (Oem.Dell format)
             if "Oem" in data and "Dell" in data["Oem"]:
-                # Old Tasks endpoint format - data under Oem.Dell
-                use_tasks_endpoint = True
                 try:
                     current_pct = int(data["Oem"]["Dell"].get("PercentComplete", 0))
                     job_state = data["Oem"]["Dell"].get("JobState")
                     message = data["Oem"]["Dell"].get("Message", "")
 
-                    if current_pct > percentage:
+                    # Track if we're stuck at the same percentage (iDRAC caching bug)
+                    if current_pct == percentage:
+                        stuck_count += 1
+                        if stuck_count >= max_stuck:
+                            self.logger.warning(f"Status stuck at {percentage}% for {max_stuck} polls (iDRAC caching bug), checking for completion...")
+                            break
+                    else:
+                        stuck_count = 0  # Reset if percentage changed
                         percentage = current_pct
                         self.logger.info(f"{message}, percent complete: {percentage}")
 
-                    # Check for completion or failure
-                    if job_state in fail_states:
-                        self.logger.error(f"Export job failed with state: {job_state}")
-                        return False
-                    elif job_state == "Completed" or percentage == 100:
-                        break
-                except (KeyError, ValueError):
-                    pass
-            else:
-                # New Jobs endpoint format - data at root level
-                try:
-                    current_pct = int(data.get("PercentComplete", 0))
-                    job_state = data.get("JobState")
-
-                    if current_pct > percentage:
-                        percentage = current_pct
-                        message = data.get("Message", "Exporting")
-                        self.logger.info(f"{message}, percent complete: {percentage}")
+                    # Log progress every 10 polls even if percentage hasn't changed
+                    if poll_count % 10 == 0:
+                        self.logger.debug(f"Poll {poll_count}: Status={job_state}, Percent={current_pct}%")
 
                     # Check for failure
                     if job_state in fail_states:
-                        print(f"- ERROR    - Export job failed with state: {job_state}", flush=True)
                         self.logger.error(f"Export job failed with state: {job_state}")
                         return False
-
-                    # Don't trust JobState==Completed due to iDRAC caching, but check anyway
-                    if job_state == "Completed" or percentage == 100:
-                        # Wait a bit more to ensure data is ready
-                        await asyncio.sleep(2)
-                        break
-                except (KeyError, ValueError):
-                    pass
+                except (KeyError, ValueError) as e:
+                    self.logger.debug(f"Poll {poll_count}: Error parsing status - {e}")
 
             await asyncio.sleep(1)
 
-        # Check if we already have SystemConfiguration from the last poll
-        # If not, fetch the final result one more time
+        # The job likely completed faster than the API reports (iDRAC caching bug)
+        # Aggressively check for SystemConfiguration in the Tasks endpoint
+        # The actual export data appears here even when status shows incomplete
         if "SystemConfiguration" not in data:
-            uri = base_uri
-            response = await self.get_request(uri)
-            raw = await response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
+            print("- INFO     - Checking for exported configuration data...", flush=True)
+            self.logger.info("Polling complete, checking for exported configuration data...")
+
+            max_retries = 120  # Try for up to ~10 minutes (increasing delays)
+            for retry in range(max_retries):
+                # Increasing delays: 1, 2, 3, 4, 5, 5, 5... (cap at 5 seconds)
+                delay = min(1 + retry, 5)
+                await asyncio.sleep(delay)
+
+                try:
+                    response = await self.get_request(tasks_uri)
+                    raw = await response.text("utf-8", "ignore")
+                    data = json.loads(raw.strip())
+
+                    if isinstance(data, dict) and "SystemConfiguration" in data:
+                        self.logger.info(f"Found SystemConfiguration after {retry + 1} attempts")
+                        break
+
+                    # Log progress every 20 attempts to show we're still working
+                    if retry % 20 == 0 and retry > 0:
+                        elapsed = get_now() - start_time
+                        self.logger.info(f"Still waiting for configuration data (attempt {retry + 1}/{max_retries}, elapsed: {elapsed})...")
+
+                    self.logger.debug(f"Attempt {retry + 1}/{max_retries}: SystemConfiguration not yet available")
+                except (json.JSONDecodeError, ValueError) as e:
+                    self.logger.debug(f"Attempt {retry + 1}/{max_retries}: JSON parse error - {e}")
 
         # Save the exported configuration
         if "SystemConfiguration" in data:

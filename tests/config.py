@@ -1159,9 +1159,9 @@ RESPONSE_EXPORT_SCP_PASS = f"""\
 - INFO     - Exporting Server Configuration Profile., percent complete: 45
 - INFO     - Exporting Server Configuration Profile., percent complete: 60
 - INFO     - Exporting Server Configuration Profile., percent complete: 75
-- INFO     - Exporting Server Configuration Profile., percent complete: 90
-- INFO     - Exporting Server Configuration Profile., percent complete: 99
-- INFO     - Exporting Server Configuration Profile., percent complete: 100
+- WARNING  - Status stuck at 75%% for 10 polls (iDRAC caching bug), checking for completion...
+- INFO     - Polling complete, checking for exported configuration data...
+- INFO     - Found SystemConfiguration after 3 attempts
 - INFO     - SCP export completed successfully.
 - INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
 """

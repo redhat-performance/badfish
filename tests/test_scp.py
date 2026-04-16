@@ -119,18 +119,28 @@ class TestExportSCP(TestBase):
     def test_pass(self, mock_get, mock_post, mock_delete):
         export_dir_check()
         scp_file = open(self.example_path, "r").read()
-        # Provide enough responses for polling loop (up to 50 polls) plus final fetch
+        # Simulate: job gets stuck at 75%, but SystemConfiguration appears after a few retries
+        # Polling responses (will break early when stuck is detected after ~10 same-percentage polls)
         responses_get = [
             SCP_MESSAGE_PERCENTAGE % ("Ex", 15),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 30),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 45),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 60),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),  # Stuck at 75%
             SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 90),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),  # 10th stuck poll - breaks here
+            # Retry fetch responses - first few don't have data, then it appears
             SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
-            SCP_MESSAGE_PERCENTAGE_STATE % ("Exporting Server Configuration Profile.", 100, "Completed"),  # Breaks loop
-            scp_file,  # Final fetch after loop
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
+            scp_file,  # Configuration data appears on 3rd retry
         ]
         responses = INIT_RESP + responses_get
         headers = {"Location": f"/{JOB_ID}"}
@@ -179,19 +189,21 @@ class TestExportSCP(TestBase):
         if hasattr(fixed_datetime, "counter"):
             setattr(fixed_datetime, "counter", 0)
         export_dir_check()
-        # New export_scp uses poll count, not time-based timeout
-        # Provide responses that never reach 100% completion - poll exhausts at max_polls=50
-        # Then final fetch also doesn't have SystemConfiguration
-        responses = INIT_RESP + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 51) + [BLANK_RESP]
+        # Test scenario: Job gets stuck at 10%, breaks early due to stuck detection
+        # Then all retry attempts fail to find SystemConfiguration
+        # Need enough responses: INIT (5) + stuck polling (~15) + retry attempts (120)
+        stuck_responses = [SCP_MESSAGE_PERCENTAGE % ("Ex", 10)] * 20  # Stuck at 10%
+        retry_responses = [SCP_MESSAGE_PERCENTAGE % ("Ex", 99)] * 125  # Retries without data (120 + buffer)
+        responses = INIT_RESP + stuck_responses + retry_responses
         headers = {"Location": f"/{JOB_ID}"}
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], ["OK", "OK"], headers=headers, post=True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        # With new polling logic, job exhausts polls without completion, then fails to find SystemConfiguration
+        # Should see stuck warning, then eventual failure to find configuration
         assert "- INFO     - Job for exporting server configuration" in err
-        assert "- INFO     - Exporting Server Configuration Profile., percent complete: 1" in err
+        assert ("stuck at 10%" in err or "- INFO     - Exporting Server Configuration Profile., percent complete: 10" in err)
         assert "- ERROR    - Export job completed but SystemConfiguration not found in response." in err
 
 
