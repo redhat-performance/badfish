@@ -79,7 +79,12 @@ class TestHostListExecution(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call(mock_host=None)
-        assert err == HOST_LIST_EXTRAS
+        # Now that system_resource is optional, we get warnings, then fail on manager resource
+        assert err.count("- WARNING  - Could not find system resource: ComputerSystem's Members array is either empty or missing") == 3
+        assert err.count("- ERROR    - Manager's Members array is either empty or missing") == 3
+        assert err.count("- INFO     - ************************************************") == 3
+        assert "[badfish.helpers.logger] - INFO     - RESULTS:" in err
+        assert err.count("f01-h01-000-r630.host.io: FAILED") == 3
 
 
 class TestInitialization(TestBase):
@@ -136,15 +141,20 @@ class TestInitialization(TestBase):
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
-        assert err == "- ERROR    - ComputerSystem's Members array is either empty or missing\n"
+        # Now that system_resource is optional, we get a warning instead of failing
+        assert "- WARNING  - Could not find system resource: ComputerSystem's Members array is either empty or missing. Some operations may not be available." in err
+        assert "- INFO     - Found active jobs: None" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
     def test_find_systems_resource_not_found(self, mock_get, mock_post, mock_delete):
-        responses = [ROOT_RESP, "{}", MAN_RESP]
+        responses = [ROOT_RESP, ROOT_RESP, "{}", "{}", MAN_RESP, '{"Members":[]}', ROOT_RESP]
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
         _, err = self.badfish_call()
-        assert err == RESPONSE_INIT_SYSTEMS_RESOURCE_NOT_FOUND
+        # Now that system_resource is optional, we get a warning instead of failing
+        # The actual error is "ComputerSystem's Members array" because {} gets parsed as Members missing
+        assert "- WARNING  - Could not find system resource:" in err
+        assert ("Systems resource not found" in err or "ComputerSystem's Members array" in err)

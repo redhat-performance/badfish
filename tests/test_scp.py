@@ -118,6 +118,7 @@ class TestExportSCP(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_pass(self, mock_get, mock_post, mock_delete):
         export_dir_check()
+        scp_file = open(self.example_path, "r").read()
         responses_get = [
             SCP_MESSAGE_PERCENTAGE % ("Ex", 15),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 30),
@@ -127,7 +128,7 @@ class TestExportSCP(TestBase):
             SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 90),
             SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
-            open(self.example_path, "r").read(),
+            scp_file,  # Fetched during polling when we hit 99%
         ]
         responses = INIT_RESP + responses_get
         headers = {"Location": f"/{JOB_ID}"}

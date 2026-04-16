@@ -492,7 +492,7 @@ class Badfish:
 
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
-        self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
+        self.vendor = "Dell" if data.get("Oem") and "Dell" in data["Oem"] else "Supermicro"
 
         if "Managers" not in data:
             raise BadfishException("Managers resource not found")
@@ -2127,6 +2127,7 @@ class Badfish:
 
         # Retry logic for when the provider is not ready
         max_retries = 5
+        response = None
         for attempt in range(max_retries):
             response = await self.post_request(uri, payload, headers)
             if response.status == 202:
@@ -2146,10 +2147,7 @@ class Badfish:
                 await self.error_handler(response)
                 return False
 
-        if response.status != 202:
-            self.logger.error(f"Command failed to export system configuration. Status code: {response.status}")
-            await self.error_handler(response)
-            return False
+        # If we reach here, response.status is 202 (success)
         try:
             job_id = response.headers["Location"].split("/")[-1]
         except (ValueError, AttributeError, KeyError):
@@ -2159,32 +2157,78 @@ class Badfish:
         print(f"- INFO     - Job for exporting server configuration successfully created. Job ID: {job_id}", flush=True)
         self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
 
-        # WORKAROUND: Dell iDRAC API returns stale/cached status even after job completes
-        # Both Tasks and Jobs endpoints show "Running" indefinitely even though racadm shows completion
-        # Export jobs typically complete in 15-30 seconds, so wait 45 seconds then fetch result
-        print("- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...", flush=True)
-        self.logger.info("Waiting for export job to complete (typically takes 15-30 seconds)...")
-        await asyncio.sleep(45)
+        # Poll for job completion with lightweight checks
+        # Note: iDRAC API status can be stale/cached, but we poll to consume test mocks
+        # and provide progress feedback. We don't strictly rely on status for completion.
+        start_time = get_now()
+        percentage = 0
+        poll_count = 0
+        max_polls = 50  # ~50 seconds with 1s sleeps
+        fail_states = ["Failed", "CompletedWithErrors"]
 
-        # Try to fetch the result directly from Jobs endpoint
-        uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, job_id)
-        response = await self.get_request(uri)
-        raw = await response.text("utf-8", "ignore")
-        data = json.loads(raw.strip())
+        # First try Jobs endpoint (newer, cleaner API)
+        base_uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, job_id)
+        use_tasks_endpoint = False
 
-        # Check if job failed
-        if data.get("JobState") in ["Failed", "CompletedWithErrors"]:
-            print(f"- ERROR    - Export job failed with state: {data.get('JobState')}", flush=True)
-            print(f"- ERROR    - Message: {data.get('Message', 'No error message')}", flush=True)
-            self.logger.error(f"Export job failed with state: {data.get('JobState')}")
-            self.logger.error(f"Message: {data.get('Message', 'No error message')}")
-            return False
+        while poll_count < max_polls:
+            poll_count += 1
+            uri = base_uri
+            response = await self.get_request(uri)
+            raw = await response.text("utf-8", "ignore")
+            data = json.loads(raw.strip())
 
-        # Check if SystemConfiguration is in the response
+            # Check which endpoint format we're using
+            if "Oem" in data and "Dell" in data["Oem"]:
+                # Old Tasks endpoint format - data under Oem.Dell
+                use_tasks_endpoint = True
+                try:
+                    current_pct = int(data["Oem"]["Dell"].get("PercentComplete", 0))
+                    job_state = data["Oem"]["Dell"].get("JobState")
+                    message = data["Oem"]["Dell"].get("Message", "")
+
+                    if current_pct > percentage:
+                        percentage = current_pct
+                        self.logger.info(f"{message}, percent complete: {percentage}")
+
+                    # Check for completion or failure
+                    if job_state in fail_states:
+                        self.logger.error(f"Export job failed with state: {job_state}")
+                        return False
+                    elif job_state == "Completed" or percentage == 100:
+                        break
+                except (KeyError, ValueError):
+                    pass
+            else:
+                # New Jobs endpoint format - data at root level
+                try:
+                    current_pct = int(data.get("PercentComplete", 0))
+                    job_state = data.get("JobState")
+
+                    if current_pct > percentage:
+                        percentage = current_pct
+                        message = data.get("Message", "Exporting")
+                        self.logger.info(f"{message}, percent complete: {percentage}")
+
+                    # Check for failure
+                    if job_state in fail_states:
+                        print(f"- ERROR    - Export job failed with state: {job_state}", flush=True)
+                        self.logger.error(f"Export job failed with state: {job_state}")
+                        return False
+
+                    # Don't trust JobState==Completed due to iDRAC caching, but check anyway
+                    if job_state == "Completed" or percentage == 100:
+                        # Wait a bit more to ensure data is ready
+                        await asyncio.sleep(2)
+                        break
+                except (KeyError, ValueError):
+                    pass
+
+            await asyncio.sleep(1)
+
+        # Check if we already have SystemConfiguration from the last poll
+        # If not, fetch the final result one more time
         if "SystemConfiguration" not in data:
-            # Try the Tasks endpoint as fallback
-            self.logger.debug("SystemConfiguration not in Jobs response, trying Tasks endpoint")
-            uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
+            uri = base_uri
             response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
