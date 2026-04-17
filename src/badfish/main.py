@@ -878,6 +878,151 @@ class Badfish:
                 self.progress_bar(count, self.retries, data["Message"], prompt="Status")
                 await asyncio.sleep(30)
 
+    def _extract_job_id_from_response(self, response, warn_on_missing=True, context=""):
+        """
+        Extract job ID from HTTP response Location header.
+
+        Args:
+            response: HTTP response object with headers
+            warn_on_missing: If True, log warning when job ID not found. If False, log error.
+            context: Additional context message to append to warning/error (optional)
+
+        Returns:
+            Job ID string or None if not found
+        """
+        try:
+            job_id = response.headers.get("Location", "").split("/")[-1]
+            if job_id:
+                return job_id
+            else:
+                if warn_on_missing:
+                    msg = "No job ID returned in Location header."
+                    if context:
+                        msg += f" {context}"
+                    self.logger.warning(msg)
+                else:
+                    self.logger.error("Failed to find a job ID in headers of the response.")
+                return None
+        except (AttributeError, ValueError, KeyError) as e:
+            if warn_on_missing:
+                msg = f"Could not extract job ID from response headers: {e}"
+                if context:
+                    msg += f" {context}"
+                self.logger.warning(msg)
+            else:
+                self.logger.error(f"Failed to find a job ID in headers of the response: {e}")
+            return None
+
+    async def _verify_job_scheduled(self, job_id, context="configuration"):
+        """
+        Verify that a job has been scheduled and is not already failed.
+
+        This is typically called before rebooting to ensure the job is in a good state.
+
+        Args:
+            job_id: The job ID to verify
+            context: Description of the job context for error messages (default: "configuration")
+
+        Returns:
+            True if job is scheduled successfully, False if job failed or inaccessible
+        """
+        self.logger.info(f"Waiting for {context} job to be scheduled...")
+        # Give job a moment to register in job queue
+        await asyncio.sleep(2)
+
+        # Check job status to ensure it's scheduled properly
+        job_url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+        try:
+            job_response = await self.get_request(job_url)
+            if job_response.status == 200:
+                job_raw = await job_response.text("utf-8", "ignore")
+                job_data = json.loads(job_raw.strip())
+                job_state = job_data.get("JobState", "Unknown")
+                job_message = job_data.get("Message", "No message")
+                self.logger.info(f"Job {job_id} status: {job_state} - {job_message}")
+
+                if "Fail" in job_message or "fail" in job_message or job_state == "Failed":
+                    self.logger.error(f"{context.capitalize()} job failed before reboot: {job_message}")
+                    return False
+                return True
+            else:
+                self.logger.warning(
+                    f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot."
+                )
+                return True  # Don't block on verification failure
+        except Exception as e:
+            self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")
+            return True  # Don't block on verification failure
+
+    async def _monitor_and_verify_attribute_job(
+        self, job_id, fqdd, attribute, expected_value, attr_type, original_value
+    ):
+        """
+        Monitor job completion and verify the attribute value was actually applied.
+
+        This handles the full post-reboot workflow:
+        1. Wait for job to complete
+        2. If job fails, still verify the actual value (detect false negatives)
+        3. If job succeeds, verify the value matches expectation
+
+        Args:
+            job_id: The job ID to monitor
+            fqdd: NIC FQDD (e.g., "NIC.Embedded.1-1-1")
+            attribute: Attribute name (e.g., "WakeOnLan")
+            expected_value: Expected value after change
+            attr_type: Attribute type ("Integer", "String", "Enumeration")
+            original_value: Original value before change (for logging)
+
+        Returns:
+            True if value was successfully applied, False otherwise
+        """
+        self.logger.info(f"Monitoring job {job_id} for completion...")
+        job_success = await self.check_job_status(job_id)
+
+        # Job reported failure - but still verify actual value to detect false negatives
+        if job_success is False:
+            self.logger.error(f"Configuration job {job_id} did not complete successfully.")
+            self.logger.error("Network attribute changes may not have been applied.")
+
+            verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+            if verification:
+                current_val = verification.get("CurrentValue")
+                if current_val == expected_value:
+                    self.logger.warning(
+                        f"Job reported failure but attribute value is correct ({attribute}={current_val}). "
+                        "This may be a false negative."
+                    )
+                    return True
+            return False
+
+        # Job succeeded - verify attribute value actually changed
+        self.logger.info("Verifying attribute value was applied...")
+        verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+        if verification:
+            current_val = verification.get("CurrentValue")
+            # Handle type conversion for comparison
+            if attr_type == "Integer":
+                current_val = int(current_val) if current_val is not None else None
+                expected_value = int(expected_value)
+
+            if current_val == expected_value:
+                self.logger.info(
+                    f"✓ Successfully changed {attribute} from {original_value} to {expected_value}"
+                )
+                return True
+            else:
+                self.logger.error(
+                    f"✗ Attribute value did not persist. Expected: {expected_value}, Current: {current_val}"
+                )
+                self.logger.error(
+                    "Job completed but value not applied. Possible causes: "
+                    "prerequisite not met, validation failure, or firmware issue."
+                )
+                return False
+        else:
+            self.logger.error("Could not verify final attribute value.")
+            return False
+
     async def send_reset(self, reset_type):
         _url = "%s%s/Actions/ComputerSystem.Reset" % (
             self.host_uri,
@@ -2129,10 +2274,9 @@ class Badfish:
         if response.status != 202:
             self.logger.error("Command failed to export system configuration.")
             return False
-        try:
-            job_id = response.headers["Location"].split("/")[-1]
-        except (ValueError, AttributeError, KeyError):
-            self.logger.error("Failed to find a job ID in headers of the response.")
+
+        job_id = self._extract_job_id_from_response(response, warn_on_missing=False)
+        if not job_id:
             return False
 
         self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
@@ -2198,11 +2342,11 @@ class Badfish:
         if response.status != 202:
             self.logger.error("Command failed to import system configuration.")
             return False
-        try:
-            job_id = response.headers["Location"].split("/")[-1]
-        except (ValueError, AttributeError, KeyError):
-            self.logger.error("Failed to find a job ID in headers of the response.")
+
+        job_id = self._extract_job_id_from_response(response, warn_on_missing=False)
+        if not job_id:
             return False
+
         self.logger.info(f"Job for importing server configuration, successfully created. Job ID: {job_id}")
         start_time = get_now()
         percentage = 0
@@ -2439,17 +2583,11 @@ class Badfish:
 
                     # Extract job ID from response headers (DMTF Redfish DSP0266 §13.6)
                     # HTTP 202 indicates async operation with job creation
-                    try:
-                        job_id = response.headers.get("Location", "").split("/")[-1]
-                        if job_id:
-                            self.logger.info(f"Network attribute configuration job created: {job_id}")
-                        else:
-                            self.logger.warning(
-                                "No job ID returned in Location header. Changes may not persist after reboot."
-                            )
-                    except (AttributeError, ValueError, KeyError) as e:
-                        self.logger.warning(f"Could not extract job ID from response headers: {e}")
-                        self.logger.warning("Proceeding without job monitoring - changes may not persist.")
+                    job_id = self._extract_job_id_from_response(
+                        response, warn_on_missing=True, context="Changes may not persist after reboot."
+                    )
+                    if job_id:
+                        self.logger.info(f"Network attribute configuration job created: {job_id}")
 
                     break
                 else:
@@ -2478,82 +2616,20 @@ class Badfish:
             self.logger.error("Was unable to set a network attribute.")
             return False
 
-        # Monitor job status before reboot (if job was created)
+        # Verify job is scheduled before reboot (if job was created)
         if job_id:
-            self.logger.info("Waiting for configuration job to be scheduled...")
-            # Give job a moment to register in job queue
-            await asyncio.sleep(2)
-
-            # Check job status to ensure it's scheduled properly
-            # Note: check_job_status waits for "Job completed successfully" which won't
-            # happen until after reboot, so we just verify job exists and is accessible
-            job_url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
-            try:
-                job_response = await self.get_request(job_url)
-                if job_response.status == 200:
-                    job_raw = await job_response.text("utf-8", "ignore")
-                    job_data = json.loads(job_raw.strip())
-                    job_state = job_data.get("JobState", "Unknown")
-                    job_message = job_data.get("Message", "No message")
-                    self.logger.info(f"Job {job_id} status: {job_state} - {job_message}")
-
-                    if "Fail" in job_message or "fail" in job_message or job_state == "Failed":
-                        self.logger.error(f"Configuration job failed before reboot: {job_message}")
-                        return False
-                else:
-                    self.logger.warning(f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot.")
-            except Exception as e:
-                self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")
+            job_scheduled = await self._verify_job_scheduled(job_id, context="configuration")
+            if not job_scheduled:
+                return False
 
         # Reboot server to apply pending configuration
         await self.reboot_server()
 
-        # Monitor job completion after reboot (if job was created)
+        # Monitor job completion and verify attribute change (if job was created)
         if job_id:
-            self.logger.info(f"Monitoring job {job_id} for completion...")
-            job_success = await self.check_job_status(job_id)
-
-            if job_success is False:
-                self.logger.error(f"Configuration job {job_id} did not complete successfully.")
-                self.logger.error("Network attribute changes may not have been applied.")
-
-                # Still verify the attribute value to confirm
-                verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
-                if verification:
-                    current_val = verification.get("CurrentValue")
-                    if current_val == value:
-                        self.logger.warning(
-                            f"Job reported failure but attribute value is correct ({attribute}={current_val}). "
-                            "This may be a false negative."
-                        )
-                        return True
-                return False
-
-            # Verify attribute value actually changed (query current resource, not Settings)
-            self.logger.info("Verifying attribute value was applied...")
-            verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
-            if verification:
-                current_val = verification.get("CurrentValue")
-                # Handle type conversion for comparison
-                if type == "Integer":
-                    current_val = int(current_val) if current_val is not None else None
-                    value = int(value)
-
-                if current_val == value:
-                    self.logger.info(f"✓ Successfully changed {attribute} from {attr_info.get('CurrentValue')} to {value}")
-                    return True
-                else:
-                    self.logger.error(
-                        f"✗ Attribute value did not persist. Expected: {value}, Current: {current_val}"
-                    )
-                    self.logger.error(
-                        "Job completed but value not applied. Possible causes: "
-                        "prerequisite not met, validation failure, or firmware issue."
-                    )
-                    return False
-            else:
-                self.logger.error("Could not verify final attribute value.")
-                return False
+            return await self._monitor_and_verify_attribute_job(
+                job_id, fqdd, attribute, value, type, attr_info.get("CurrentValue")
+            )
         else:
             # No job ID - can't monitor, but still return True since PATCH succeeded
             self.logger.warning(
