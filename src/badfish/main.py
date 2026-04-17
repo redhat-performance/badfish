@@ -2428,12 +2428,29 @@ class Badfish:
             "Attributes": {attribute: value},
         }
         first_reset = False
+        job_id = None
+
         try:
             for i in range(self.retries):
                 response = await self.patch_request(uri, payload, headers)
                 status_code = response.status
                 if status_code in [200, 202]:
                     self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
+
+                    # Extract job ID from response headers (DMTF Redfish DSP0266 §13.6)
+                    # HTTP 202 indicates async operation with job creation
+                    try:
+                        job_id = response.headers.get("Location", "").split("/")[-1]
+                        if job_id:
+                            self.logger.info(f"Network attribute configuration job created: {job_id}")
+                        else:
+                            self.logger.warning(
+                                "No job ID returned in Location header. Changes may not persist after reboot."
+                            )
+                    except (AttributeError, ValueError, KeyError) as e:
+                        self.logger.warning(f"Could not extract job ID from response headers: {e}")
+                        self.logger.warning("Proceeding without job monitoring - changes may not persist.")
+
                     break
                 else:
                     self.logger.error(
@@ -2459,8 +2476,91 @@ class Badfish:
                     return False
         except (AttributeError, ValueError):
             self.logger.error("Was unable to set a network attribute.")
+            return False
 
+        # Monitor job status before reboot (if job was created)
+        if job_id:
+            self.logger.info("Waiting for configuration job to be scheduled...")
+            # Give job a moment to register in job queue
+            await asyncio.sleep(2)
+
+            # Check job status to ensure it's scheduled properly
+            # Note: check_job_status waits for "Job completed successfully" which won't
+            # happen until after reboot, so we just verify job exists and is accessible
+            job_url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+            try:
+                job_response = await self.get_request(job_url)
+                if job_response.status == 200:
+                    job_raw = await job_response.text("utf-8", "ignore")
+                    job_data = json.loads(job_raw.strip())
+                    job_state = job_data.get("JobState", "Unknown")
+                    job_message = job_data.get("Message", "No message")
+                    self.logger.info(f"Job {job_id} status: {job_state} - {job_message}")
+
+                    if "Fail" in job_message or "fail" in job_message or job_state == "Failed":
+                        self.logger.error(f"Configuration job failed before reboot: {job_message}")
+                        return False
+                else:
+                    self.logger.warning(f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot.")
+            except Exception as e:
+                self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")
+
+        # Reboot server to apply pending configuration
         await self.reboot_server()
+
+        # Monitor job completion after reboot (if job was created)
+        if job_id:
+            self.logger.info(f"Monitoring job {job_id} for completion...")
+            job_success = await self.check_job_status(job_id)
+
+            if job_success is False:
+                self.logger.error(f"Configuration job {job_id} did not complete successfully.")
+                self.logger.error("Network attribute changes may not have been applied.")
+
+                # Still verify the attribute value to confirm
+                verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+                if verification:
+                    current_val = verification.get("CurrentValue")
+                    if current_val == value:
+                        self.logger.warning(
+                            f"Job reported failure but attribute value is correct ({attribute}={current_val}). "
+                            "This may be a false negative."
+                        )
+                        return True
+                return False
+
+            # Verify attribute value actually changed (query current resource, not Settings)
+            self.logger.info("Verifying attribute value was applied...")
+            verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+            if verification:
+                current_val = verification.get("CurrentValue")
+                # Handle type conversion for comparison
+                if type == "Integer":
+                    current_val = int(current_val) if current_val is not None else None
+                    value = int(value)
+
+                if current_val == value:
+                    self.logger.info(f"✓ Successfully changed {attribute} from {attr_info.get('CurrentValue')} to {value}")
+                    return True
+                else:
+                    self.logger.error(
+                        f"✗ Attribute value did not persist. Expected: {value}, Current: {current_val}"
+                    )
+                    self.logger.error(
+                        "Job completed but value not applied. Possible causes: "
+                        "prerequisite not met, validation failure, or firmware issue."
+                    )
+                    return False
+            else:
+                self.logger.error("Could not verify final attribute value.")
+                return False
+        else:
+            # No job ID - can't monitor, but still return True since PATCH succeeded
+            self.logger.warning(
+                "Configuration change submitted but job monitoring was not possible. "
+                "Please manually verify attribute value persisted after reboot."
+            )
+            return True
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
