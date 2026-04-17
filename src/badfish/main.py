@@ -2135,13 +2135,11 @@ class Badfish:
             self.logger.error("Failed to find a job ID in headers of the response.")
             return False
 
-        print(f"- INFO     - Job for exporting server configuration successfully created. Job ID: {job_id}", flush=True)
         self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
 
         # WORKAROUND: Dell iDRAC API returns stale/cached status even after job completes
         # Both Tasks and Jobs endpoints show "Running" indefinitely even though racadm shows completion
         # Export jobs typically complete in 15-30 seconds, so wait 45 seconds then fetch result
-        print("- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...", flush=True)
         self.logger.info("Waiting for export job to complete (typically takes 15-30 seconds)...")
         await asyncio.sleep(45)
 
@@ -2153,8 +2151,6 @@ class Badfish:
 
         # Check if job failed
         if data.get("JobState") in ["Failed", "CompletedWithErrors"]:
-            print(f"- ERROR    - Export job failed with state: {data.get('JobState')}", flush=True)
-            print(f"- ERROR    - Message: {data.get('Message', 'No error message')}", flush=True)
             self.logger.error(f"Export job failed with state: {data.get('JobState')}")
             self.logger.error(f"Message: {data.get('Message', 'No error message')}")
             return False
@@ -2174,13 +2170,10 @@ class Badfish:
             filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
             with open(filename, "w") as f:
                 f.write(json.dumps(data, indent=4))
-            print("- INFO     - SCP export completed successfully.", flush=True)
-            print(f"- INFO     - Exported system configuration to file: {filename}", flush=True)
             self.logger.info("SCP export completed successfully.")
             self.logger.info(f"Exported system configuration to file: {filename}")
             return True
         else:
-            print("- ERROR    - Export job completed but SystemConfiguration not found in response.", flush=True)
             self.logger.error("Export job completed but SystemConfiguration not found in response.")
             return False
 

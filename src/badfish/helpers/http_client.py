@@ -25,6 +25,26 @@ class HTTPClient:
         self.token = None
         self.session_id = None
 
+    def _handle_ssl_error(self, ex: Exception, allow_continue: bool = False) -> None:
+        """Handle SSL certificate verification errors.
+
+        Args:
+            ex: The SSL exception that was raised
+            allow_continue: If True, return None instead of raising exception
+        """
+        if allow_continue:
+            return None
+
+        self.logger.debug(f"SSL certificate verification failed: {ex}")
+        raise BadfishException(
+            f"SSL certificate verification failed for {self.host}. "
+            "This is likely due to a self-signed or untrusted certificate. "
+            "To fix this:\n"
+            "  1. Use a valid, trusted certificate on your BMC/iDRAC, OR\n"
+            "  2. Add the certificate to your system's trust store, OR\n"
+            "  3. For testing only, use the --insecure flag to skip verification (not recommended for production)"
+        )
+
     async def error_handler(self, response: aiohttp.ClientResponse, message: Optional[str] = None) -> None:
         try:
             raw = await response.text("utf-8", "ignore")
@@ -86,18 +106,7 @@ class HTTPClient:
                         ) as _response:
                             await _response.read()
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            if _continue:
-                return
-            else:
-                self.logger.debug(f"SSL certificate verification failed: {ex}")
-                raise BadfishException(
-                    f"SSL certificate verification failed for {self.host}. "
-                    "This is likely due to a self-signed or untrusted certificate. "
-                    "To fix this:\n"
-                    "  1. Use a valid, trusted certificate on your BMC/iDRAC, OR\n"
-                    "  2. Add the certificate to your system's trust store, OR\n"
-                    "  3. For testing only, use the --insecure flag to skip verification (not recommended for production)"
-                )
+            return self._handle_ssl_error(ex, allow_continue=_continue)
         except (Exception, TimeoutError) as ex:
             if _continue:
                 return
@@ -131,15 +140,7 @@ class HTTPClient:
                         else:
                             return _response
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            self.logger.debug(f"SSL certificate verification failed: {ex}")
-            raise BadfishException(
-                f"SSL certificate verification failed for {self.host}. "
-                "This is likely due to a self-signed or untrusted certificate. "
-                "To fix this:\n"
-                "  1. Use a valid, trusted certificate on your BMC/iDRAC, OR\n"
-                "  2. Add the certificate to your system's trust store, OR\n"
-                "  3. For testing only, use the --insecure flag to skip verification (not recommended for production)"
-            )
+            self._handle_ssl_error(ex)
         except (Exception, TimeoutError):
             raise BadfishException("Failed to communicate with server.")
         return _response
@@ -160,18 +161,7 @@ class HTTPClient:
                         self.logger.debug(raw_data)
                         return _response
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            if _continue:
-                return None
-            else:
-                self.logger.debug(f"SSL certificate verification failed: {ex}")
-                raise BadfishException(
-                    f"SSL certificate verification failed for {self.host}. "
-                    "This is likely due to a self-signed or untrusted certificate. "
-                    "To fix this:\n"
-                    "  1. Use a valid, trusted certificate on your BMC/iDRAC, OR\n"
-                    "  2. Add the certificate to your system's trust store, OR\n"
-                    "  3. For testing only, use the --insecure flag to skip verification (not recommended for production)"
-                )
+            return self._handle_ssl_error(ex, allow_continue=_continue)
         except Exception as ex:
             if _continue:
                 return None
@@ -194,15 +184,7 @@ class HTTPClient:
                         self.logger.debug(raw_data)
                         return _response
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            self.logger.debug(f"SSL certificate verification failed: {ex}")
-            raise BadfishException(
-                f"SSL certificate verification failed for {self.host}. "
-                "This is likely due to a self-signed or untrusted certificate. "
-                "To fix this:\n"
-                "  1. Use a valid, trusted certificate on your BMC/iDRAC, OR\n"
-                "  2. Add the certificate to your system's trust store, OR\n"
-                "  3. For testing only, use the --insecure flag to skip verification (not recommended for production)"
-            )
+            self._handle_ssl_error(ex)
         except (Exception, TimeoutError):
             raise BadfishException("Failed to communicate with server.")
 
