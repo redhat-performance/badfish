@@ -25,16 +25,15 @@ class HTTPClient:
         self.token = None
         self.session_id = None
 
-    def _handle_ssl_error(self, ex: Exception, allow_continue: bool = False) -> None:
-        """Handle SSL certificate verification errors.
+    def _handle_ssl_error(self, ex: Exception) -> None:
+        """Handle SSL certificate verification errors by logging and raising exception.
 
         Args:
             ex: The SSL exception that was raised
-            allow_continue: If True, return None instead of raising exception
-        """
-        if allow_continue:
-            return None
 
+        Raises:
+            BadfishException: Always raises with detailed SSL error information
+        """
         self.logger.debug(f"SSL certificate verification failed: {ex}")
         raise BadfishException(
             f"SSL certificate verification failed for {self.host}. "
@@ -106,7 +105,9 @@ class HTTPClient:
                         ) as _response:
                             await _response.read()
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            return self._handle_ssl_error(ex, allow_continue=_continue)
+            if _continue:
+                return
+            self._handle_ssl_error(ex)
         except (Exception, TimeoutError) as ex:
             if _continue:
                 return
@@ -161,7 +162,9 @@ class HTTPClient:
                         self.logger.debug(raw_data)
                         return _response
         except (ssl.SSLError, aiohttp.ClientConnectorCertificateError, aiohttp.ClientSSLError) as ex:
-            return self._handle_ssl_error(ex, allow_continue=_continue)
+            if _continue:
+                return None
+            self._handle_ssl_error(ex)
         except Exception as ex:
             if _continue:
                 return None
