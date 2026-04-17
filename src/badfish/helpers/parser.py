@@ -238,6 +238,11 @@ def create_parser():
         default=RETRIES,
     )
     parser.add_argument(
+        "--insecure",
+        help="Disable SSL/TLS certificate verification (insecure, use only for testing)",
+        action="store_true",
+    )
+    parser.add_argument(
         "--get-scp-targets",
         help="Get allowable target values to export or import with iDRAC SCP. Choices=['Export', 'Import']",
         choices=["Export", "Import"],

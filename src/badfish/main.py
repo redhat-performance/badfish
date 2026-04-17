@@ -30,18 +30,18 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(_host, _username, _password, _logger=None, _retries=RETRIES, _loop=None):
+async def badfish_factory(_host, _username, _password, _logger=None, _retries=RETRIES, _loop=None, _insecure=False):
     if not _logger:
         bfl = BadfishLogger()
         _logger = bfl.logger
 
-    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
+    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop, _insecure)
     await badfish.init()
     return badfish
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None):
+    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None, _insecure=False):
         self.host = _host
         self.username = _username
         self.password = _password
@@ -54,7 +54,7 @@ class Badfish:
         self.loop = _loop
         if not self.loop:
             self.loop = asyncio.get_event_loop()
-        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries)
+        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries, _insecure)
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None
@@ -77,9 +77,14 @@ class Badfish:
     async def init(self):
         self.session_uri = await self.find_session_uri()
         self.token = await self.validate_credentials()
-        self.system_resource = await self.find_systems_resource()
+        try:
+            self.system_resource = await self.find_systems_resource()
+            self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
+        except BadfishException as e:
+            self.logger.warning(f"Could not find system resource: {e}. Some operations may not be available.")
+            self.system_resource = None
+            self.bios_uri = None
         self.manager_resource = await self.find_managers_resource()
-        self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
 
     @staticmethod
     def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
@@ -487,7 +492,7 @@ class Badfish:
 
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
-        self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
+        self.vendor = "Dell" if data.get("Oem") and "Dell" in data["Oem"] else "Supermicro"
 
         if "Managers" not in data:
             raise BadfishException("Managers resource not found")
@@ -2119,6 +2124,7 @@ class Badfish:
             "IncludeInExport": ("Default" if not include_read_only else "IncludeReadOnly"),
             "ShareParameters": {"Target": targets},
         }
+
         response = await self.post_request(uri, payload, headers)
         if response.status != 202:
             self.logger.error("Command failed to export system configuration.")
@@ -2128,46 +2134,48 @@ class Badfish:
         except (ValueError, AttributeError, KeyError):
             self.logger.error("Failed to find a job ID in headers of the response.")
             return False
-        self.logger.info(f"Job for exporting server configuration, successfully created. Job ID: {job_id}")
-        start_time = get_now()
-        percentage = 0
-        while True:
-            ct = get_now() - start_time
+
+        self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
+
+        # WORKAROUND: Dell iDRAC API returns stale/cached status even after job completes
+        # Both Tasks and Jobs endpoints show "Running" indefinitely even though racadm shows completion
+        # Export jobs typically complete in 15-30 seconds, so wait 45 seconds then fetch result
+        self.logger.info("Waiting for export job to complete (typically takes 15-30 seconds)...")
+        await asyncio.sleep(45)
+
+        # Try to fetch the result directly from Jobs endpoint
+        uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, job_id)
+        response = await self.get_request(uri)
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
+
+        # Check if job failed
+        if data.get("JobState") in ["Failed", "CompletedWithErrors"]:
+            self.logger.error(f"Export job failed with state: {data.get('JobState')}")
+            self.logger.error(f"Message: {data.get('Message', 'No error message')}")
+            return False
+
+        # Check if SystemConfiguration is in the response
+        if "SystemConfiguration" not in data:
+            # Try the Tasks endpoint as fallback
+            self.logger.debug("SystemConfiguration not in Jobs response, trying Tasks endpoint")
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
             response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
-            if "SystemConfiguration" in data:
-                now = get_now()
-                filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
-                open_file = open(filename, "w")
-                open_file.write(json.dumps(data, indent=4))
-                open_file.close()
-                self.logger.info("SCP export went through successfully.")
-                self.logger.info("Exported system configuration to file: %s" % filename)
-                break
-            if response.status in [200, 202]:
-                await asyncio.sleep(1)
-            else:
-                self.logger.error("Unable to get detail for the job, command failed.")
-                return False
-            if str(ct)[0:7] >= "0:05:00":
-                self.logger.error("Job has been timed out, took longer than 5 minutes, command failed.")
-                return False
-            else:
-                try:
-                    if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
-                        percentage = int(data["Oem"]["Dell"]["PercentComplete"])
-                        self.logger.info(
-                            "%s, percent complete: %s"
-                            % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
-                        )
-                    await asyncio.sleep(1)
-                except (ValueError, AttributeError, KeyError):
-                    self.logger.info("Unable to get job status message, trying again.")
-                    await asyncio.sleep(1)
-                continue
-        return True
+
+        # Save the exported configuration
+        if "SystemConfiguration" in data:
+            now = get_now()
+            filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
+            with open(filename, "w") as f:
+                f.write(json.dumps(data, indent=4))
+            self.logger.info("SCP export completed successfully.")
+            self.logger.info(f"Exported system configuration to file: {filename}")
+            return True
+        else:
+            self.logger.error("Export job completed but SystemConfiguration not found in response.")
+            return False
 
     async def import_scp(self, file_path, targets="ALL"):
         try:
@@ -2525,6 +2533,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     get_nic_fqdds = _args["get_nic_fqdds"]
     get_nic_attribute = _args["get_nic_attribute"]
     set_nic_attribute = _args["set_nic_attribute"]
+    insecure = _args.get("insecure", False)
     result = True
     badfish = None
 
@@ -2535,6 +2544,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             _password=_password,
             _logger=logger,
             _retries=retries,
+            _insecure=insecure,
         )
 
         if _args["host_list"] and not _args["output"]:

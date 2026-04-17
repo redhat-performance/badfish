@@ -1136,6 +1136,12 @@ SCP_MESSAGE_PERCENTAGE_STATE = """\
     }
 }
 """
+SCP_EXPORT_JOB_FAILED = """\
+{
+    "JobState": "Failed",
+    "Message": "Export operation failed due to internal error"
+}
+"""
 
 # TEST SCP RESPONSES
 RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = """\
@@ -1153,24 +1159,23 @@ RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = "- ERROR    - iDRAC on this system do
 RESPONSE_GET_SCP_TARGETS_WRONG = "- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
 
 RESPONSE_EXPORT_SCP_PASS = f"""\
-- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
-- INFO     - Exporting Server Configuration Profile., percent complete: 15
-- INFO     - Exporting Server Configuration Profile., percent complete: 30
-- INFO     - Exporting Server Configuration Profile., percent complete: 45
-- INFO     - Exporting Server Configuration Profile., percent complete: 60
-- INFO     - Exporting Server Configuration Profile., percent complete: 75
-- INFO     - Exporting Server Configuration Profile., percent complete: 90
-- INFO     - Exporting Server Configuration Profile., percent complete: 99
-- INFO     - SCP export went through successfully.
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- INFO     - SCP export completed successfully.
 - INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
 """
 RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration.\n"
 RESPONSE_EXPORT_SCP_NO_LOCATION = "- ERROR    - Failed to find a job ID in headers of the response.\n"
 RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
-- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
-- INFO     - Unable to get job status message, trying again.
-- INFO     - Exporting Server Configuration Profile., percent complete: 1
-- ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- ERROR    - Export job completed but SystemConfiguration not found in response.
+"""
+RESPONSE_EXPORT_SCP_JOB_FAILED = f"""\
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- ERROR    - Export job failed with state: Failed
+- ERROR    - Message: Export operation failed due to internal error
 """
 RESPONSE_IMPORT_SCP_INVALID_FILEPATH = "- ERROR    - File doesn't exist or couldn't be opened.\n"
 RESPONSE_IMPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to import system configuration.\n"
