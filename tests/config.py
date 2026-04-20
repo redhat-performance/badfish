@@ -2535,3 +2535,135 @@ RESPONSE_SET_NIC_ATTR_FALSE_NEGATIVE = """\
 - ERROR    - Network attribute changes may not have been applied.
 - WARNING  - Job reported failure but attribute value is correct (WakeOnLan=Disabled). This may be a false negative.
 """
+
+# VF Limit Validation Test Fixtures
+GET_NIC_ATTR_LIST_XXV710_NPARSRIOV = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"NPARSRIOV",
+        "NumberPCIFunctionsEnabled":"4",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
+GET_NIC_ATTR_LIST_SINGLE_FUNCTION = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"SRIOV",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
+RESPONSE_SET_NIC_ATTR_VF_LIMIT_XXV710_WARNING = """\
+- WARNING  - Attempting to set NumberVFAdvertised to 128 on Intel XXV710 in NPARSRIOV mode.
+- WARNING  - Testing has shown that Intel XXV710 NICs may be limited to 64 VFs when using NPARSRIOV mode (NIC Partitioning + SR-IOV combination).
+- WARNING  - This operation may fail with firmware error PR21 or HTTP 400. If it fails, consider using SRIOV mode (single function) or limiting VFs to ≤64.
+"""
+
+RESPONSE_SET_NIC_ATTR_VF_LIMIT_SINGLE_FUNCTION_WARNING = """\
+- WARNING  - Attempting to set NumberVFAdvertised to 128 with only 1 PCI function enabled.
+- WARNING  - Testing has shown configurations with a single PCI function may be limited to 64 VFs.
+- WARNING  - If this fails, consider enabling NIC Partitioning mode (NPARSRIOV) to enable multiple PCI functions, though some NIC models may still have VF limits in NPARSRIOV mode.
+"""
+
+
+
+# Corrected registry with NumberVFAdvertised
+GET_NIC_ATTR_REGISTRY_WITH_VF = """
+{
+    "@odata.context": "/redfish/v1/$metadata#AttributeRegistry.AttributeRegistry",
+    "@odata.id": "/redfish/v1/Registries/NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1/NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1.json",
+    "@odata.type": "#AttributeRegistry.v1_3_3.AttributeRegistry",
+    "Description": "This registry defines a representation of Network Attribute instances",
+    "Id": "NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1",
+    "Language": "en",
+    "Name": "Network Attribute Registry",
+    "OwningEntity": "Dell",
+    "RegistryEntries": {
+        "Attributes": [
+            {
+                "AttributeName": "NumberVFAdvertised",
+                "CurrentValue": null,
+                "DisplayName": "PCI Virtual Functions Advertised",
+                "DisplayOrder": 304,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "LowerBound": 0,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "ScalarIncrement": 16,
+                "Type": "Integer",
+                "UpperBound": 128,
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "WakeOnLan",
+                "CurrentValue": null,
+                "DisplayName": "Wake On LAN",
+                "DisplayOrder": 201,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Device Level Configuration",
+                        "GroupName": "DeviceLevelConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            }
+        ]
+    },
+    "RegistryVersion": "1.0.0",
+    "SupportedSystems": []
+}
+"""
+
+
+GET_NIC_ATTR_LIST_WITH_VF = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"SRIOV",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""

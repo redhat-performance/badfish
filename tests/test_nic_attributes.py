@@ -6,7 +6,11 @@ from tests.config import (
     GET_NIC_ATTR_LIST,
     GET_NIC_ATTR_LIST_UPDATED,
     GET_NIC_ATTR_LIST_INTEGER_UPDATED,
+    GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,
+    GET_NIC_ATTR_LIST_SINGLE_FUNCTION,
+    GET_NIC_ATTR_LIST_WITH_VF,
     GET_NIC_ATTR_REGISTRY,
+    GET_NIC_ATTR_REGISTRY_WITH_VF,
     GET_NIC_FQQDS_ADAPTERS,
     GET_NIC_FQQDS_EMBEDDED,
     GET_NIC_FQQDS_INTEGRATED,
@@ -40,6 +44,8 @@ from tests.config import (
     RESPONSE_SET_NIC_ATTR_PRE_REBOOT_FAIL,
     RESPONSE_SET_NIC_ATTR_VERIFY_FAILED,
     RESPONSE_SET_NIC_ATTR_FALSE_NEGATIVE,
+    RESPONSE_SET_NIC_ATTR_VF_LIMIT_XXV710_WARNING,
+    RESPONSE_SET_NIC_ATTR_VF_LIMIT_SINGLE_FUNCTION_WARNING,
     RESPONSE_VENDOR_UNSUPPORTED,
     STATE_OFF_RESP,
     STATE_ON_RESP,
@@ -778,3 +784,203 @@ class TestSetNICAttribute(TestBase):
         # Should fall back to old behavior with warning
         assert "No job ID returned in Location header" in err
         assert "Configuration change submitted but job monitoring was not possible" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_vf_limit_xxv710_nparsriov_warning(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test VF limit warning for Intel XXV710 in NPARSRIOV mode with >64 VFs"""
+        from tests.config import (
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,
+            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,
+        )
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call
+            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,  # get_nic_attribute call for VF limit check
+            JOB_STATUS_SCHEDULED,  # Pre-reboot job check
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_COMPLETED,  # Post-reboot job monitoring
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,  # Final verification (value still 64, not 128)
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.ChassisSlot.8-2-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "128",
+        ]
+        _, err = self.badfish_call()
+        # Should warn but still proceed
+        assert "Attempting to set NumberVFAdvertised to 128" in err
+        assert "Intel XXV710" in err
+        assert "NPARSRIOV" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_vf_limit_valid_value_no_warning(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test that valid VF values (≤64) don't trigger warnings"""
+        from tests.config import (
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,
+        )
+        
+        # Create updated list with NumberVFAdvertised set to 48
+        import json
+        updated_attrs = json.loads(GET_NIC_ATTR_LIST_WITH_VF)
+        updated_attrs["Attributes"]["NumberVFAdvertised"] = "48"
+        GET_NIC_ATTR_LIST_VF_48 = json.dumps(updated_attrs)
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call (current: 64)
+            # No VF limit check call since value ≤64
+            JOB_STATUS_SCHEDULED,  # Pre-reboot job check
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_COMPLETED,  # Post-reboot job monitoring
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_VF_48,  # Final verification (changed to 48)
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.ChassisSlot.8-2-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "48",
+        ]
+        _, err = self.badfish_call()
+        # Should NOT warn for valid values ≤64
+        assert "Attempting to set NumberVFAdvertised to" not in err
+        assert "limited to 64 VFs" not in err
+        # Should succeed
+        assert "✓ Successfully changed NumberVFAdvertised" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_vf_limit_single_function_warning(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test VF limit warning for single PCI function with >64 VFs"""
+        from tests.config import (
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,
+        )
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # get_nic_attribute call for VF limit check
+            JOB_STATUS_SCHEDULED,  # Pre-reboot job check
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_COMPLETED,  # Post-reboot job monitoring
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # Final verification
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.ChassisSlot.8-2-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "128",
+        ]
+        _, err = self.badfish_call()
+        # Should warn about single PCI function
+        assert "Attempting to set NumberVFAdvertised to 128 with only 1 PCI function enabled" in err
+        assert "single PCI function may be limited to 64 VFs" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_vf_limit_exception_handling(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test VF limit validation gracefully handles exceptions during attribute parsing"""
+        from tests.config import (
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,
+        )
+        
+        # NIC attrs with non-integer NumberPCIFunctionsEnabled to trigger ValueError in int() conversion
+        ATTRS_WITH_INVALID_FUNCTION_COUNT = """
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"SRIOV",
+        "NumberPCIFunctionsEnabled":"NotANumber",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128"
+    }
+}
+"""
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call
+            ATTRS_WITH_INVALID_FUNCTION_COUNT,  # get_nic_attribute returns data with invalid function count
+            JOB_STATUS_SCHEDULED,  # Pre-reboot job check
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_COMPLETED,  # Post-reboot job monitoring
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_WITH_VF,  # Final verification
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.ChassisSlot.8-2-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "128",
+        ]
+        _, err = self.badfish_call()
+        # Should gracefully handle ValueError exception and continue without warnings
+        # Exception caught at line 2568, proceeds with attempt
+        assert "Attempting to set NumberVFAdvertised" not in err  # No warning due to exception
