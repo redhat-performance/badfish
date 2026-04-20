@@ -1181,3 +1181,35 @@ class TestSetNICAttribute(TestBase):
         _, err = self.badfish_call()
         # Should NOT have the NONE error
         assert "Cannot set NumberVFAdvertised when VirtualizationMode is NONE" not in err
+
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_catches_patch_exception(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test set_nic_attribute handles PATCH exceptions gracefully"""
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST,
+            GET_NIC_ATTR_LIST,  # VirtualizationMode check
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        # Make PATCH context manager raise exception
+        mock_patch.return_value.__aenter__.side_effect = ValueError("Test exception")
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "WakeOnLan",
+            "--value",
+            "Disabled",
+        ]
+        _, err = self.badfish_call()
+        # Should catch and log error (may be "Failed to communicate" or "Was unable to set")
+        assert ("Was unable to set" in err or "Failed to communicate" in err or "ERROR" in err)
