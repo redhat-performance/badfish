@@ -2563,18 +2563,30 @@ GET_NIC_ATTR_LIST_SINGLE_FUNCTION = """\
 }
 """
 
+GET_NIC_ATTR_LIST_VIRT_MODE_NONE = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet 25G 2P XXV710 Adapter",
+        "VirtualizationMode":"NONE",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
 RESPONSE_SET_NIC_ATTR_VF_LIMIT_XXV710_WARNING = """\
-- WARNING  - Attempting to set NumberVFAdvertised to 128 on Intel XXV710 in NPARSRIOV mode.
-- WARNING  - Testing has shown that Intel XXV710 NICs may be limited to 64 VFs when using NPARSRIOV mode (NIC Partitioning + SR-IOV combination).
-- WARNING  - This operation may fail with firmware error PR21 or HTTP 400. If it fails, consider using SRIOV mode (single function) or limiting VFs to ≤64.
+- WARNING  - Attempting to set NumberVFAdvertised to 128 on Intel XXV710.
+- WARNING  - Testing has shown that Intel XXV710 NICs are limited to 64 VFs regardless of virtualization mode (SRIOV/NPARSRIOV) or firmware version.
+- WARNING  - This operation will likely fail. The hardware limit appears to be 64 VFs maximum.
 """
 
-RESPONSE_SET_NIC_ATTR_VF_LIMIT_SINGLE_FUNCTION_WARNING = """\
-- WARNING  - Attempting to set NumberVFAdvertised to 128 with only 1 PCI function enabled.
-- WARNING  - Testing has shown configurations with a single PCI function may be limited to 64 VFs.
-- WARNING  - If this fails, consider enabling NIC Partitioning mode (NPARSRIOV) to enable multiple PCI functions, though some NIC models may still have VF limits in NPARSRIOV mode.
+RESPONSE_SET_NIC_ATTR_VIRT_MODE_NONE = """\
+- ERROR    - Cannot set NumberVFAdvertised when VirtualizationMode is NONE (disabled).
+- ERROR    - First enable SR-IOV virtualization mode with:
+- ERROR    -   --set-nic-attribute NIC.Embedded.1-1-1 --attribute VirtualizationMode --value SRIOV
 """
-
 
 
 # Corrected registry with NumberVFAdvertised

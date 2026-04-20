@@ -2522,6 +2522,25 @@ class Badfish:
             self.logger.error("Was unable to set a network attribute. Attribute most likely doesn't exist.")
             return False
 
+        # Check if VirtualizationMode is enabled for SR-IOV attributes
+        sriov_attributes = ["NumberVFAdvertised", "VFDistribution", "VFAllocMult"]
+        if attribute in sriov_attributes:
+            all_attrs = await self.get_nic_attribute(fqdd, log=False)
+            if all_attrs:
+                attrs_dict = dict(all_attrs)
+                virt_mode = attrs_dict.get("VirtualizationMode", "")
+                if virt_mode == "NONE":
+                    self.logger.error(
+                        f"Cannot set {attribute} when VirtualizationMode is NONE (disabled)."
+                    )
+                    self.logger.error(
+                        f"First enable SR-IOV virtualization mode with:"
+                    )
+                    self.logger.error(
+                        f"  --set-nic-attribute {fqdd} --attribute VirtualizationMode --value SRIOV"
+                    )
+                    return False
+
         # Check for known hardware VF limits on NumberVFAdvertised attribute
         if attribute == "NumberVFAdvertised":
             try:
@@ -2531,40 +2550,21 @@ class Badfish:
                     all_attrs = await self.get_nic_attribute(fqdd, log=False)
                     if all_attrs:
                         attrs_dict = dict(all_attrs)
-                        virt_mode = attrs_dict.get("VirtualizationMode", "")
                         device_name = attrs_dict.get("DeviceName", "")
-                        num_functions = attrs_dict.get("NumberPCIFunctionsEnabled", "1")
 
-                        # Intel XXV710 observed limitation with NPARSRIOV
-                        if "XXV710" in device_name and virt_mode == "NPARSRIOV":
+                        # Intel XXV710 hardware limitation observed across firmware versions and modes
+                        if "XXV710" in device_name:
                             self.logger.warning(
-                                f"Attempting to set NumberVFAdvertised to {requested_vfs} on Intel XXV710 in NPARSRIOV mode."
+                                f"Attempting to set NumberVFAdvertised to {requested_vfs} on Intel XXV710."
                             )
                             self.logger.warning(
-                                "Testing has shown that Intel XXV710 NICs may be limited to 64 VFs when using NPARSRIOV mode "
-                                "(NIC Partitioning + SR-IOV combination)."
+                                "Testing has shown that Intel XXV710 NICs are limited to 64 VFs regardless of "
+                                "virtualization mode (SRIOV/NPARSRIOV) or firmware version."
                             )
                             self.logger.warning(
-                                "This operation may fail with firmware error PR21 or HTTP 400. "
-                                "If it fails, consider using SRIOV mode (single function) or limiting VFs to ≤64."
+                                "This operation will likely fail. The hardware limit appears to be 64 VFs maximum."
                             )
                             # Allow attempt - let firmware reject if truly unsupported
-                            # return False
-
-                        # Single PCI function limitation (observed on testing)
-                        if int(num_functions) == 1 and virt_mode in ["SRIOV", "NPARSRIOV"] and requested_vfs > 64:
-                            self.logger.warning(
-                                f"Attempting to set NumberVFAdvertised to {requested_vfs} with only 1 PCI function enabled."
-                            )
-                            self.logger.warning(
-                                "Testing has shown configurations with a single PCI function may be limited to 64 VFs."
-                            )
-                            self.logger.warning(
-                                "If this fails, consider enabling NIC Partitioning mode (NPARSRIOV) to enable multiple PCI functions, "
-                                "though some NIC models may still have VF limits in NPARSRIOV mode."
-                            )
-                            # Allow attempt - let firmware reject if truly unsupported
-                            # return False
             except (ValueError, AttributeError, KeyError):
                 # If we can't determine limits, allow the attempt and let firmware reject if invalid
                 pass

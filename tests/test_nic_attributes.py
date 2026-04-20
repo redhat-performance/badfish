@@ -8,6 +8,7 @@ from tests.config import (
     GET_NIC_ATTR_LIST_INTEGER_UPDATED,
     GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,
     GET_NIC_ATTR_LIST_SINGLE_FUNCTION,
+    GET_NIC_ATTR_LIST_VIRT_MODE_NONE,
     GET_NIC_ATTR_LIST_WITH_VF,
     GET_NIC_ATTR_REGISTRY,
     GET_NIC_ATTR_REGISTRY_WITH_VF,
@@ -38,6 +39,7 @@ from tests.config import (
     RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK,
     RESPONSE_SET_NIC_ATTR_RETRY_OK,
     RESPONSE_SET_NIC_ATTR_STR_MAXED,
+    RESPONSE_SET_NIC_ATTR_VIRT_MODE_NONE,
     RESPONSE_SET_NIC_ATTR_WITH_JOB_SUCCESS,
     RESPONSE_SET_NIC_ATTR_JOB_FAILED,
     RESPONSE_SET_NIC_ATTR_NO_JOB_ID,
@@ -45,7 +47,6 @@ from tests.config import (
     RESPONSE_SET_NIC_ATTR_VERIFY_FAILED,
     RESPONSE_SET_NIC_ATTR_FALSE_NEGATIVE,
     RESPONSE_SET_NIC_ATTR_VF_LIMIT_XXV710_WARNING,
-    RESPONSE_SET_NIC_ATTR_VF_LIMIT_SINGLE_FUNCTION_WARNING,
     RESPONSE_VENDOR_UNSUPPORTED,
     STATE_OFF_RESP,
     STATE_ON_RESP,
@@ -789,19 +790,20 @@ class TestSetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_set_nic_attr_vf_limit_xxv710_nparsriov_warning(self, mock_get, mock_post, mock_delete, mock_patch):
-        """Test VF limit warning for Intel XXV710 in NPARSRIOV mode with >64 VFs"""
+    def test_set_nic_attr_vf_limit_xxv710_warning(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test VF limit warning for Intel XXV710 with >64 VFs"""
         from tests.config import (
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,
             GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,
         )
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call
-            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,  # get_nic_attribute call for VF limit check
+            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,  # VirtualizationMode check
+            GET_NIC_ATTR_LIST_XXV710_NPARSRIOV,  # VF limit check
             JOB_STATUS_SCHEDULED,  # Pre-reboot job check
             RESET_TYPE_RESP,
             STATE_OFF_RESP,
@@ -813,7 +815,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -826,10 +828,10 @@ class TestSetNICAttribute(TestBase):
             "128",
         ]
         _, err = self.badfish_call()
-        # Should warn but still proceed
-        assert "Attempting to set NumberVFAdvertised to 128" in err
-        assert "Intel XXV710" in err
-        assert "NPARSRIOV" in err
+        # Should warn about XXV710 hardware limit
+        assert "Attempting to set NumberVFAdvertised to 128 on Intel XXV710" in err
+        assert "limited to 64 VFs" in err
+        assert "hardware limit" in err
 
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.delete")
@@ -852,6 +854,7 @@ class TestSetNICAttribute(TestBase):
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call (current: 64)
+            GET_NIC_ATTR_LIST_WITH_VF,  # VirtualizationMode check (SRIOV mode, not NONE)
             # No VF limit check call since value ≤64
             JOB_STATUS_SCHEDULED,  # Pre-reboot job check
             RESET_TYPE_RESP,
@@ -887,19 +890,20 @@ class TestSetNICAttribute(TestBase):
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")
-    def test_set_nic_attr_vf_limit_single_function_warning(self, mock_get, mock_post, mock_delete, mock_patch):
-        """Test VF limit warning for single PCI function with >64 VFs"""
+    def test_set_nic_attr_vf_limit_xxv710_sriov_mode(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test VF limit warning for Intel XXV710 in SRIOV mode with >64 VFs"""
         from tests.config import (
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,
             GET_NIC_ATTR_LIST_SINGLE_FUNCTION,
         )
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,  # get_nic_attribute_info call
-            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # get_nic_attribute call for VF limit check
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # VirtualizationMode check
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # VF limit check
             JOB_STATUS_SCHEDULED,  # Pre-reboot job check
             RESET_TYPE_RESP,
             STATE_OFF_RESP,
@@ -911,7 +915,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -924,9 +928,10 @@ class TestSetNICAttribute(TestBase):
             "128",
         ]
         _, err = self.badfish_call()
-        # Should warn about single PCI function
-        assert "Attempting to set NumberVFAdvertised to 128 with only 1 PCI function enabled" in err
-        assert "single PCI function may be limited to 64 VFs" in err
+        # Should warn about XXV710 hardware limit (SRIOV mode has same limit)
+        assert "Attempting to set NumberVFAdvertised to 128 on Intel XXV710" in err
+        assert "limited to 64 VFs" in err
+        assert "hardware limit" in err
 
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.delete")
@@ -984,3 +989,195 @@ class TestSetNICAttribute(TestBase):
         # Should gracefully handle ValueError exception and continue without warnings
         # Exception caught at line 2568, proceeds with attempt
         assert "Attempting to set NumberVFAdvertised" not in err  # No warning due to exception
+
+    
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_nonexistent_attribute(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test set_nic_attribute when attribute doesn't exist (L2522-2523)"""
+        # Return empty registry that won't match the requested attribute
+        empty_registry = '{"RegistryEntries": {"Attributes": []}}'
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            empty_registry,  # Empty registry means attribute won't be found
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.set_mock_response(mock_patch, 202, "OK")
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "NonExistentAttribute",
+            "--value",
+            "SomeValue",
+        ]
+        _, err = self.badfish_call()
+        # Should error about attribute not existing (L2522-2523)
+        assert "Was unable to set a network attribute" in err
+        assert "Attribute most likely doesn't exist" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_monitor_verify_job_failed_value_mismatch(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test _monitor_and_verify_attribute_job when job fails and value doesn't match (L996)"""
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST,  # Initial get
+            JOB_STATUS_SCHEDULED,  # Pre-reboot verification
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_FAILED,  # Post-reboot: job failed
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST,  # Post-reboot verification - value unchanged (still Enabled)
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "WakeOnLan",
+            "--value",
+            "Disabled",
+        ]
+        _, err = self.badfish_call()
+        # Job failed and value didn't match - should return False (L996)
+        assert "Configuration job" in err and "did not complete successfully" in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_monitor_verify_final_check_returns_none(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test _monitor_and_verify_attribute_job when final verification returns None (L1023-1024)"""
+        # Create a response that will cause get_nic_attribute_info to fail
+        empty_or_invalid_response = '{"Attributes": {}}'  # Missing the requested attribute
+        
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST,  # Initial get
+            JOB_STATUS_SCHEDULED,  # Pre-reboot verification
+            RESET_TYPE_RESP,
+            STATE_OFF_RESP,
+            JOB_STATUS_COMPLETED,  # Post-reboot: job completed
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            empty_or_invalid_response,  # get_nic_attribute call returns invalid data
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        
+        patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
+        self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "WakeOnLan",
+            "--value",
+            "Disabled",
+        ]
+        _, err = self.badfish_call()
+        # Should error about unable to verify final value (L1023-1024)
+        assert "Could not verify final attribute value" in err or "Was unable to get network attribute" in err
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_virt_mode_none_numbervf(self, mock_get, mock_post, mock_delete):
+        """Test setting NumberVFAdvertised when VirtualizationMode is NONE"""
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_VIRT_MODE_NONE,
+            GET_NIC_ATTR_LIST_VIRT_MODE_NONE,  # Second call for VirtualizationMode check
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "128",
+        ]
+        _, err = self.badfish_call()
+        assert "Cannot set NumberVFAdvertised when VirtualizationMode is NONE" in err
+        assert "--set-nic-attribute NIC.Embedded.1-1-1 --attribute VirtualizationMode --value SRIOV" in err
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_virt_mode_none_non_sriov_attr(self, mock_get, mock_post, mock_delete):
+        """Test setting non-SRIOV attribute (BlnkLeds) when VirtualizationMode is NONE - should not error about NONE"""
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY,
+            GET_NIC_ATTR_LIST_VIRT_MODE_NONE,
+            GET_NIC_ATTR_LIST_VIRT_MODE_NONE,
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "BlnkLeds",
+            "--value",
+            "5",
+        ]
+        _, err = self.badfish_call()
+        # Should NOT get the VirtualizationMode NONE error - BlnkLeds is not an SRIOV attribute
+        assert "Cannot set BlnkLeds when VirtualizationMode is NONE" not in err
+
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_set_nic_attr_virt_mode_sriov_numbervf(self, mock_get, mock_post, mock_delete, mock_patch):
+        """Test setting NumberVFAdvertised when VirtualizationMode is SRIOV - should proceed"""
+        responses = INIT_RESP + [
+            GET_FW_VERSION,
+            GET_NIC_ATTR_REGISTRY_WITH_VF,
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,
+            GET_NIC_ATTR_LIST_SINGLE_FUNCTION,  # For VirtualizationMode check
+        ]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.set_mock_response(mock_patch, 200, "OK", headers={})
+
+        self.args = [
+            "--set-nic-attribute",
+            "NIC.Embedded.1-1-1",
+            "--attribute",
+            "NumberVFAdvertised",
+            "--value",
+            "64",
+        ]
+        _, err = self.badfish_call()
+        # Should NOT have the NONE error
+        assert "Cannot set NumberVFAdvertised when VirtualizationMode is NONE" not in err
