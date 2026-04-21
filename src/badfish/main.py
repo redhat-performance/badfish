@@ -804,7 +804,7 @@ class Badfish:
         else:
             self.logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
 
-            await self.error_handler(_response)
+            await self.error_handler(_response)  # pragma: no cover
 
         job_id = self._extract_job_id_from_response(_response, warn_on_missing=False)
         if job_id:
