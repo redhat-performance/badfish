@@ -384,6 +384,9 @@ For the replacement of `racadm racreset`, the optional argument `--racreset` was
 ```bash
 badfish -H mgmt-your-server.example.com --racreset
 ```
+* You can also specify `--racreset --wait` and Badfish will poll the iDrac for it to complete and keep you updated on progress. 
+
+
 > [!NOTE]
 > Dell specific command, for Supermicro servers there is an equivalent of `--bmc-reset`
 
