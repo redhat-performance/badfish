@@ -1074,7 +1074,7 @@ class Badfish:
             await self.send_reset("On")
         return True
 
-    async def reset_idrac(self):
+    async def reset_idrac(self, wait=False):
         if self.vendor != "Dell":
             self.logger.warning("Vendor isn't a Dell, if you are trying this on a Supermicro, use --bmc-reset instead.")
             return False
@@ -1100,8 +1100,17 @@ class Badfish:
             data = await _response.text("utf-8", "ignore")
             raise BadfishException("Status code %s returned, error is: \n%s." % (status_code, data))
 
-        self.logger.info("iDRAC will now reset and be back online within a few minutes.")
-        return True
+        if wait:
+            self.logger.info("iDRAC reset initiated. Waiting for iDRAC to come back online...")
+            ready = await self.wait_for_idrac_ready()
+            if ready:
+                self.logger.info("iDRAC is now responsive.")
+            else:
+                self.logger.warning("iDRAC did not respond within the timeout period.")
+            return ready
+        else:
+            self.logger.info("iDRAC will now reset and be back online within a few minutes.")
+            return True
 
     async def reset_bmc(self):
         if self.vendor != "Supermicro":
@@ -1297,6 +1306,30 @@ class Badfish:
             self.progress_bar(count, self.retries, current_state)
 
         return desired_state
+
+    async def poll_until_ready(self, check_func, description, sleep_interval=5, clear_cache=False):
+        self.logger.info("Polling for %s" % description)
+        for count in range(self.retries):
+            if clear_cache:
+                self.http_client.get_request.cache_clear()
+            ready = await check_func()
+            if ready:
+                self.progress_bar(self.retries, self.retries, "Ready")
+                self.logger.info("%s is ready." % description)
+                return True
+            self.progress_bar(count, self.retries, "Not Ready")
+            await asyncio.sleep(sleep_interval)
+        self.logger.warning("%s did not become ready within timeout." % description)
+        return False
+
+    async def wait_for_idrac_ready(self):
+        async def check_idrac_responsive():
+            response = await self.get_request(self.root_uri, _continue=True)
+            return response and response.status == 200
+
+        self.logger.info("Waiting for iDRAC to be ready after reset (this may take a few minutes)...")
+        await asyncio.sleep(10)
+        return await self.poll_until_ready(check_idrac_responsive, "iDRAC", sleep_interval=10, clear_cache=True)
 
     async def get_firmware_inventory(self):
         self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
@@ -2705,6 +2738,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     power_cycle = _args["power_cycle"]
     power_consumed_watts = _args["get_power_consumed"]
     rac_reset = _args["racreset"]
+    wait = _args["wait"]
     bmc_reset = _args["bmc_reset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
@@ -2785,7 +2819,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         elif host_type:
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif rac_reset:
-            await badfish.reset_idrac()
+            await badfish.reset_idrac(wait=wait)
         elif bmc_reset:
             await badfish.reset_bmc()
         elif factory_reset:
