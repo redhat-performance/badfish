@@ -1005,9 +1005,7 @@ class Badfish:
                 expected_value = int(expected_value)
 
             if current_val == expected_value:
-                self.logger.info(
-                    f"✓ Successfully changed {attribute} from {original_value} to {expected_value}"
-                )
+                self.logger.info(f"✓ Successfully changed {attribute} from {original_value} to {expected_value}")
                 return True
             else:
                 self.logger.error(
@@ -2529,15 +2527,9 @@ class Badfish:
                 attrs_dict = dict(all_attrs)
                 virt_mode = attrs_dict.get("VirtualizationMode", "")
                 if virt_mode == "NONE":
-                    self.logger.error(
-                        f"Cannot set {attribute} when VirtualizationMode is NONE (disabled)."
-                    )
-                    self.logger.error(
-                        f"First enable SR-IOV virtualization mode with:"
-                    )
-                    self.logger.error(
-                        f"  --set-nic-attribute {fqdd} --attribute VirtualizationMode --value SRIOV"
-                    )
+                    self.logger.error(f"Cannot set {attribute} when VirtualizationMode is NONE (disabled).")
+                    self.logger.error("First enable SR-IOV virtualization mode with:")
+                    self.logger.error(f"  --set-nic-attribute {fqdd} --attribute VirtualizationMode --value SRIOV")
                     return False
 
         # Check for known hardware VF limits on NumberVFAdvertised attribute
