@@ -1,4 +1,4 @@
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock, AsyncMock
 
 from tests.config import (
     BOOT_SEQ_RESPONSE_DIRECTOR,
@@ -54,6 +54,24 @@ class TestResetIdrac(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_RESET_WRONG_VENDOR % ("Dell", "Supermicro", "--bmc-reset")
+
+    @patch("badfish.main.Badfish.wait_for_idrac_ready", new_callable=AsyncMock)
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_reset_idrac_with_wait_timeout(self, mock_get, mock_post, mock_delete, mock_wait):
+        responses = INIT_RESP + [RESET_TYPE_RESP]
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 204], "OK", True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        mock_wait.return_value = False
+
+        self.boot_seq = BOOT_SEQ_RESPONSE_DIRECTOR
+        self.args = [self.option_arg, "--wait"]
+        _, err = self.badfish_call()
+        assert "Status code 204 returned for POST command to reset iDRAC" in err
+        assert "iDRAC reset initiated. Waiting for iDRAC to come back online" in err
+        assert "iDRAC did not respond within the timeout period" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
