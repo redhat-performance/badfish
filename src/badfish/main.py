@@ -806,12 +806,7 @@ class Badfish:
 
             await self.error_handler(_response)
 
-        raw = await _response.text("utf-8", "ignore")
-        result = re.search("JID_.+?", raw)
-        res_group = ""
-        if result:
-            res_group = result.group()
-        job_id = re.sub("[,']", "", res_group)
+        job_id = self._extract_job_id_from_response(_response, warn_on_missing=False)
         if job_id:
             self.logger.debug("%s job ID successfully created" % job_id)
         return job_id
@@ -905,14 +900,14 @@ class Badfish:
                 return None
         except (AttributeError, ValueError, KeyError) as e:  # pragma: no cover
             # Defensive: headers.get() raising exceptions is extremely rare in practice
-            if warn_on_missing:  # pragma: no cover
-                msg = f"Could not extract job ID from response headers: {e}"  # pragma: no cover
-                if context:  # pragma: no cover
-                    msg += f" {context}"  # pragma: no cover
-                self.logger.warning(msg)  # pragma: no cover
-            else:  # pragma: no cover
-                self.logger.error(f"Failed to find a job ID in headers of the response: {e}")  # pragma: no cover
-            return None  # pragma: no cover
+            if warn_on_missing:
+                msg = f"Could not extract job ID from response headers: {e}"
+                if context:
+                    msg += f" {context}"
+                self.logger.warning(msg)
+            else:
+                self.logger.error(f"Failed to find a job ID in headers of the response: {e}")
+            return None
 
     async def _verify_job_scheduled(self, job_id, context="configuration"):
         """
@@ -948,14 +943,14 @@ class Badfish:
                 return True
             else:  # pragma: no cover
                 # Defensive: non-200 responses during job verification are rare
-                self.logger.warning(  # pragma: no cover
-                    f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot."  # pragma: no cover
-                )  # pragma: no cover
-                return True  # Don't block on verification failure  # pragma: no cover
+                self.logger.warning(
+                    f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot."
+                )
+                return True  # Don't block on verification failure
         except Exception as e:  # pragma: no cover
             # Defensive: exceptions during job status check are rare in practice
-            self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")  # pragma: no cover
-            return True  # Don't block on verification failure  # pragma: no cover
+            self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")
+            return True  # Don't block on verification failure
 
     async def _monitor_and_verify_attribute_job(
         self, job_id, fqdd, attribute, expected_value, attr_type, original_value
@@ -2570,7 +2565,7 @@ class Badfish:
                             # Allow attempt - let firmware reject if truly unsupported
             except (ValueError, AttributeError, KeyError):  # pragma: no cover
                 # Defensive: exception during attribute parsing is rare - bad firmware data
-                pass  # pragma: no cover
+                pass
 
         try:
             type = attr_info.get("Type")
