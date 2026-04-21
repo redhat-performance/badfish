@@ -133,3 +133,29 @@ class TestBootTo(TestBase):
         self.args = [self.option_arg, BAD_DEVICE_NAME]
         _, err = self.badfish_call()
         assert err == ERROR_DEV_NO_MATCH
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.patch")
+    @patch("aiohttp.ClientSession.get")
+    def test_boot_to_job_creation_fails(self, mock_get, mock_patch, mock_post, mock_delete):
+        """Test create_job when POST to create job returns non-200 status (covers L805-806 in main.py)"""
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
+        get_resp = [
+            BOOT_MODE_RESP,
+            boot_seq_resp_fmt.replace("'", '"'),
+            BLANK_RESP,
+            BOOT_MODE_RESP,
+        ]
+        responses = INIT_RESP + get_resp
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_patch, 200, ["OK"])
+        # Make POST request fail with 500 to trigger error path in create_job
+        self.set_mock_response(mock_post, 500, '{"error": "Internal Server Error"}')
+        self.set_mock_response(mock_delete, 200, "OK")
+
+        self.args = [self.option_arg, DEVICE_NIC_2["name"]]
+        _, err = self.badfish_call()
+        # The error path executes L805-806, but error_handler raises BadfishException
+        # which gets caught at higher level and logs generic message
+        assert "Failed to communicate" in err
