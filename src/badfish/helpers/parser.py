@@ -70,6 +70,7 @@ def create_parser():
         action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--wait", help="Wait for iDRAC to be responsive after reset", action="store_true")
     parser.add_argument("--bmc-reset", help="Flag for BMC reset", action="store_true")
     parser.add_argument(
         "--factory-reset",

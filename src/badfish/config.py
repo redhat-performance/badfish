@@ -1,1 +1,1 @@
-RETRIES = 15
+RETRIES = 30
