@@ -1,5 +1,6 @@
 import argparse
 
+from badfish import __version__
 from badfish.config import RETRIES
 
 
@@ -9,6 +10,7 @@ def create_parser():
         description="Tool for managing server hardware via the Redfish API.",
         allow_abbrev=False,
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("-H", "--host", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username")
     parser.add_argument("-p", help="iDRAC password")

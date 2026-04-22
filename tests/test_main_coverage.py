@@ -172,3 +172,14 @@ async def test_set_nic_attribute_invalid_fqdd_exception():
     await bf.set_nic_attribute(mock_fqdd, "Attr", "NewVal")
 
     logger.error.assert_any_call("Invalid FQDD supplied.")
+
+
+def test_version_flag(capsys):
+    from badfish import __version__
+    from badfish.helpers.parser import parse_arguments
+
+    with pytest.raises(SystemExit) as exc_info:
+        parse_arguments(["--version"])
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert f"badfish {__version__}" in captured.out
