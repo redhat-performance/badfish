@@ -1,5 +1,6 @@
 import argparse
 
+from badfish import __version__
 from badfish.config import RETRIES
 
 
@@ -9,6 +10,7 @@ def create_parser():
         description="Tool for managing server hardware via the Redfish API.",
         allow_abbrev=False,
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("-H", "--host", help="iDRAC host address")
     parser.add_argument("-u", help="iDRAC username")
     parser.add_argument("-p", help="iDRAC password")
@@ -70,6 +72,7 @@ def create_parser():
         action="store_true",
     )
     parser.add_argument("--racreset", help="Flag for iDRAC reset", action="store_true")
+    parser.add_argument("--wait", help="Wait for iDRAC to be responsive after reset", action="store_true")
     parser.add_argument("--bmc-reset", help="Flag for BMC reset", action="store_true")
     parser.add_argument(
         "--factory-reset",
@@ -236,6 +239,11 @@ def create_parser():
         "--retries",
         help="Number of retries for executing actions.",
         default=RETRIES,
+    )
+    parser.add_argument(
+        "--insecure",
+        help="Disable SSL/TLS certificate verification (insecure, use only for testing)",
+        action="store_true",
     )
     parser.add_argument(
         "--get-scp-targets",

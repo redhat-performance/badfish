@@ -1136,6 +1136,12 @@ SCP_MESSAGE_PERCENTAGE_STATE = """\
     }
 }
 """
+SCP_EXPORT_JOB_FAILED = """\
+{
+    "JobState": "Failed",
+    "Message": "Export operation failed due to internal error"
+}
+"""
 
 # TEST SCP RESPONSES
 RESPONSE_GET_SCP_TARGETS_WITH_ALLOWABLES_PASS = """\
@@ -1153,24 +1159,23 @@ RESPONSE_GET_SCP_TARGETS_UNSUPPORTED_ERR = "- ERROR    - iDRAC on this system do
 RESPONSE_GET_SCP_TARGETS_WRONG = "- ERROR    - There was something wrong trying to get targets for SCP Export.\n"
 
 RESPONSE_EXPORT_SCP_PASS = f"""\
-- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
-- INFO     - Exporting Server Configuration Profile., percent complete: 15
-- INFO     - Exporting Server Configuration Profile., percent complete: 30
-- INFO     - Exporting Server Configuration Profile., percent complete: 45
-- INFO     - Exporting Server Configuration Profile., percent complete: 60
-- INFO     - Exporting Server Configuration Profile., percent complete: 75
-- INFO     - Exporting Server Configuration Profile., percent complete: 90
-- INFO     - Exporting Server Configuration Profile., percent complete: 99
-- INFO     - SCP export went through successfully.
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- INFO     - SCP export completed successfully.
 - INFO     - Exported system configuration to file: ./exports/%s_targets_ALL_export.json
 """
 RESPONSE_EXPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to export system configuration.\n"
 RESPONSE_EXPORT_SCP_NO_LOCATION = "- ERROR    - Failed to find a job ID in headers of the response.\n"
 RESPONSE_EXPORT_SCP_TIME_OUT = f"""\
-- INFO     - Job for exporting server configuration, successfully created. Job ID: {JOB_ID}
-- INFO     - Unable to get job status message, trying again.
-- INFO     - Exporting Server Configuration Profile., percent complete: 1
-- ERROR    - Job has been timed out, took longer than 5 minutes, command failed.
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- ERROR    - Export job completed but SystemConfiguration not found in response.
+"""
+RESPONSE_EXPORT_SCP_JOB_FAILED = f"""\
+- INFO     - Job for exporting server configuration successfully created. Job ID: {JOB_ID}
+- INFO     - Waiting for export job to complete (typically takes 15-30 seconds)...
+- ERROR    - Export job failed with state: Failed
+- ERROR    - Message: Export operation failed due to internal error
 """
 RESPONSE_IMPORT_SCP_INVALID_FILEPATH = "- ERROR    - File doesn't exist or couldn't be opened.\n"
 RESPONSE_IMPORT_SCP_STATUS_FAIL = "- ERROR    - Command failed to import system configuration.\n"
@@ -2298,7 +2303,9 @@ RESPONSE_GET_NIC_ATTR_SPECIFIC_LIST_FAIL = f"""\
 RESPONSE_SET_NIC_ATTR_ALREADY_OK = "- WARNING  - This attribute already is set to this value. Skipping.\n"
 RESPONSE_SET_NIC_ATTR_OK = """\
 - INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- WARNING  - No job ID returned in Location header. Changes may not persist after reboot.
 - INFO     - Command passed to On server, code return is 200.
+- WARNING  - Configuration change submitted but job monitoring was not possible. Please manually verify attribute value persisted after reboot.
 """
 RESPONSE_SET_NIC_ATTR_RETRY_OK = f"""\
 - ERROR    - Patch command to set network attribute values and create next reboot job FAILED, error code is: 503.
@@ -2323,10 +2330,12 @@ RESPONSE_SET_NIC_ATTR_RETRY_NOT_OK = """\
 - INFO     - Status code 200 returned for POST command to reset iDRAC.
 - INFO     - iDRAC will now reset and be back online within a few minutes.
 - INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- WARNING  - No job ID returned in Location header. Changes may not persist after reboot.
 - WARNING  - Actions resource not found
 - INFO     - Command passed to GracefulRestart server, code return is 200.
 - INFO     - Polling for host state: Not Down
 - INFO     - Command passed to On server, code return is 200.
+- WARNING  - Configuration change submitted but job monitoring was not possible. Please manually verify attribute value persisted after reboot.
 """
 RESPONSE_GET_NIC_ATTR_FW_BAD = f"""\
 {RESPONSE_VENDOR_UNSUPPORTED}
@@ -2340,3 +2349,333 @@ RESPONSE_GET_NIC_ATTR_FW_EXC = f"""\
 """
 MANAGER_INSTANCE_RESP = '{"Jobs":{"@odata.id":"/redfish/v1/Managers/iDRAC.Embedded.1/Jobs"}}'
 JOBS_RESP = '{"Members":[]}'
+
+# Job monitoring responses for NIC attribute tests
+JOB_STATUS_SCHEDULED = """{
+    "Id": "JID_498218641680",
+    "JobState": "Scheduled",
+    "JobType": "NICConfiguration",
+    "Message": "Task successfully scheduled.",
+    "Name": "Configure: NIC.Embedded.1-1-1",
+    "PercentComplete": 0,
+    "StartTime": "TIME_NA",
+    "TargetSettingsURI": null
+}"""
+
+JOB_STATUS_RUNNING = """{
+    "Id": "JID_498218641680",
+    "JobState": "Running",
+    "JobType": "NICConfiguration",
+    "Message": "Job in progress.",
+    "Name": "Configure: NIC.Embedded.1-1-1",
+    "PercentComplete": 50,
+    "StartTime": "2026-04-17T20:00:00",
+    "TargetSettingsURI": null
+}"""
+
+JOB_STATUS_COMPLETED = """{
+    "Id": "JID_498218641680",
+    "JobState": "Completed",
+    "JobType": "NICConfiguration",
+    "Message": "Job completed successfully.",
+    "Name": "Configure: NIC.Embedded.1-1-1",
+    "PercentComplete": 100,
+    "StartTime": "2026-04-17T20:00:00",
+    "TargetSettingsURI": null
+}"""
+
+JOB_STATUS_FAILED = """{
+    "Id": "JID_498218641680",
+    "JobState": "Failed",
+    "JobType": "NICConfiguration",
+    "Message": "Job failed: Unable to apply configuration.",
+    "Name": "Configure: NIC.Embedded.1-1-1",
+    "PercentComplete": 0,
+    "StartTime": "2026-04-17T20:00:00",
+    "TargetSettingsURI": null
+}"""
+
+# Updated NIC attribute responses for verification (after job completes)
+GET_NIC_ATTR_LIST_UPDATED = """\
+{
+    "Attributes": {
+        "WakeOnLan": "Disabled",
+        "VLanMode": "Enabled",
+        "VLanId": 1,
+        "ChipMdl": "0",
+        "BlnkLeds": 0,
+        "NumberVFAdvertised": 128
+    }
+}"""
+
+GET_NIC_ATTR_LIST_INTEGER_UPDATED = """\
+{
+    "@Redfish.Settings":{
+        "@odata.context":"/redfish/v1/$metadata#Settings.Settings",
+        "@odata.type":"#Settings.v1_3_1.Settings",
+        "SettingsObject":{"@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1/Settings"},
+        "SupportedApplyTimes":[
+            "Immediate",
+            "AtMaintenanceWindowStart",
+            "OnReset",
+            "InMaintenanceWindowOnReset"
+        ]
+    },
+    "@odata.context":"/redfish/v1/$metadata#DellAttributes.DellAttributes",
+    "@odata.id":"/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1",
+    "@odata.type":"#DellAttributes.v1_0_0.DellAttributes",
+    "AttributeRegistry":"NetworkAttributeRegistry_NIC.Embedded.1-1-1",
+    "Attributes":{
+        "ChipMdl":"BCM5720 A0",
+        "PCIDeviceID":"165F",
+        "BusDeviceFunction":"04:00:00",
+        "MacAddr":"C8:4B:D6:83:16:00",
+        "VirtMacAddr":"C8:4B:D6:83:16:00",
+        "FCoEOffloadSupport":"Unavailable",
+        "iSCSIOffloadSupport":"Unavailable",
+        "iSCSIBootSupport":"Unavailable",
+        "PXEBootSupport":"Available",
+        "FCoEBootSupport":"Unavailable",
+        "NicPartitioningSupport":"Unavailable",
+        "FlexAddressing":"Unavailable",
+        "TXBandwidthControlMaximum":"Unavailable",
+        "TXBandwidthControlMinimum":"Unavailable",
+        "EnergyEfficientEthernet":"Available",
+        "FamilyVersion":"22.00.6",
+        "ControllerBIOSVersion":"1.39",
+        "EFIVersion":"21.6.29",
+        "BlnkLeds":12,
+        "BannerMessageTimeout":5,
+        "VLanId":1,
+        "EEEControl":"Enabled",
+        "LinkStatus":"Disconnected",
+        "BootOptionROM":"Enabled",
+        "LegacyBootProto":"NONE",
+        "BootStrapType":"AutoDetect",
+        "HideSetupPrompt":"Disabled",
+        "LnkSpeed":"AutoNeg",
+        "WakeOnLan":"Enabled",
+        "VLanMode":"Disabled",
+        "PermitTotalPortShutdown":"Disabled"
+    },
+    "Description":"DellNetworkAttributes represents the Network device attribute details.",
+    "Id":"NIC.Embedded.1-1-1",
+    "Name":"DellNetworkAttributes"
+}
+"""
+
+# Expected responses for job monitoring test cases
+RESPONSE_SET_NIC_ATTR_WITH_JOB_SUCCESS = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Network attribute configuration job created: JID_498218641680
+- INFO     - Waiting for configuration job to be scheduled...
+- INFO     - Job JID_498218641680 status: Scheduled - Task successfully scheduled.
+- INFO     - Command passed to On server, code return is 200.
+- INFO     - Monitoring job JID_498218641680 for completion...
+- INFO     - JobID: JID_498218641680
+- INFO     - Name: Configure: NIC.Embedded.1-1-1
+- INFO     - Message: Job completed successfully.
+- INFO     - PercentComplete: 100
+- INFO     - Verifying attribute value was applied...
+- INFO     - ✓ Successfully changed WakeOnLan from Enabled to Disabled
+"""
+
+RESPONSE_SET_NIC_ATTR_JOB_FAILED = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Network attribute configuration job created: JID_498218641680
+- INFO     - Waiting for configuration job to be scheduled...
+- INFO     - Job JID_498218641680 status: Scheduled - Task successfully scheduled.
+- INFO     - Command passed to GracefulRestart server, code return is 204.
+- INFO     - Polling for host state: Not Down
+- WARNING  - Command failed to On server, host appears to be already in that state.
+- INFO     - Monitoring job JID_498218641680 for completion...
+- ERROR    - Configuration job JID_498218641680 did not complete successfully.
+- ERROR    - Network attribute changes may not have been applied.
+"""
+
+RESPONSE_SET_NIC_ATTR_NO_JOB_ID = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- WARNING  - No job ID returned in Location header. Changes may not persist after reboot.
+- INFO     - Command passed to On server, code return is 200.
+- WARNING  - Configuration change submitted but job monitoring was not possible. Please manually verify attribute value persisted after reboot.
+"""
+
+RESPONSE_SET_NIC_ATTR_PRE_REBOOT_FAIL = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Network attribute configuration job created: JID_498218641680
+- INFO     - Waiting for configuration job to be scheduled...
+- INFO     - Job JID_498218641680 status: Failed - Job failed: Unable to apply configuration.
+- ERROR    - Configuration job failed before reboot: Job failed: Unable to apply configuration.
+"""
+
+RESPONSE_SET_NIC_ATTR_VERIFY_FAILED = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Network attribute configuration job created: JID_498218641680
+- INFO     - Waiting for configuration job to be scheduled...
+- INFO     - Job JID_498218641680 status: Scheduled - Task successfully scheduled.
+- INFO     - Command passed to On server, code return is 200.
+- INFO     - Monitoring job JID_498218641680 for completion...
+- INFO     - JobID: JID_498218641680
+- INFO     - Name: Configure: NIC.Embedded.1-1-1
+- INFO     - Message: Job completed successfully.
+- INFO     - PercentComplete: 100
+- INFO     - Verifying attribute value was applied...
+- ERROR    - ✗ Attribute value did not persist. Expected: Disabled, Current: Enabled
+- ERROR    - Job completed but value not applied. Possible causes: prerequisite not met, validation failure, or firmware issue.
+"""
+
+RESPONSE_SET_NIC_ATTR_FALSE_NEGATIVE = """\
+- INFO     - Patch command to set network attribute values and create next reboot job PASSED.
+- INFO     - Network attribute configuration job created: JID_498218641680
+- INFO     - Waiting for configuration job to be scheduled...
+- INFO     - Job JID_498218641680 status: Scheduled - Task successfully scheduled.
+- INFO     - Command passed to On server, code return is 200.
+- INFO     - Monitoring job JID_498218641680 for completion...
+- ERROR    - Configuration job JID_498218641680 did not complete successfully.
+- ERROR    - Network attribute changes may not have been applied.
+- WARNING  - Job reported failure but attribute value is correct (WakeOnLan=Disabled). This may be a false negative.
+"""
+
+# VF Limit Validation Test Fixtures
+GET_NIC_ATTR_LIST_XXV710_NPARSRIOV = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"NPARSRIOV",
+        "NumberPCIFunctionsEnabled":"4",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
+GET_NIC_ATTR_LIST_SINGLE_FUNCTION = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"SRIOV",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
+GET_NIC_ATTR_LIST_VIRT_MODE_NONE = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet 25G 2P XXV710 Adapter",
+        "VirtualizationMode":"NONE",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""
+
+RESPONSE_SET_NIC_ATTR_VF_LIMIT_XXV710_WARNING = """\
+- WARNING  - Attempting to set NumberVFAdvertised to 128 on Intel XXV710.
+- WARNING  - Testing has shown that Intel XXV710 NICs are limited to 64 VFs regardless of virtualization mode (SRIOV/NPARSRIOV) or firmware version.
+- WARNING  - This operation will likely fail. The hardware limit appears to be 64 VFs maximum.
+"""
+
+RESPONSE_SET_NIC_ATTR_VIRT_MODE_NONE = """\
+- ERROR    - Cannot set NumberVFAdvertised when VirtualizationMode is NONE (disabled).
+- ERROR    - First enable SR-IOV virtualization mode with:
+- ERROR    -   --set-nic-attribute NIC.Embedded.1-1-1 --attribute VirtualizationMode --value SRIOV
+"""
+
+
+# Corrected registry with NumberVFAdvertised
+GET_NIC_ATTR_REGISTRY_WITH_VF = """
+{
+    "@odata.context": "/redfish/v1/$metadata#AttributeRegistry.AttributeRegistry",
+    "@odata.id": "/redfish/v1/Registries/NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1/NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1.json",
+    "@odata.type": "#AttributeRegistry.v1_3_3.AttributeRegistry",
+    "Description": "This registry defines a representation of Network Attribute instances",
+    "Id": "NetworkAttributesRegistry_NIC.ChassisSlot.8-2-1",
+    "Language": "en",
+    "Name": "Network Attribute Registry",
+    "OwningEntity": "Dell",
+    "RegistryEntries": {
+        "Attributes": [
+            {
+                "AttributeName": "NumberVFAdvertised",
+                "CurrentValue": null,
+                "DisplayName": "PCI Virtual Functions Advertised",
+                "DisplayOrder": 304,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "LowerBound": 0,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "NIC Configuration",
+                        "GroupName": "NICConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "ScalarIncrement": 16,
+                "Type": "Integer",
+                "UpperBound": 128,
+                "WarningText": null,
+                "WriteOnly": false
+            },
+            {
+                "AttributeName": "WakeOnLan",
+                "CurrentValue": null,
+                "DisplayName": "Wake On LAN",
+                "DisplayOrder": 201,
+                "HelpText": null,
+                "Hidden": false,
+                "Immutable": false,
+                "MenuPath": "./",
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOemAttributeRegistry.v1_0_0.Attributes",
+                        "GroupDisplayName": "Device Level Configuration",
+                        "GroupName": "DeviceLevelConfig"
+                    }
+                },
+                "ReadOnly": false,
+                "ResetRequired": true,
+                "Type": "Enumeration",
+                "Value": [
+                    {
+                        "ValueDisplayName": "Disabled",
+                        "ValueName": "Disabled"
+                    },
+                    {
+                        "ValueDisplayName": "Enabled",
+                        "ValueName": "Enabled"
+                    }
+                ],
+                "WarningText": null,
+                "WriteOnly": false
+            }
+        ]
+    },
+    "RegistryVersion": "1.0.0",
+    "SupportedSystems": []
+}
+"""
+
+
+GET_NIC_ATTR_LIST_WITH_VF = """\
+{
+    "Attributes":{
+        "DeviceName":"Intel(R) Ethernet Network Adapter XXV710",
+        "VirtualizationMode":"SRIOV",
+        "NumberPCIFunctionsEnabled":"1",
+        "NumberVFAdvertised":"64",
+        "NumberVFSupported":"128",
+        "WakeOnLan":"Disabled"
+    }
+}
+"""

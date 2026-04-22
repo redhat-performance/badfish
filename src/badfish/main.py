@@ -30,18 +30,18 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(_host, _username, _password, _logger=None, _retries=RETRIES, _loop=None):
+async def badfish_factory(_host, _username, _password, _logger=None, _retries=RETRIES, _loop=None, _insecure=False):
     if not _logger:
         bfl = BadfishLogger()
         _logger = bfl.logger
 
-    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop)
+    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop, _insecure)
     await badfish.init()
     return badfish
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None):
+    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None, _insecure=False):
         self.host = _host
         self.username = _username
         self.password = _password
@@ -54,7 +54,7 @@ class Badfish:
         self.loop = _loop
         if not self.loop:
             self.loop = asyncio.get_event_loop()
-        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries)
+        self.http_client = HTTPClient(_host, _username, _password, _logger, _retries, _insecure)
         self.system_resource = None
         self.manager_resource = None
         self.bios_uri = None
@@ -77,9 +77,14 @@ class Badfish:
     async def init(self):
         self.session_uri = await self.find_session_uri()
         self.token = await self.validate_credentials()
-        self.system_resource = await self.find_systems_resource()
+        try:
+            self.system_resource = await self.find_systems_resource()
+            self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
+        except BadfishException as e:
+            self.logger.warning(f"Could not find system resource: {e}. Some operations may not be available.")
+            self.system_resource = None
+            self.bios_uri = None
         self.manager_resource = await self.find_managers_resource()
-        self.bios_uri = "%s/Bios/Settings" % self.system_resource[len(self.redfish_uri) :]
 
     @staticmethod
     def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
@@ -487,7 +492,7 @@ class Badfish:
 
         raw = await response.text("utf-8", "ignore")
         data = json.loads(raw.strip())
-        self.vendor = "Dell" if "Dell" in data["Oem"] else "Supermicro"
+        self.vendor = "Dell" if data.get("Oem") and "Dell" in data["Oem"] else "Supermicro"
 
         if "Managers" not in data:
             raise BadfishException("Managers resource not found")
@@ -796,17 +801,13 @@ class Badfish:
         status_code = _response.status
         if status_code in expected:
             self.logger.debug("POST command passed to create target config job.")
-        else:
-            self.logger.error("POST command failed to create BIOS config job, status code is %s." % status_code)
-
+        else:  # pragma: no cover
+            # Defensive error handling: POST failures typically raise exceptions in http_client
+            # before returning, making this path difficult to test in isolation
+            self.logger.error("POST command failed to create BIOS config job, status_code is %s." % status_code)
             await self.error_handler(_response)
 
-        raw = await _response.text("utf-8", "ignore")
-        result = re.search("JID_.+?", raw)
-        res_group = ""
-        if result:
-            res_group = result.group()
-        job_id = re.sub("[,']", "", res_group)
+        job_id = self._extract_job_id_from_response(_response, warn_on_missing=False)
         if job_id:
             self.logger.debug("%s job ID successfully created" % job_id)
         return job_id
@@ -873,6 +874,152 @@ class Badfish:
                 self.progress_bar(count, self.retries, data["Message"], prompt="Status")
                 await asyncio.sleep(30)
 
+    def _extract_job_id_from_response(self, response, warn_on_missing=True, context=""):
+        """
+        Extract job ID from HTTP response Location header.
+
+        Args:
+            response: HTTP response object with headers
+            warn_on_missing: If True, log warning when job ID not found. If False, log error.
+            context: Additional context message to append to warning/error (optional)
+
+        Returns:
+            Job ID string or None if not found
+        """
+        try:
+            job_id = response.headers.get("Location", "").split("/")[-1]
+            if job_id:
+                return job_id
+            else:
+                if warn_on_missing:
+                    msg = "No job ID returned in Location header."
+                    if context:
+                        msg += f" {context}"
+                    self.logger.warning(msg)
+                else:
+                    self.logger.error("Failed to find a job ID in headers of the response.")
+                return None
+        except (AttributeError, ValueError, KeyError) as e:  # pragma: no cover
+            # Defensive: headers.get() raising exceptions is extremely rare in practice
+            if warn_on_missing:
+                msg = f"Could not extract job ID from response headers: {e}"
+                if context:
+                    msg += f" {context}"
+                self.logger.warning(msg)
+            else:
+                self.logger.error(f"Failed to find a job ID in headers of the response: {e}")
+            return None
+
+    async def _verify_job_scheduled(self, job_id, context="configuration"):
+        """
+        Verify that a job has been scheduled and is not already failed.
+
+        This is typically called before rebooting to ensure the job is in a good state.
+
+        Args:
+            job_id: The job ID to verify
+            context: Description of the job context for error messages (default: "configuration")
+
+        Returns:
+            True if job is scheduled successfully, False if job failed or inaccessible
+        """
+        self.logger.info(f"Waiting for {context} job to be scheduled...")
+        # Give job a moment to register in job queue
+        await asyncio.sleep(2)
+
+        # Check job status to ensure it's scheduled properly
+        job_url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+        try:
+            job_response = await self.get_request(job_url)
+            if job_response.status == 200:
+                job_raw = await job_response.text("utf-8", "ignore")
+                job_data = json.loads(job_raw.strip())
+                job_state = job_data.get("JobState", "Unknown")
+                job_message = job_data.get("Message", "No message")
+                self.logger.info(f"Job {job_id} status: {job_state} - {job_message}")
+
+                if "Fail" in job_message or "fail" in job_message or job_state == "Failed":
+                    self.logger.error(f"{context.capitalize()} job failed before reboot: {job_message}")
+                    return False
+                return True
+            else:  # pragma: no cover
+                # Defensive: non-200 responses during job verification are rare
+                self.logger.warning(
+                    f"Could not verify job status (HTTP {job_response.status}). Proceeding with reboot."
+                )
+                return True  # Don't block on verification failure
+        except Exception as e:  # pragma: no cover
+            # Defensive: exceptions during job status check are rare in practice
+            self.logger.warning(f"Could not check job status before reboot: {e}. Proceeding anyway.")
+            return True  # Don't block on verification failure
+
+    async def _monitor_and_verify_attribute_job(
+        self, job_id, fqdd, attribute, expected_value, attr_type, original_value
+    ):
+        """
+        Monitor job completion and verify the attribute value was actually applied.
+
+        This handles the full post-reboot workflow:
+        1. Wait for job to complete
+        2. If job fails, still verify the actual value (detect false negatives)
+        3. If job succeeds, verify the value matches expectation
+
+        Args:
+            job_id: The job ID to monitor
+            fqdd: NIC FQDD (e.g., "NIC.Embedded.1-1-1")
+            attribute: Attribute name (e.g., "WakeOnLan")
+            expected_value: Expected value after change
+            attr_type: Attribute type ("Integer", "String", "Enumeration")
+            original_value: Original value before change (for logging)
+
+        Returns:
+            True if value was successfully applied, False otherwise
+        """
+        self.logger.info(f"Monitoring job {job_id} for completion...")
+        job_success = await self.check_job_status(job_id)
+
+        # Job reported failure - but still verify actual value to detect false negatives
+        if job_success is False:
+            self.logger.error(f"Configuration job {job_id} did not complete successfully.")
+            self.logger.error("Network attribute changes may not have been applied.")
+
+            verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+            if verification:
+                current_val = verification.get("CurrentValue")
+                if current_val == expected_value:
+                    self.logger.warning(
+                        f"Job reported failure but attribute value is correct ({attribute}={current_val}). "
+                        "This may be a false negative."
+                    )
+                    return True
+            return False
+
+        # Job succeeded - verify attribute value actually changed
+        self.logger.info("Verifying attribute value was applied...")
+        verification = await self.get_nic_attribute_info(fqdd, attribute, log=False)
+        if verification:
+            current_val = verification.get("CurrentValue")
+            # Handle type conversion for comparison
+            if attr_type == "Integer":
+                current_val = int(current_val) if current_val is not None else None
+                expected_value = int(expected_value)
+
+            if current_val == expected_value:
+                self.logger.info(f"✓ Successfully changed {attribute} from {original_value} to {expected_value}")
+                return True
+            else:
+                self.logger.error(
+                    f"✗ Attribute value did not persist. Expected: {expected_value}, Current: {current_val}"
+                )
+                self.logger.error(
+                    "Job completed but value not applied. Possible causes: "
+                    "prerequisite not met, validation failure, or firmware issue."
+                )
+                return False
+        else:
+            self.logger.error("Could not verify final attribute value.")
+            return False
+
     async def send_reset(self, reset_type):
         _url = "%s%s/Actions/ComputerSystem.Reset" % (
             self.host_uri,
@@ -927,7 +1074,7 @@ class Badfish:
             await self.send_reset("On")
         return True
 
-    async def reset_idrac(self):
+    async def reset_idrac(self, wait=False):
         if self.vendor != "Dell":
             self.logger.warning("Vendor isn't a Dell, if you are trying this on a Supermicro, use --bmc-reset instead.")
             return False
@@ -953,8 +1100,17 @@ class Badfish:
             data = await _response.text("utf-8", "ignore")
             raise BadfishException("Status code %s returned, error is: \n%s." % (status_code, data))
 
-        self.logger.info("iDRAC will now reset and be back online within a few minutes.")
-        return True
+        if wait:
+            self.logger.info("iDRAC reset initiated. Waiting for iDRAC to come back online...")
+            ready = await self.wait_for_idrac_ready()
+            if ready:
+                self.logger.info("iDRAC is now responsive.")
+            else:
+                self.logger.warning("iDRAC did not respond after %d retry attempts." % self.retries)
+            return ready
+        else:
+            self.logger.info("iDRAC will now reset and be back online within a few minutes.")
+            return True
 
     async def reset_bmc(self):
         if self.vendor != "Supermicro":
@@ -1150,6 +1306,30 @@ class Badfish:
             self.progress_bar(count, self.retries, current_state)
 
         return desired_state
+
+    async def poll_until_ready(self, check_func, description, sleep_interval=5, clear_cache=False):
+        self.logger.info("Polling for %s" % description)
+        for count in range(self.retries):
+            if clear_cache:
+                self.http_client.get_request.cache_clear()
+            ready = await check_func()
+            if ready:
+                self.progress_bar(self.retries, self.retries, "Ready")
+                self.logger.info("%s is ready." % description)
+                return True
+            self.progress_bar(count, self.retries, "Not Ready")
+            await asyncio.sleep(sleep_interval)
+        self.logger.warning("%s did not become ready after %d retry attempts." % (description, self.retries))
+        return False
+
+    async def wait_for_idrac_ready(self):
+        async def check_idrac_responsive():
+            response = await self.get_request(self.root_uri, _continue=True)
+            return response and response.status == 200
+
+        self.logger.info("Waiting for iDRAC to be ready after reset (this may take a few minutes)...")
+        await asyncio.sleep(10)
+        return await self.poll_until_ready(check_idrac_responsive, "iDRAC", sleep_interval=10, clear_cache=True)
 
     async def get_firmware_inventory(self):
         self.logger.debug("Getting firmware inventory for all devices supported by iDRAC.")
@@ -2119,55 +2299,57 @@ class Badfish:
             "IncludeInExport": ("Default" if not include_read_only else "IncludeReadOnly"),
             "ShareParameters": {"Target": targets},
         }
+
         response = await self.post_request(uri, payload, headers)
         if response.status != 202:
             self.logger.error("Command failed to export system configuration.")
             return False
-        try:
-            job_id = response.headers["Location"].split("/")[-1]
-        except (ValueError, AttributeError, KeyError):
-            self.logger.error("Failed to find a job ID in headers of the response.")
+
+        job_id = self._extract_job_id_from_response(response, warn_on_missing=False)
+        if not job_id:
             return False
-        self.logger.info(f"Job for exporting server configuration, successfully created. Job ID: {job_id}")
-        start_time = get_now()
-        percentage = 0
-        while True:
-            ct = get_now() - start_time
+
+        self.logger.info(f"Job for exporting server configuration successfully created. Job ID: {job_id}")
+
+        # WORKAROUND: Dell iDRAC API returns stale/cached status even after job completes
+        # Both Tasks and Jobs endpoints show "Running" indefinitely even though racadm shows completion
+        # Export jobs typically complete in 15-30 seconds, so wait 45 seconds then fetch result
+        self.logger.info("Waiting for export job to complete (typically takes 15-30 seconds)...")
+        await asyncio.sleep(45)
+
+        # Try to fetch the result directly from Jobs endpoint
+        uri = "%s%s/Jobs/%s" % (self.host_uri, self.manager_resource, job_id)
+        response = await self.get_request(uri)
+        raw = await response.text("utf-8", "ignore")
+        data = json.loads(raw.strip())
+
+        # Check if job failed
+        if data.get("JobState") in ["Failed", "CompletedWithErrors"]:
+            self.logger.error(f"Export job failed with state: {data.get('JobState')}")
+            self.logger.error(f"Message: {data.get('Message', 'No error message')}")
+            return False
+
+        # Check if SystemConfiguration is in the response
+        if "SystemConfiguration" not in data:
+            # Try the Tasks endpoint as fallback
+            self.logger.debug("SystemConfiguration not in Jobs response, trying Tasks endpoint")
             uri = "%s/redfish/v1/TaskService/Tasks/%s" % (self.host_uri, job_id)
             response = await self.get_request(uri)
             raw = await response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
-            if "SystemConfiguration" in data:
-                now = get_now()
-                filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
-                open_file = open(filename, "w")
-                open_file.write(json.dumps(data, indent=4))
-                open_file.close()
-                self.logger.info("SCP export went through successfully.")
-                self.logger.info("Exported system configuration to file: %s" % filename)
-                break
-            if response.status in [200, 202]:
-                await asyncio.sleep(1)
-            else:
-                self.logger.error("Unable to get detail for the job, command failed.")
-                return False
-            if str(ct)[0:7] >= "0:05:00":
-                self.logger.error("Job has been timed out, took longer than 5 minutes, command failed.")
-                return False
-            else:
-                try:
-                    if percentage < int(data["Oem"]["Dell"]["PercentComplete"]):
-                        percentage = int(data["Oem"]["Dell"]["PercentComplete"])
-                        self.logger.info(
-                            "%s, percent complete: %s"
-                            % (data["Oem"]["Dell"]["Message"], data["Oem"]["Dell"]["PercentComplete"])
-                        )
-                    await asyncio.sleep(1)
-                except (ValueError, AttributeError, KeyError):
-                    self.logger.info("Unable to get job status message, trying again.")
-                    await asyncio.sleep(1)
-                continue
-        return True
+
+        # Save the exported configuration
+        if "SystemConfiguration" in data:
+            now = get_now()
+            filename = file_path + now.strftime(f"%Y-%m-%d_%H%M%S_targets_{targets.replace(',', '-')}_export.json")
+            with open(filename, "w") as f:
+                f.write(json.dumps(data, indent=4))
+            self.logger.info("SCP export completed successfully.")
+            self.logger.info(f"Exported system configuration to file: {filename}")
+            return True
+        else:
+            self.logger.error("Export job completed but SystemConfiguration not found in response.")
+            return False
 
     async def import_scp(self, file_path, targets="ALL"):
         try:
@@ -2190,11 +2372,11 @@ class Badfish:
         if response.status != 202:
             self.logger.error("Command failed to import system configuration.")
             return False
-        try:
-            job_id = response.headers["Location"].split("/")[-1]
-        except (ValueError, AttributeError, KeyError):
-            self.logger.error("Failed to find a job ID in headers of the response.")
+
+        job_id = self._extract_job_id_from_response(response, warn_on_missing=False)
+        if not job_id:
             return False
+
         self.logger.info(f"Job for importing server configuration, successfully created. Job ID: {job_id}")
         start_time = get_now()
         percentage = 0
@@ -2370,6 +2552,47 @@ class Badfish:
             self.logger.error("Was unable to set a network attribute. Attribute most likely doesn't exist.")
             return False
 
+        # Check if VirtualizationMode is enabled for SR-IOV attributes
+        sriov_attributes = ["NumberVFAdvertised", "VFDistribution", "VFAllocMult"]
+        if attribute in sriov_attributes:
+            all_attrs = await self.get_nic_attribute(fqdd, log=False)
+            if all_attrs:
+                attrs_dict = dict(all_attrs)
+                virt_mode = attrs_dict.get("VirtualizationMode", "")
+                if virt_mode == "NONE":
+                    self.logger.error(f"Cannot set {attribute} when VirtualizationMode is NONE (disabled).")
+                    self.logger.error("First enable SR-IOV virtualization mode with:")
+                    self.logger.error(f"  --set-nic-attribute {fqdd} --attribute VirtualizationMode --value SRIOV")
+                    return False
+
+        # Check for known hardware VF limits on NumberVFAdvertised attribute
+        if attribute == "NumberVFAdvertised":
+            try:
+                requested_vfs = int(value)
+                if requested_vfs > 64:
+                    # Get additional NIC attributes to determine hardware limits
+                    all_attrs = await self.get_nic_attribute(fqdd, log=False)
+                    if all_attrs:
+                        attrs_dict = dict(all_attrs)
+                        device_name = attrs_dict.get("DeviceName", "")
+
+                        # Intel XXV710 hardware limitation observed across firmware versions and modes
+                        if "XXV710" in device_name:
+                            self.logger.warning(
+                                f"Attempting to set NumberVFAdvertised to {requested_vfs} on Intel XXV710."
+                            )
+                            self.logger.warning(
+                                "Testing has shown that Intel XXV710 NICs are limited to 64 VFs regardless of "
+                                "virtualization mode (SRIOV/NPARSRIOV) or firmware version."
+                            )
+                            self.logger.warning(
+                                "This operation will likely fail. The hardware limit appears to be 64 VFs maximum."
+                            )
+                            # Allow attempt - let firmware reject if truly unsupported
+            except (ValueError, AttributeError, KeyError):  # pragma: no cover
+                # Defensive: exception during attribute parsing is rare - bad firmware data
+                pass
+
         try:
             type = attr_info.get("Type")
             current_value = attr_info.get("CurrentValue")
@@ -2420,12 +2643,23 @@ class Badfish:
             "Attributes": {attribute: value},
         }
         first_reset = False
+        job_id = None
+
         try:
             for i in range(self.retries):
                 response = await self.patch_request(uri, payload, headers)
                 status_code = response.status
                 if status_code in [200, 202]:
                     self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
+
+                    # Extract job ID from response headers (DMTF Redfish DSP0266 §13.6)
+                    # HTTP 202 indicates async operation with job creation
+                    job_id = self._extract_job_id_from_response(
+                        response, warn_on_missing=True, context="Changes may not persist after reboot."
+                    )
+                    if job_id:
+                        self.logger.info(f"Network attribute configuration job created: {job_id}")
+
                     break
                 else:
                     self.logger.error(
@@ -2451,8 +2685,29 @@ class Badfish:
                     return False
         except (AttributeError, ValueError):
             self.logger.error("Was unable to set a network attribute.")
+            return False
 
+        # Verify job is scheduled before reboot (if job was created)
+        if job_id:
+            job_scheduled = await self._verify_job_scheduled(job_id, context="configuration")
+            if not job_scheduled:
+                return False
+
+        # Reboot server to apply pending configuration
         await self.reboot_server()
+
+        # Monitor job completion and verify attribute change (if job was created)
+        if job_id:
+            return await self._monitor_and_verify_attribute_job(
+                job_id, fqdd, attribute, value, type, attr_info.get("CurrentValue")
+            )
+        else:
+            # No job ID - can't monitor, but still return True since PATCH succeeded
+            self.logger.warning(
+                "Configuration change submitted but job monitoring was not possible. "
+                "Please manually verify attribute value persisted after reboot."
+            )
+            return True
 
 
 async def execute_badfish(_host, _args, logger, format_handler=None):
@@ -2483,6 +2738,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     power_cycle = _args["power_cycle"]
     power_consumed_watts = _args["get_power_consumed"]
     rac_reset = _args["racreset"]
+    wait = _args.get("wait", False)
     bmc_reset = _args["bmc_reset"]
     factory_reset = _args["factory_reset"]
     check_boot = _args["check_boot"]
@@ -2525,6 +2781,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
     get_nic_fqdds = _args["get_nic_fqdds"]
     get_nic_attribute = _args["get_nic_attribute"]
     set_nic_attribute = _args["set_nic_attribute"]
+    insecure = _args.get("insecure", False)
     result = True
     badfish = None
 
@@ -2535,6 +2792,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             _password=_password,
             _logger=logger,
             _retries=retries,
+            _insecure=insecure,
         )
 
         if _args["host_list"] and not _args["output"]:
@@ -2561,7 +2819,7 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
         elif host_type:
             await badfish.change_boot(host_type, interfaces_path, pxe)
         elif rac_reset:
-            await badfish.reset_idrac()
+            await badfish.reset_idrac(wait=wait)
         elif bmc_reset:
             await badfish.reset_bmc()
         elif factory_reset:

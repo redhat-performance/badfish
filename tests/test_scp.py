@@ -6,6 +6,7 @@ from tests.config import (
     BLANK_RESP,
     INIT_RESP,
     JOB_ID,
+    RESPONSE_EXPORT_SCP_JOB_FAILED,
     RESPONSE_EXPORT_SCP_NO_LOCATION,
     RESPONSE_EXPORT_SCP_PASS,
     RESPONSE_EXPORT_SCP_STATUS_FAIL,
@@ -19,6 +20,7 @@ from tests.config import (
     RESPONSE_IMPORT_SCP_PASS,
     RESPONSE_IMPORT_SCP_STATUS_FAIL,
     RESPONSE_IMPORT_SCP_TIME_OUT,
+    SCP_EXPORT_JOB_FAILED,
     SCP_GET_TARGETS_ACTIONS_OEM_UNSUPPORTED,
     SCP_GET_TARGETS_ACTIONS_OEM_WITH_ALLOWABLES,
     SCP_GET_TARGETS_ACTIONS_OEM_WITHOUT_ALLOWABLES,
@@ -118,15 +120,12 @@ class TestExportSCP(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_pass(self, mock_get, mock_post, mock_delete):
         export_dir_check()
+        scp_file = open(self.example_path, "r").read()
+        # Wait-then-fetch approach: wait 45 seconds, then fetch from Jobs, fallback to Tasks
+        # First GET from Jobs endpoint (no SystemConfiguration), then GET from Tasks endpoint (has it)
         responses_get = [
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 15),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 30),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 45),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 60),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 75),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 90),
-            SCP_MESSAGE_PERCENTAGE % ("Ex", 99),
-            open(self.example_path, "r").read(),
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 100),  # Jobs endpoint response (no SystemConfiguration)
+            scp_file,  # Tasks endpoint response (has SystemConfiguration)
         ]
         responses = INIT_RESP + responses_get
         headers = {"Location": f"/{JOB_ID}"}
@@ -142,8 +141,10 @@ class TestExportSCP(TestBase):
     @patch("aiohttp.ClientSession.get")
     def test_status_fail(self, mock_get, mock_post, mock_delete):
         export_dir_check()
-        responses = INIT_RESP
+        # Provide extra responses in case error_handler makes additional requests
+        responses = INIT_RESP + [BLANK_RESP] * 10
         self.set_mock_response(mock_get, 200, responses)
+        # First POST is session/auth (200), second POST is export command (400 = fail)
         self.set_mock_response(mock_post, [200, 400], ["OK", "Bad Request"], post=True)
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
@@ -172,7 +173,12 @@ class TestExportSCP(TestBase):
         if hasattr(fixed_datetime, "counter"):
             setattr(fixed_datetime, "counter", 0)
         export_dir_check()
-        responses = INIT_RESP + ["{}"] + ([SCP_MESSAGE_PERCENTAGE % ("Ex", 1)] * 4)
+        # Test failure: SystemConfiguration not found in either Jobs or Tasks endpoint
+        responses_get = [
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 100),  # Jobs endpoint (no SystemConfiguration)
+            SCP_MESSAGE_PERCENTAGE % ("Ex", 100),  # Tasks endpoint (no SystemConfiguration either)
+        ]
+        responses = INIT_RESP + responses_get
         headers = {"Location": f"/{JOB_ID}"}
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, [200, 202], ["OK", "OK"], headers=headers, post=True)
@@ -180,6 +186,24 @@ class TestExportSCP(TestBase):
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
         assert err == RESPONSE_EXPORT_SCP_TIME_OUT
+
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_job_failed(self, mock_get, mock_post, mock_delete):
+        export_dir_check()
+        # Test job failed state: Jobs endpoint returns JobState: "Failed"
+        responses_get = [
+            SCP_EXPORT_JOB_FAILED,  # Jobs endpoint response with JobState: "Failed"
+        ]
+        responses = INIT_RESP + responses_get
+        headers = {"Location": f"/{JOB_ID}"}
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, [200, 202], ["OK", "OK"], headers=headers, post=True)
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg, "./exports/"]
+        _, err = self.badfish_call()
+        assert err == RESPONSE_EXPORT_SCP_JOB_FAILED
 
 
 class TestImportSCP(TestBase):

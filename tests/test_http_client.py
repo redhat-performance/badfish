@@ -1,4 +1,5 @@
 import json
+import ssl
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -45,7 +46,7 @@ def set_mock_response(mock, status, responses, post=False, headers=None):
 @pytest.mark.asyncio
 async def test_error_handler_valueerror_raises():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     resp = SimpleNamespace(text=AsyncMock(return_value="not-json"))
     with pytest.raises(BadfishException, match="Error reading response from host."):
         await client.error_handler(resp)
@@ -54,7 +55,7 @@ async def test_error_handler_valueerror_raises():
 @pytest.mark.asyncio
 async def test_error_handler_extended_info_with_custom_message():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     payload = {"error": {"@Message.ExtendedInfo": [{"Message": "detail", "Resolution": "fix it"}]}}
     resp = SimpleNamespace(text=AsyncMock(return_value=json.dumps(payload)))
     with pytest.raises(BadfishException, match="custom"):
@@ -67,7 +68,7 @@ async def test_error_handler_extended_info_with_custom_message():
 @patch("aiohttp.ClientSession.get")
 async def test_get_raw_success_with_token(mock_get):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     client.token = "TKN"
     set_mock_response(mock_get, 200, "{}")
     resp = await client.get_raw("https://x")
@@ -85,7 +86,7 @@ async def test_get_raw_success_with_token(mock_get):
 @patch("aiohttp.ClientSession.get")
 async def test_get_raw_success_with_basic_auth(mock_get):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     set_mock_response(mock_get, 200, "{}")
     resp = await client.get_raw("https://x", _get_token=True)
     assert resp.status == 200
@@ -101,7 +102,7 @@ async def test_get_raw_success_with_basic_auth(mock_get):
 @patch("aiohttp.ClientSession.get", side_effect=Exception("boom"))
 async def test_get_raw_exception_continue_returns_none(mock_get):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     resp = await client.get_raw("https://x", _continue=True)
     assert resp is None
 
@@ -110,7 +111,7 @@ async def test_get_raw_exception_continue_returns_none(mock_get):
 @patch("aiohttp.ClientSession.get", side_effect=Exception("boom"))
 async def test_get_raw_exception_raises(mock_get):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     with pytest.raises(BadfishException):
         await client.get_raw("https://x")
     assert any("Failed to communicate" not in m for m in logger.debug_msgs)  # debug captured
@@ -119,7 +120,7 @@ async def test_get_raw_exception_raises(mock_get):
 @pytest.mark.asyncio
 async def test_get_json_success_and_invalid():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
 
     class FakeResp:
         def __init__(self, text):
@@ -146,7 +147,7 @@ async def test_get_json_success_and_invalid():
 @patch("aiohttp.ClientSession.post")
 async def test_post_request_with_and_without_204(mock_post):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     client.token = "TT"
 
     # Non-204 => reads body, returns response
@@ -164,7 +165,7 @@ async def test_post_request_with_and_without_204(mock_post):
 @patch("aiohttp.ClientSession.post", side_effect=Exception("err"))
 async def test_post_request_raises(mock_post):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     with pytest.raises(BadfishException):
         await client.post_request("https://x", {}, {})
 
@@ -173,7 +174,7 @@ async def test_post_request_raises(mock_post):
 @patch("aiohttp.ClientSession.patch")
 async def test_patch_request_success(mock_patch):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     set_mock_response(mock_patch, 200, "OK")
     resp = await client.patch_request("https://x", {}, {})
     assert resp.status == 200
@@ -183,7 +184,7 @@ async def test_patch_request_success(mock_patch):
 @patch("aiohttp.ClientSession.patch", side_effect=Exception("bad"))
 async def test_patch_request_continue_and_raise(mock_patch):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     # Continue returns None
     out = await client.patch_request("https://x", {}, {}, _continue=True)
     assert out is None
@@ -196,7 +197,7 @@ async def test_patch_request_continue_and_raise(mock_patch):
 @patch("aiohttp.ClientSession.delete")
 async def test_delete_request_success(mock_delete):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     set_mock_response(mock_delete, 200, "OK")
     resp = await client.delete_request("https://x", {})
     assert resp.status == 200
@@ -206,7 +207,7 @@ async def test_delete_request_success(mock_delete):
 @patch("aiohttp.ClientSession.delete", side_effect=Exception("x"))
 async def test_delete_request_raises(mock_delete):
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     with pytest.raises(BadfishException):
         await client.delete_request("https://x", {})
 
@@ -214,7 +215,7 @@ async def test_delete_request_raises(mock_delete):
 @pytest.mark.asyncio
 async def test_find_session_uri_paths_and_404_switch():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
 
     # First call: root with Redfish 1.60 -> SessionService/Sessions
     # Second call: check session URI returns 200 => keep
@@ -235,7 +236,7 @@ async def test_find_session_uri_paths_and_404_switch():
 @pytest.mark.asyncio
 async def test_find_session_uri_auth_or_comm_errors():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     # Unauthorized
     resp401 = SimpleNamespace(status=401, text=AsyncMock(return_value="{}"))
     client.get_request = AsyncMock(return_value=resp401)
@@ -252,7 +253,7 @@ async def test_find_session_uri_auth_or_comm_errors():
 @pytest.mark.asyncio
 async def test_validate_credentials_success_and_errors():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
     client.find_session_uri = AsyncMock(return_value="/redfish/v1/Sessions")
 
     headers = {"Location": "/redfish/v1/SessionService/Sessions/1", "X-Auth-Token": "TK"}
@@ -278,7 +279,7 @@ async def test_validate_credentials_success_and_errors():
 @pytest.mark.asyncio
 async def test_delete_session_paths_and_cleanup():
     logger = DummyLogger()
-    client = HTTPClient("host", "u", "p", logger)
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
 
     # No session id => returns and keeps cleared
     client.session_id = None
@@ -320,3 +321,145 @@ async def test_delete_session_paths_and_cleanup():
     client.delete_request = AsyncMock(side_effect=raise_exc)
     await client.delete_session()
     assert any("Failed to delete session" in m for m in logger.warn_msgs)
+
+
+# SSL Certificate Verification Tests
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_get_raw_ssl_error_raises(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.get_raw("https://x")
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_get_raw_ssl_error_continue_returns_none(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    resp = await client.get_raw("https://x", _continue=True)
+    assert resp is None
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_get_raw_client_connector_certificate_error_raises(mock_get):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    # Simulate ClientConnectorCertificateError
+    mock_get.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.get_raw("https://x")
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.post", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_post_request_ssl_error_raises(mock_post):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.post_request("https://x", {}, {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.post")
+async def test_post_request_client_connector_certificate_error_raises(mock_post):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_post.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.post_request("https://x", {}, {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_patch_request_ssl_error_raises(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.patch_request("https://x", {}, {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_patch_request_ssl_error_continue_returns_none(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    resp = await client.patch_request("https://x", {}, {}, _continue=True)
+    assert resp is None
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.patch")
+async def test_patch_request_client_connector_certificate_error_raises(mock_patch):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_patch.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.patch_request("https://x", {}, {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.delete", side_effect=ssl.SSLError("certificate verify failed"))
+async def test_delete_request_ssl_error_raises(mock_delete):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.delete_request("https://x", {})
+    assert any("SSL certificate verification failed" in m for m in logger.debug_msgs)
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.delete")
+async def test_delete_request_client_connector_certificate_error_raises(mock_delete):
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    mock_delete.side_effect = aiohttp.ClientConnectorCertificateError(
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+    with pytest.raises(BadfishException, match="SSL certificate verification failed"):
+        await client.delete_request("https://x", {})
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_insecure_flag_sets_ssl_false(mock_get):
+    """Test that insecure=True properly disables SSL verification"""
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=True)
+    set_mock_response(mock_get, 200, "{}")
+    await client.get_raw("https://x")
+
+    # Check that ssl=False was passed
+    called_with_ssl_false = False
+    for args, kwargs in mock_get.call_args_list:
+        if kwargs.get("ssl") is False:
+            called_with_ssl_false = True
+            break
+    assert called_with_ssl_false, "insecure=True should set ssl=False"
+
+
+@pytest.mark.asyncio
+@patch("aiohttp.ClientSession.get")
+async def test_secure_flag_sets_ssl_true(mock_get):
+    """Test that insecure=False properly enables SSL verification"""
+    logger = DummyLogger()
+    client = HTTPClient("host", "u", "p", logger, insecure=False)
+    set_mock_response(mock_get, 200, "{}")
+    await client.get_raw("https://x")
+
+    # Check that ssl=True was passed
+    called_with_ssl_true = False
+    for args, kwargs in mock_get.call_args_list:
+        if kwargs.get("ssl") is True:
+            called_with_ssl_true = True
+            break
+    assert called_with_ssl_true, "insecure=False should set ssl=True"
