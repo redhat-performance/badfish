@@ -1,6 +1,158 @@
 # CHANGELOG
 
 
+## v1.3.0 (2026-04-22)
+
+### Bug Fixes
+
+- --export-scp hang bug.
+  ([`75f0fc1`](https://github.com/redhat-performance/badfish/commit/75f0fc1ad6a440b7e441d529e0d30eeaed8bd507))
+
+* export_scp method polling loop 'continue' statement was nested inside an unnecessary 'else:' block
+  after the timeout check. This made the control flow inconsistent with the working import_scp()
+  method.
+
+fixes: https://github.com/redhat-performance/badfish/issues/499
+
+- Add fallback / warn intelligence for XX710 NIC
+  ([`a726de9`](https://github.com/redhat-performance/badfish/commit/a726de906438b0d051a880b3f2f1398da2a5be04))
+
+* We think intel XX710 may not be able to do 128 VRF * Add proper warning but don't fail.
+
+- Refactor create_job to use _extract_job_id_from_response
+  ([`28cca05`](https://github.com/redhat-performance/badfish/commit/28cca050456d63a06c777fb10a874b989b84be88))
+
+* try not to go too crazy with pragma no cover
+
+- Resolve export_scp hanging at low percentages due to iDRAC API caching bug
+  ([`ecb03a2`](https://github.com/redhat-performance/badfish/commit/ecb03a21e4433723b58bfdef8d8abaf939bac7d2))
+
+* making additional fixes here and testing, we were good but tinkered too much with control flow
+  mechanisms
+
+- Resort back to a simpler approach.
+  ([`b91a73a`](https://github.com/redhat-performance/badfish/commit/b91a73afb9d9a64b5363d744722d3bb9205c98fb))
+
+* revert back to a less aggress and simpler approach
+
+- Sriov set nic attributes dont persist on reboot.
+  ([`da0ef9e`](https://github.com/redhat-performance/badfish/commit/da0ef9e6ba83d263ffd8d763f1602746a5ab42a0))
+
+fixes: https://github.com/redhat-performance/badfish/issues/523
+
+### Chores
+
+- Add more SSL test coverage
+  ([`0621a67`](https://github.com/redhat-performance/badfish/commit/0621a6798b714d942c606a73595b1484673404db))
+
+- Add poll_helpers test
+  ([`b1db697`](https://github.com/redhat-performance/badfish/commit/b1db697958fabcd89c62c041a698e7173b3473d0))
+
+- Address code review feedback
+  ([`26223b9`](https://github.com/redhat-performance/badfish/commit/26223b94caaf32132f611ccc84e6b28d868f690d))
+
+- Address code review points, DRY.
+  ([`cf8a454`](https://github.com/redhat-performance/badfish/commit/cf8a45470963c35ecfdbe881bba97b9a93a0924a))
+
+- Adust tests and PR feedback, increase default retries to 30.
+  ([`e1516e6`](https://github.com/redhat-performance/badfish/commit/e1516e6d2586f27348eeb3cab53ca5791e3a294a))
+
+* essentially 2.7 minutes may not be enough time to poll idrac (15x retries). Increasing this to 30
+  retries or just over 5min.
+
+- Black fixes and flake8
+  ([`66158ca`](https://github.com/redhat-performance/badfish/commit/66158ca6b4bc2e06b2d5c3cb9d745e11369c1b02))
+
+- Bump CI python version
+  ([`7a73d7a`](https://github.com/redhat-performance/badfish/commit/7a73d7aebce42489b0a077edd818689345985893))
+
+- Fix codecov
+  ([`cfe2f71`](https://github.com/redhat-performance/badfish/commit/cfe2f71f596ec89c2401233e25cae7abaf6fd6fe))
+
+- Fix formatting in GHA lint.yml
+  ([`a2419d5`](https://github.com/redhat-performance/badfish/commit/a2419d5c65364aa4fb726031795cedbb23ad9eec))
+
+- Fix test with duplicate 75% response where it's skipped
+  ([`69e7c2c`](https://github.com/redhat-performance/badfish/commit/69e7c2c33d682f6da9faf2772cceaacaaf003a88))
+
+- Fix tests again
+  ([`2dd9971`](https://github.com/redhat-performance/badfish/commit/2dd997110c41ad23f31158f7d9bb3cbe38de86b8))
+
+- Fix tests, add doc mention
+  ([`f80b915`](https://github.com/redhat-performance/badfish/commit/f80b91539b55ecb2d00dab1569b7ea807f918290))
+
+- Further fix test coverage
+  ([`f3e118a`](https://github.com/redhat-performance/badfish/commit/f3e118a744cc12df956254a57630e57842fc7189))
+
+- Further test fixes
+  ([`3d89b25`](https://github.com/redhat-performance/badfish/commit/3d89b25c1739370d5a864887db9bf41ab8813ec6))
+
+- Further tweak tests
+  ([`ddfa57e`](https://github.com/redhat-performance/badfish/commit/ddfa57e640a3e067f6a99ec713f4daac85c9b3e3))
+
+- Hopefully fix rest of tests
+  ([`6fdc73c`](https://github.com/redhat-performance/badfish/commit/6fdc73cdeb3734c836eee9529408884ad9040f8e))
+
+- Make codecov happy
+  ([`918d99c`](https://github.com/redhat-performance/badfish/commit/918d99c49629b5a056948f76788ed7d7ad32b9b5))
+
+- Simplify tests
+  ([`6f60320`](https://github.com/redhat-performance/badfish/commit/6f6032051b38ac975b2d11444e720988787c427c))
+
+* Don't obesess over defensive / firmware status handling
+
+- Try to eek out more test coverage
+  ([`93b5e53`](https://github.com/redhat-performance/badfish/commit/93b5e53d50d09aa9b043e58deb457925799dc1a7))
+
+- Update testing coverage
+  ([`6e8fb92`](https://github.com/redhat-performance/badfish/commit/6e8fb92646a9108f826188158cb5046665387360))
+
+### Features
+
+- Add --insecure flag and SSL verification.
+  ([`42b7441`](https://github.com/redhat-performance/badfish/commit/42b7441190feb7a713a2601f8b198ba10b4a0b82))
+
+fixes: https://github.com/redhat-performance/badfish/issues/499
+
+fixes: https://github.com/redhat-performance/badfish/issues/498
+
+* We now properly check SSL connections and offer an --insecure parameter. * export_scp hang bug:
+  Fixed by discovering that Dell iDRAC API endpoints (both Tasks and Jobs) return stale/cached
+  status data showing "Running" indefinitely even after the job * Add more fixes for --export-scp
+  feature * Workaround: Instead of unreliable polling, we now wait 45 seconds which is more than
+  enough time then fetch json. * This now fully works and is fast.
+
+- INFO - Job for exporting server configuration successfully created. Job ID: JID_763636328050 -
+  INFO - Waiting for export job to complete (typically takes 15-30 seconds)... - INFO - SCP export
+  completed successfully. - INFO - Exported system configuration to file:
+  ./2026-04-16_142201_targets_IDRAC-BIOS_export.json - INFO - Job for exporting server configuration
+  successfully created. Job ID: JID_763636328050 - INFO - Waiting for export job to complete
+  (typically takes 15-30 seconds)... - INFO - SCP export completed successfully. - INFO - Exported
+  system configuration to file: ./2026-04-16_142201_targets_IDRAC-BIOS_export.json
+
+real	0m57.349s user	0m0.409s sys	0m0.066s
+
+- Add --version flag to CLI
+  ([`215d1ea`](https://github.com/redhat-performance/badfish/commit/215d1ea810dd1bd4a307d899faa6fc0306c7c152))
+
+Resolves #525.
+
+(cherry picked from commit fdd7b1d0058d336a509abc2d0aaf081593c9e1b8)
+
+- Add --wait to racreset
+  ([`093c005`](https://github.com/redhat-performance/badfish/commit/093c00588e0ab6cdcc428f33677fd2853a9ab7fc))
+
+fixes: https://github.com/redhat-performance/badfish/issues/450
+
+- Refactor to include three helper functions.
+  ([`2d662a5`](https://github.com/redhat-performance/badfish/commit/2d662a56a129fdc2095194b30a4dd3f61095809e))
+
+* Always be DRY'ing
+
+Helper 1: _extract_job_id_from_response() Helper 2: _verify_job_scheduled() Helper 3:
+  _monitor_and_verify_attribute_job()
+
+
 ## v1.2.0 (2026-02-13)
 
 ### Bug Fixes
