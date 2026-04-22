@@ -19,7 +19,7 @@ class TestPollHelpers(TestBase):
         result = asyncio.get_event_loop().run_until_complete(run_test())
 
         assert result is False
-        logger.warning.assert_called_once_with("test service did not become ready within timeout.")
+        logger.warning.assert_called_once_with("test service did not become ready after 2 retry attempts.")
 
     @patch("badfish.main.HTTPClient")
     def test_poll_until_ready_success(self, mock_http_client):

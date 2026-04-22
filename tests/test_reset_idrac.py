@@ -71,7 +71,7 @@ class TestResetIdrac(TestBase):
         _, err = self.badfish_call()
         assert "Status code 204 returned for POST command to reset iDRAC" in err
         assert "iDRAC reset initiated. Waiting for iDRAC to come back online" in err
-        assert "iDRAC did not respond within the timeout period" in err
+        assert "iDRAC did not respond after 30 retry attempts" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

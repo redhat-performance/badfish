@@ -1106,7 +1106,7 @@ class Badfish:
             if ready:
                 self.logger.info("iDRAC is now responsive.")
             else:
-                self.logger.warning("iDRAC did not respond within the timeout period.")
+                self.logger.warning("iDRAC did not respond after %d retry attempts." % self.retries)
             return ready
         else:
             self.logger.info("iDRAC will now reset and be back online within a few minutes.")
@@ -1319,7 +1319,7 @@ class Badfish:
                 return True
             self.progress_bar(count, self.retries, "Not Ready")
             await asyncio.sleep(sleep_interval)
-        self.logger.warning("%s did not become ready within timeout." % description)
+        self.logger.warning("%s did not become ready after %d retry attempts." % (description, self.retries))
         return False
 
     async def wait_for_idrac_ready(self):
