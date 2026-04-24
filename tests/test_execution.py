@@ -22,11 +22,11 @@ from tests.config import (
 from tests.test_base import TestBase
 
 
-def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3, ignore4=None):
+def raise_keyb_interrupt_stub(ignore1, ignore2, ignore3, ignore4=None, **kwargs):
     raise KeyboardInterrupt
 
 
-def raise_badfish_exception_stub(ignore1, ignore2, ignore3, ignore4=None):
+def raise_badfish_exception_stub(ignore1, ignore2, ignore3, ignore4=None, **kwargs):
     raise BadfishException
 
 

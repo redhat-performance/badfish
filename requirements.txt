@@ -7,4 +7,5 @@ pyyaml>=3.10
 aiohttp>=3.10
 setuptools>=39.0
 async-lru>=2.0
+rich>=13.0
 build>=0.7.0
