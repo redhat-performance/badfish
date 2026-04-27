@@ -867,9 +867,10 @@ class Badfish:
             return False
 
     async def check_job_status(self, job_id):
-        with polling_progress(
-            self.console, self.retries, "Status", disable=self._progress_disabled
-        ) as (progress, task_id):
+        with polling_progress(self.console, self.retries, "Status", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
             for count in range(self.retries):
                 _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
                 self.http_client.get_request.cache_clear()
@@ -1319,9 +1320,10 @@ class Badfish:
         state_str = "Not %s" % state if not equals else state
         self.logger.info("Polling for host state: %s" % state_str)
         desired_state = False
-        with polling_progress(
-            self.console, self.retries, "Host state", disable=self._progress_disabled
-        ) as (progress, task_id):
+        with polling_progress(self.console, self.retries, "Host state", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
             for count in range(self.retries):
                 current_state = await self.get_power_state()
                 if equals:
@@ -1338,9 +1340,10 @@ class Badfish:
 
     async def poll_until_ready(self, check_func, description, sleep_interval=5, clear_cache=False):
         self.logger.info("Polling for %s" % description)
-        with polling_progress(
-            self.console, self.retries, "Host state", disable=self._progress_disabled
-        ) as (progress, task_id):
+        with polling_progress(self.console, self.retries, "Host state", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
             for count in range(self.retries):
                 if clear_cache:
                     self.http_client.get_request.cache_clear()
