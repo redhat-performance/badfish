@@ -4,7 +4,7 @@ USER root
 
 RUN dnf install -y git
 
-RUN git clone https://github.com/redhat-performance/badfish
+RUN git clone https://github.com/quadsproject/badfish
 
 WORKDIR badfish
 
