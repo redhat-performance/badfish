@@ -134,7 +134,7 @@ class TestExportSCP(TestBase):
         self.set_mock_response(mock_delete, 200, "OK")
         self.args = [self.option_arg, "./exports/"]
         _, err = self.badfish_call()
-        assert err == RESPONSE_EXPORT_SCP_PASS % (datetime.now().strftime("%Y-%m-%d_%H%M%S"))
+        assert err == RESPONSE_EXPORT_SCP_PASS % (fixed_datetime().strftime("%Y-%m-%d_%H%M%S"))
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
