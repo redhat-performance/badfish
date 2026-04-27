@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/redhat-performance/badfish/development/image/badfish-original-licensed.small.png" />
+  <img src="https://raw.githubusercontent.com/quadsproject/badfish/development/image/badfish-original-licensed.small.png" />
 </p>
 
 <h2 align="center">The Out-of-Band Wrangler</h2>
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/quadsdev/badfish/package/badfish/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/quadsdev/badfish/package/badfish/)
-[![Codecov](https://codecov.io/gh/redhat-performance/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/redhat-performance/badfish)
+[![Codecov](https://codecov.io/gh/quadsproject/badfish/branch/master/graph/badge.svg?token=CNJN0CD6GN)](https://codecov.io/gh/quadsproject/badfish)
 [![Container image on Quay](https://quay.io/repository/quads/badfish/status "Container image on Quay")](https://quay.io/repository/quads/badfish)
-[![Tox](https://github.com/redhat-performance/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
-[![Lint](https://github.com/redhat-performance/badfish/actions/workflows/lint.yml/badge.svg)](https://github.com/redhat-performance/badfish/actions)
+[![Tox](https://github.com/quadsproject/badfish/actions/workflows/tox.yml/badge.svg)](https://github.com/quadsproject/badfish/actions)
+[![Lint](https://github.com/quadsproject/badfish/actions/workflows/lint.yml/badge.svg)](https://github.com/quadsproject/badfish/actions)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -142,7 +142,7 @@ Active RPM releases:
 
 ### Badfish Standalone CLI
 ```bash
-git clone https://github.com/redhat-performance/badfish && cd badfish
+git clone https://github.com/quadsproject/badfish && cd badfish
 python3 -m venv bf
 source bf/bin/activate
 python3 -m pip install --upgrade build
@@ -252,7 +252,7 @@ If you choose to install Badfish via RPM package then it'll be located in `/usr/
 You can always retrieve our example `idrac_interfaces.yml` file via:
 
 ```
-curl  https://raw.githubusercontent.com/redhat-performance/badfish/master/config/idrac_interfaces.yml --output idrac_interfaces.yml
+curl  https://raw.githubusercontent.com/quadsproject/badfish/master/config/idrac_interfaces.yml --output idrac_interfaces.yml
 ```
 
 ## Common Operations

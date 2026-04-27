@@ -1,5 +1,5 @@
 %global project badfish
-%global org     redhat-performance
+%global org     quadsproject
 %global sum     Tool for managing bare-metal systems via the Redfish API
 %global desc    Badfish is a vendor-agnostic, redfish-based API tool used to consolidate \
 management of IPMI and out-of-band interfaces for common server hardware \
