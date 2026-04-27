@@ -13,11 +13,14 @@ import yaml
 import tempfile
 from urllib.parse import urlparse
 
+from rich.console import Console
+
 from badfish.helpers import get_now
 from badfish.helpers.parser import parse_arguments
 from badfish.helpers.logger import BadfishLogger
 from badfish.helpers.http_client import HTTPClient
 from badfish.helpers.exceptions import BadfishException
+from badfish.helpers.progress import polling_progress
 
 from logging import (
     DEBUG,
@@ -30,18 +33,49 @@ warnings.filterwarnings("ignore")
 RETRIES = 15
 
 
-async def badfish_factory(_host, _username, _password, _logger=None, _retries=RETRIES, _loop=None, _insecure=False):
+async def badfish_factory(
+    _host,
+    _username,
+    _password,
+    _logger=None,
+    _retries=RETRIES,
+    _loop=None,
+    _insecure=False,
+    _console=None,
+    _progress_disabled=False,
+):
     if not _logger:
         bfl = BadfishLogger()
         _logger = bfl.logger
 
-    badfish = Badfish(_host, _username, _password, _logger, _retries, _loop, _insecure)
+    badfish = Badfish(
+        _host,
+        _username,
+        _password,
+        _logger,
+        _retries,
+        _loop,
+        _insecure,
+        _console,
+        _progress_disabled,
+    )
     await badfish.init()
     return badfish
 
 
 class Badfish:
-    def __init__(self, _host, _username, _password, _logger, _retries, _loop=None, _insecure=False):
+    def __init__(
+        self,
+        _host,
+        _username,
+        _password,
+        _logger,
+        _retries,
+        _loop=None,
+        _insecure=False,
+        _console=None,
+        _progress_disabled=False,
+    ):
         self.host = _host
         self.username = _username
         self.password = _password
@@ -63,6 +97,8 @@ class Badfish:
         self.session_id = None
         self.token = None
         self.vendor = None
+        self.console = _console if _console is not None else Console()
+        self._progress_disabled = _progress_disabled
 
     async def __aenter__(self):
         await self.init()
@@ -85,19 +121,6 @@ class Badfish:
             self.system_resource = None
             self.bios_uri = None
         self.manager_resource = await self.find_managers_resource()
-
-    @staticmethod
-    def progress_bar(value, end_value, state, prompt="Host state", bar_length=20):
-        ratio = float(value) / end_value
-        arrow = "-" * int(round(ratio * bar_length) - 1) + ">"
-        spaces = " " * (bar_length - len(arrow))
-        percent = int(round(ratio * 100))
-
-        if state.lower() == "on":
-            state = "On  "
-        ret = "\r" if percent != 100 else "\n"
-        sys.stdout.write(f"\r- POLLING: [{arrow + spaces}] {percent}% - {prompt}: {state}{ret}")
-        sys.stdout.flush()
 
     async def error_handler(self, _response, message=None):
         try:
@@ -844,35 +867,39 @@ class Badfish:
             return False
 
     async def check_job_status(self, job_id):
-        for count in range(self.retries):
-            _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
-            self.http_client.get_request.cache_clear()
-            _response = await self.get_request(_url)
+        with polling_progress(self.console, self.retries, "Status", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
+            for count in range(self.retries):
+                _url = f"{self.host_uri}{self.manager_resource}/Jobs/{job_id}"
+                self.http_client.get_request.cache_clear()
+                _response = await self.get_request(_url)
 
-            status_code = _response.status
-            raw = await _response.text("utf-8", "ignore")
-            data = json.loads(raw.strip())
-            if status_code != 200:
-                self.logger.error(f"Command failed to check job status, return code is {status_code}")
-                self.logger.debug(f"Extended Info Message: {data}")
-                return False
+                status_code = _response.status
+                raw = await _response.text("utf-8", "ignore")
+                data = json.loads(raw.strip())
+                if status_code != 200:
+                    self.logger.error(f"Command failed to check job status, return code is {status_code}")
+                    self.logger.debug(f"Extended Info Message: {data}")
+                    return False
 
-            if "Message" not in data:
-                self.logger.warning("Job status response missing Message field")
-                return False
+                if "Message" not in data:
+                    self.logger.warning("Job status response missing Message field")
+                    return False
 
-            if "Fail" in data["Message"] or "fail" in data["Message"]:
-                self.logger.debug(f"\n{job_id} job failed.")
-                return False
-            elif data["Message"] == "Job completed successfully.":
-                self.logger.info(f"JobID: {data[u'Id']}")
-                self.logger.info(f"Name: {data[u'Name']}")
-                self.logger.info(f"Message: {data[u'Message']}")
-                self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
-                break
-            else:
-                self.progress_bar(count, self.retries, data["Message"], prompt="Status")
-                await asyncio.sleep(30)
+                if "Fail" in data["Message"] or "fail" in data["Message"]:
+                    self.logger.debug(f"\n{job_id} job failed.")
+                    return False
+                elif data["Message"] == "Job completed successfully.":
+                    self.logger.info(f"JobID: {data[u'Id']}")
+                    self.logger.info(f"Name: {data[u'Name']}")
+                    self.logger.info(f"Message: {data[u'Message']}")
+                    self.logger.info(f"PercentComplete: {str(data[u'PercentComplete'])}")
+                    break
+                else:
+                    progress.update(task_id, completed=count + 1, state=data["Message"])
+                    await asyncio.sleep(30)
 
     def _extract_job_id_from_response(self, response, warn_on_missing=True, context=""):
         """
@@ -1293,32 +1320,40 @@ class Badfish:
         state_str = "Not %s" % state if not equals else state
         self.logger.info("Polling for host state: %s" % state_str)
         desired_state = False
-        for count in range(self.retries):
-            current_state = await self.get_power_state()
-            if equals:
-                desired_state = current_state.lower() == state.lower()
-            else:
-                desired_state = current_state.lower() != state.lower()
-            await asyncio.sleep(5)
-            if desired_state:
-                self.progress_bar(self.retries, self.retries, current_state)
-                break
-            self.progress_bar(count, self.retries, current_state)
+        with polling_progress(self.console, self.retries, "Host state", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
+            for count in range(self.retries):
+                current_state = await self.get_power_state()
+                if equals:
+                    desired_state = current_state.lower() == state.lower()
+                else:
+                    desired_state = current_state.lower() != state.lower()
+                await asyncio.sleep(5)
+                if desired_state:
+                    progress.update(task_id, completed=self.retries, state=current_state)
+                    break
+                progress.update(task_id, completed=count + 1, state=current_state)
 
         return desired_state
 
     async def poll_until_ready(self, check_func, description, sleep_interval=5, clear_cache=False):
         self.logger.info("Polling for %s" % description)
-        for count in range(self.retries):
-            if clear_cache:
-                self.http_client.get_request.cache_clear()
-            ready = await check_func()
-            if ready:
-                self.progress_bar(self.retries, self.retries, "Ready")
-                self.logger.info("%s is ready." % description)
-                return True
-            self.progress_bar(count, self.retries, "Not Ready")
-            await asyncio.sleep(sleep_interval)
+        with polling_progress(self.console, self.retries, "Host state", disable=self._progress_disabled) as (
+            progress,
+            task_id,
+        ):
+            for count in range(self.retries):
+                if clear_cache:
+                    self.http_client.get_request.cache_clear()
+                ready = await check_func()
+                if ready:
+                    progress.update(task_id, completed=self.retries, state="Ready")
+                    self.logger.info("%s is ready." % description)
+                    return True
+                progress.update(task_id, completed=count + 1, state="Not Ready")
+                await asyncio.sleep(sleep_interval)
         self.logger.warning("%s did not become ready after %d retry attempts." % (description, self.retries))
         return False
 
@@ -2710,7 +2745,7 @@ class Badfish:
             return True
 
 
-async def execute_badfish(_host, _args, logger, format_handler=None):
+async def execute_badfish(_host, _args, logger, format_handler=None, console=None, progress_disabled=False):
     _username = _args.get("u") or os.environ.get("BADFISH_USERNAME")
     _password = _args.get("p") or os.environ.get("BADFISH_PASSWORD")
 
@@ -2793,6 +2828,8 @@ async def execute_badfish(_host, _args, logger, format_handler=None):
             _logger=logger,
             _retries=retries,
             _insecure=insecure,
+            _console=console,
+            _progress_disabled=progress_disabled,
         )
 
         if _args["host_list"] and not _args["output"]:
@@ -2949,6 +2986,9 @@ def main(argv=None):
     output = _args["output"]
     bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output)
 
+    console = Console()
+    progress_disabled = bool(output) or multi_host or bool(_args["log"]) or not console.is_terminal
+
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -2975,6 +3015,8 @@ def main(argv=None):
                         _args,
                         logger,
                         bfl.queue_listener.handlers[0] if output else None,
+                        console=console,
+                        progress_disabled=progress_disabled,
                     )
                     tasks.append(fn)
         except IOError as ex:
@@ -3004,7 +3046,14 @@ def main(argv=None):
     else:
         try:
             _host, result = loop.run_until_complete(
-                execute_badfish(host, _args, bfl.logger, bfl.queue_listener.handlers[0])
+                execute_badfish(
+                    host,
+                    _args,
+                    bfl.logger,
+                    bfl.queue_listener.handlers[0],
+                    console=console,
+                    progress_disabled=progress_disabled,
+                )
             )
         except KeyboardInterrupt:
             bfl.logger.warning("Badfish terminated")

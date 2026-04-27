@@ -60,7 +60,7 @@ uefi_7525: NIC.Integrated.1-1-1,NIC.Integrated.1-2-1,NIC.Slot.6-1-1,NIC.Slot.6-2
 uefi_r930: NIC.Integrated.1-2-1,HardDisk.List.1-1,NIC.Integrated.1-3-1
 uefi_mx750c: NIC.PxeDevice.1-1,RAID.SL.3-2
 
-# To understand how custom overrides and hierarchy work please see https://github.com/redhat-performance/badfish#host-type-overrides
+# To understand how custom overrides and hierarchy work please see https://github.com/quadsproject/badfish#host-type-overrides
 # PerfLab Entries
 foreman_cc37_r750: NIC.Embedded.1-1-1,HardDisk.List.1-1,NIC.Slot.3-1-1
 director_cc37_r750: NIC.Slot.3-1-1,HardDisk.List.1-1,NIC.Embedded.1-1-1
