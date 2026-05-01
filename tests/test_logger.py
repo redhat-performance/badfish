@@ -2,9 +2,9 @@ import os
 import tempfile
 from logging import INFO, ERROR, DEBUG, LogRecord
 
-from badfish.helpers.logger import BadfishHandler, BadfishLogger
+from badfish.helpers.logger import BadfishHandler, BadfishFormatter, BadfishLogger
 import yaml
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 class TestBadfishHandler:
@@ -203,3 +203,71 @@ class TestBadfishLogger:
         # badfish_handler should be in formatted parsing mode when output is set
         assert logger.badfish_handler.format_flag is True
         logger.queue_listener.stop()
+
+
+class TestBadfishFormatter:
+    def _make_record(self, level_name, level_no, msg="test message"):
+        return LogRecord(
+            name="badfish.helpers.logger",
+            level=level_no,
+            pathname=__file__,
+            lineno=1,
+            msg=msg,
+            args=(),
+            exc_info=None,
+        )
+
+    def test_colored_formatter_embeds_ansi_for_known_levels(self):
+        fmt = BadfishFormatter("- %(levelname)-8s - %(message)s")
+        for level_name, level_no in [("INFO", INFO), ("ERROR", ERROR), ("DEBUG", DEBUG)]:
+            record = self._make_record(level_name, level_no)
+            result = fmt.format(record)
+            assert "\033[" in result, f"Expected ANSI codes for {level_name}"
+            assert "test message" in result
+
+    def test_colored_formatter_restores_levelname(self):
+        fmt = BadfishFormatter("- %(levelname)-8s - %(message)s")
+        record = self._make_record("WARNING", 30)
+        fmt.format(record)
+        assert record.levelname == "WARNING"
+
+    def test_logger_uses_colored_formatter_when_tty(self):
+        console = MagicMock()
+        console.is_terminal = True
+        console.no_color = False
+        logger = BadfishLogger(verbose=False, multi_host=False, console=console)
+        logger.logger.info("colorful")
+        logger.queue_listener.stop()
+        msgs = logger.badfish_handler.formatted_msg
+        assert any("\033[" in m for m in msgs), "Expected ANSI codes in TTY output"
+        assert any("colorful" in m for m in msgs)
+
+    def test_logger_uses_plain_formatter_when_non_tty(self):
+        console = MagicMock()
+        console.is_terminal = False
+        console.no_color = False
+        logger = BadfishLogger(verbose=False, multi_host=False, console=console)
+        logger.logger.info("plain")
+        logger.queue_listener.stop()
+        msgs = logger.badfish_handler.formatted_msg
+        assert any("\033[" not in m for m in msgs)
+        assert any("plain" in m for m in msgs)
+
+    def test_logger_no_color_env_disables_colors(self):
+        console = MagicMock()
+        console.is_terminal = True
+        console.no_color = True  # simulates NO_COLOR env var
+        logger = BadfishLogger(verbose=False, multi_host=False, console=console)
+        logger.logger.info("respect no_color")
+        logger.queue_listener.stop()
+        msgs = logger.badfish_handler.formatted_msg
+        assert all("\033[" not in m for m in msgs)
+        assert any("respect no_color" in m for m in msgs)
+
+    def test_logger_uses_plain_formatter_without_console(self):
+        logger = BadfishLogger(verbose=False, multi_host=False)
+        logger.logger.info("no console")
+        logger.queue_listener.stop()
+        msgs = logger.badfish_handler.formatted_msg
+        assert all("\033[" not in m for m in msgs)
+        assert any("no console" in m for m in msgs)

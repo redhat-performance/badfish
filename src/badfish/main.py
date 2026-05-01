@@ -2984,9 +2984,8 @@ def main(argv=None):
     multi_host = True if host_list else False
     result = True
     output = _args["output"]
-    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output)
-
     console = Console()
+    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output, console=console)
     progress_disabled = bool(output) or multi_host or bool(_args["log"]) or not console.is_terminal
 
     try:

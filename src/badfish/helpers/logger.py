@@ -1,7 +1,9 @@
 import json
 import sys
+from io import StringIO
 
 import yaml
+from rich.console import Console as RichConsole
 
 try:
     # Python 3.7 and newer, fast reentrant implementation
@@ -39,6 +41,9 @@ class BadfishHandler(StreamHandler):
     def emit(self, record):
         if not self.format_flag:
             self.formatted_msg.append(self.formatter.format(record))
+            return
+
+        if getattr(record, "is_table", False):
             return
 
         if record.levelno == INFO and record.msg != "*" * 48:
@@ -176,8 +181,43 @@ class BadfishHandler(StreamHandler):
             return "\n".join(sorted_msg)
 
 
+_LEVEL_MARKUP = {
+    "DEBUG":    "[dim cyan]DEBUG   [/dim cyan]",
+    "INFO":     "[green]INFO    [/green]",
+    "WARNING":  "[yellow]WARNING [/yellow]",
+    "ERROR":    "[bold red]ERROR   [/bold red]",
+    "CRITICAL": "[bold red]CRITICAL[/bold red]",
+}
+
+
+class BadfishFormatter(Formatter):
+    def __init__(self, fmt):
+        super().__init__(fmt)
+        self._colors = self._build_colors()
+
+    def _build_colors(self):
+        buf = StringIO()
+        # no_color=False overrides NO_COLOR env var: we've already decided to
+        # use color (use_color=True gate), so the builder must emit ANSI codes.
+        console = RichConsole(file=buf, highlight=False, markup=True, force_terminal=True, no_color=False, color_system="standard", width=200)
+        colors = {}
+        for level, markup in _LEVEL_MARKUP.items():
+            buf.seek(0)
+            buf.truncate(0)
+            console.print(markup, end="")
+            colors[level] = buf.getvalue()
+        return colors
+
+    def format(self, record):
+        original = record.levelname
+        record.levelname = self._colors.get(original, f"{original:<8}")
+        result = super().format(record)
+        record.levelname = original
+        return result
+
+
 class BadfishLogger:
-    def __init__(self, verbose=False, multi_host=False, log_file=None, output=None):
+    def __init__(self, verbose=False, multi_host=False, log_file=None, output=None, console=None):
         self.log_level = DEBUG if verbose else INFO
         self.multi_host = multi_host
         self.log_file = log_file
@@ -186,8 +226,11 @@ class BadfishLogger:
         _format_str = f"{_host_name_tag}- %(levelname)-8s - %(message)s"
         _file_format_str = f"%(asctime)-12s: {_host_name_tag}- %(levelname)-8s - %(message)s"
 
+        use_color = bool(console and console.is_terminal and not console.no_color)
+        console_formatter = BadfishFormatter(_format_str, use_color=use_color)
+
         self.badfish_handler = BadfishHandler(True if output else False)
-        self.badfish_handler.setFormatter(Formatter(_format_str))
+        self.badfish_handler.setFormatter(console_formatter)
         self.badfish_handler.setLevel(INFO)
 
         _queue = Queue()
