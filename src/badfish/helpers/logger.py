@@ -182,33 +182,46 @@ class BadfishHandler(StreamHandler):
 
 
 _LEVEL_MARKUP = {
-    "DEBUG":    "[dim cyan]DEBUG   [/dim cyan]",
-    "INFO":     "[green]INFO    [/green]",
-    "WARNING":  "[yellow]WARNING [/yellow]",
-    "ERROR":    "[bold red]ERROR   [/bold red]",
+    "DEBUG": "[dim cyan]DEBUG[/dim cyan]",
+    "INFO": "[green]INFO[/green]",
+    "WARNING": "[yellow]WARNING[/yellow]",
+    "ERROR": "[bold red]ERROR[/bold red]",
     "CRITICAL": "[bold red]CRITICAL[/bold red]",
 }
 
 
 class BadfishFormatter(Formatter):
-    def __init__(self, fmt):
+    def __init__(self, fmt, use_color=True):
         super().__init__(fmt)
-        self._colors = self._build_colors()
+        self.use_color = use_color
+        self._colors = self._build_colors() if use_color else {}
 
     def _build_colors(self):
         buf = StringIO()
         # no_color=False overrides NO_COLOR env var: we've already decided to
         # use color (use_color=True gate), so the builder must emit ANSI codes.
-        console = RichConsole(file=buf, highlight=False, markup=True, force_terminal=True, no_color=False, color_system="standard", width=200)
+        console = RichConsole(
+            file=buf,
+            highlight=False,
+            markup=True,
+            force_terminal=True,
+            no_color=False,
+            color_system="standard",
+        )
         colors = {}
         for level, markup in _LEVEL_MARKUP.items():
             buf.seek(0)
             buf.truncate(0)
             console.print(markup, end="")
-            colors[level] = buf.getvalue()
+            padding = " " * max(0, 8 - len(level))
+            colors[level] = buf.getvalue() + padding
         return colors
 
     def format(self, record):
+        if getattr(record, "is_table", False):
+            return record.getMessage()
+        if not self.use_color:
+            return super().format(record)
         original = record.levelname
         record.levelname = self._colors.get(original, f"{original:<8}")
         result = super().format(record)
