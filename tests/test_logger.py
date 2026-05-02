@@ -173,6 +173,22 @@ class TestBadfishHandler:
         out = handler.output("text", {"h1": 0})
         assert out.splitlines() == ["[h2] - INFO - m2", "[h1] - INFO - m1"]
 
+    def test_emit_skips_is_table_record_in_format_mode(self):
+        handler = BadfishHandler(format_flag=True)
+        record = LogRecord(
+            name="host1",
+            level=INFO,
+            pathname=__file__,
+            lineno=1,
+            msg="┌─table─┐",
+            args=(),
+            exc_info=None,
+        )
+        record.is_table = True
+        handler.emit(record)
+        assert handler.messages == {}
+        assert handler.formatted_msg == []
+
 
 class TestBadfishLogger:
     def test_logger_levels_and_multi_host_formatting(self):
@@ -271,3 +287,11 @@ class TestBadfishFormatter:
         msgs = logger.badfish_handler.formatted_msg
         assert all("\033[" not in m for m in msgs)
         assert any("no console" in m for m in msgs)
+
+    def test_is_table_record_bypasses_formatter(self):
+        fmt = BadfishFormatter("- %(levelname)-8s - %(message)s", use_color=False)
+        record = self._make_record("INFO", INFO, msg="┌─table─┐")
+        record.is_table = True
+        result = fmt.format(record)
+        assert result == "┌─table─┐"
+        assert "INFO" not in result
