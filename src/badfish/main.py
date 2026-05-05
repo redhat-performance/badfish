@@ -1908,7 +1908,8 @@ class Badfish:
                 row_vals = {"Interface": interface}
                 for key, value in properties.items():
                     if key == "SupportedLinkCapabilities":
-                        row_vals["LinkSpeedMbps"] = str(value[0].get("LinkSpeedMbps", ""))
+                        caps = value[0] if isinstance(value, list) and value else {}
+                        row_vals["LinkSpeedMbps"] = str(caps.get("LinkSpeedMbps", ""))
                     elif key == "Status":
                         row_vals["Health"] = str(value.get("Health", ""))
                     else:
@@ -1921,7 +1922,7 @@ class Badfish:
                 self.logger.info(f"{interface}:")
                 for key, value in properties.items():
                     if key == "SupportedLinkCapabilities":
-                        speed = value[0].get("LinkSpeedMbps")
+                        speed = value[0].get("LinkSpeedMbps") if value else None
                         if speed:
                             self.logger.info(f"    LinkSpeedMbps: {speed}")
                     elif key == "Status":
