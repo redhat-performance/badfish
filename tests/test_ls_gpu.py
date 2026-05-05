@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from tests.config import (
     GPU_DATA_RESP1,
@@ -30,6 +30,21 @@ class TestLsGpu(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_LS_GPU
+
+    @patch("rich.console.Console.is_terminal", new_callable=PropertyMock, return_value=True)
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_ls_gpu_table(self, mock_get, mock_post, mock_delete, mock_is_terminal):
+        responses_add = [GPU_MEMBERS_RESP, GPU_DATA_RESP1, GPU_DATA_RESP2]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_get, 200, responses)
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert "- ERROR" not in err
+        assert "AMD Instinct MI300X" in err
 
     @patch("aiohttp.ClientSession.post")
     @patch("aiohttp.ClientSession.get")

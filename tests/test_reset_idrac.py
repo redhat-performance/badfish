@@ -107,4 +107,3 @@ class TestResetIdrac(TestBase):
         assert "Polling for iDRAC" in err
         assert "iDRAC is ready" in err
         assert "iDRAC is now responsive" in err
-

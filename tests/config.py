@@ -924,7 +924,8 @@ BIOS_PASS_SET_GOOD = f"""\
 BIOS_PASS_SET_MISS_ARG = """\
 - ERROR    - Missing argument: `--new-password`
 """
-BIOS_PASS_RM_GOOD = """\
+BIOS_PASS_RM_GOOD = (
+    """\
 - INFO     - Command passed to set BIOS password.
 - WARNING  - Host will now be rebooted for changes to take place.
 - INFO     - Command passed to On server, code return is 200.
@@ -932,7 +933,9 @@ BIOS_PASS_RM_GOOD = """\
 - INFO     - Name: Task
 - INFO     - Message: Job completed successfully.
 - INFO     - PercentComplete: 100
-""" % JOB_ID
+"""
+    % JOB_ID
+)
 BIOS_PASS_RM_MISS_ARG = """\
 - ERROR    - Missing argument: `--old-password`
 """
@@ -1007,10 +1010,13 @@ BIOS_SET_OK = """\
 - INFO     - Polling for host state: Not Down
 - INFO     - Command passed to On server, code return is 200.
 """
-BIOS_SET_BAD_VALUE = """\
+BIOS_SET_BAD_VALUE = (
+    """\
 - WARNING  - List of accepted values for '%s': ['Enabled', 'Disabled']
 - ERROR    - Value not accepted
-""" % ATTRIBUTE_OK
+"""
+    % ATTRIBUTE_OK
+)
 BIOS_SET_BAD_ATTR = """\
 - WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - NotThere not found. Please check attribute name.
@@ -1033,10 +1039,13 @@ BIOS_GET_ONE_OK = """\
 - INFO     - WarningText: None
 - INFO     - WriteOnly: False
 """
-BIOS_GET_ONE_BAD = """\
+BIOS_GET_ONE_BAD = (
+    """\
 - WARNING  - Could not retrieve Bios Attributes.
 - ERROR    - Unable to locate the Bios attribute: %s
-""" % ATTRIBUTE_BAD
+"""
+    % ATTRIBUTE_BAD
+)
 NEXT_BOOT_PXE_OK = '- INFO     - PATCH command passed to set next boot onetime boot device to: "Pxe".\n'
 NEXT_BOOT_PXE_BAD = (
     "- ERROR    - Command failed, error code is 400.\n" "- ERROR    - Error reading response from host.\n"
