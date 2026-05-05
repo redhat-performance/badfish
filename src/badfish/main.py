@@ -1101,9 +1101,7 @@ class Badfish:
                     host_down = await self.polling_host_state("Off")
 
                     if not host_down:
-                        self.logger.warning(
-                            "Unable to graceful shutdown the server, will perform forced shutdown now."
-                        )
+                        self.logger.warning("Unable to graceful shutdown the server, will perform forced shutdown now.")
                         await self.send_reset("ForceOff")
             else:
                 await self.send_reset("ForceOff")
@@ -1119,9 +1117,7 @@ class Badfish:
 
     async def reset_idrac(self, wait=False):
         if self.vendor != "Dell":
-            self.logger.warning(
-                "Vendor isn't a Dell, if you are trying this on a Supermicro, use --bmc-reset instead."
-            )
+            self.logger.warning("Vendor isn't a Dell, if you are trying this on a Supermicro, use --bmc-reset instead.")
             return False
         self.logger.debug("Running reset iDRAC.")
         _reset_types = await self.get_reset_types(manager=True)
@@ -1509,9 +1505,7 @@ class Badfish:
                     "members": [],
                 }
                 if data["Oem"].get("Supermicro"):
-                    vm_path.update(
-                        {"config": data["Oem"].get("Supermicro").get("VirtualMediaConfig").get("@odata.id")}
-                    )
+                    vm_path.update({"config": data["Oem"].get("Supermicro").get("VirtualMediaConfig").get("@odata.id")})
                 else:
                     vm_path.update({"config": data["Oem"].get("VirtualMediaConfig").get("@odata.id")})
                 if vm_path["count"] > 0:
@@ -1663,8 +1657,7 @@ class Badfish:
                 await self.boot_to("Optical.iDRACVirtual.1-1", True)
             else:
                 self.logger.error(
-                    "Command failed to set next onetime boot to virtual media. "
-                    "No virtual optical media boot device."
+                    "Command failed to set next onetime boot to virtual media. " "No virtual optical media boot device."
                 )
                 return False
         return True
@@ -2818,9 +2811,7 @@ class Badfish:
                 response = await self.patch_request(uri, payload, headers)
                 status_code = response.status
                 if status_code in [200, 202]:
-                    self.logger.info(
-                        "Patch command to set network attribute values and create next reboot job PASSED."
-                    )
+                    self.logger.info("Patch command to set network attribute values and create next reboot job PASSED.")
 
                     # Extract job ID from response headers (DMTF Redfish DSP0266 §13.6)
                     # HTTP 202 indicates async operation with job creation
