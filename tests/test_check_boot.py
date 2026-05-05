@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from tests.config import (
     BOOT_MODE_RESP,
@@ -60,6 +60,22 @@ class TestCheckBoot(TestBase):
         self.args = ["-i", INTERFACES_PATH, self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_FOREMAN
+
+    @patch("rich.console.Console.is_terminal", new_callable=PropertyMock, return_value=True)
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_check_boot_table(self, mock_get, mock_post, mock_delete, mock_is_terminal):
+        boot_seq_resp_fmt = BOOT_SEQ_RESP % str(BOOT_SEQ_RESPONSE_DIRECTOR)
+        responses_add = [BOOT_MODE_RESP, boot_seq_resp_fmt.replace("'", '"')]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert "- ERROR" not in err
+        assert "NIC.Integrated.1-2-1" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")

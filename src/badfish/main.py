@@ -13,7 +13,10 @@ import yaml
 import tempfile
 from urllib.parse import urlparse
 
+from io import StringIO
+
 from rich.console import Console
+from rich.table import Table
 
 from badfish.helpers import get_now
 from badfish.helpers.parser import parse_arguments
@@ -99,6 +102,15 @@ class Badfish:
         self.vendor = None
         self.console = _console if _console is not None else Console()
         self._progress_disabled = _progress_disabled
+        # Tables are useful only in the same conditions as progress bars: TTY,
+        # single-host, no structured output, no log file.
+        self._use_tables = not _progress_disabled
+
+    def _log_table(self, table):
+        buf = StringIO()
+        tmp = Console(file=buf, highlight=False, force_terminal=self.console.is_terminal, no_color=self.console.no_color)
+        tmp.print(table)
+        self.logger.info(buf.getvalue().rstrip("\n"), extra={"is_table": True})
 
     async def __aenter__(self):
         await self.init()
@@ -1295,12 +1307,21 @@ class Badfish:
                 return True
             else:
                 self.logger.warning("Current boot order does not match any of the given.")
-                self.logger.info("Current boot order:")
+
+        self.logger.info("Current boot order:")
+        if self._use_tables:
+            table = Table(show_header=True, header_style="bold")
+            table.add_column("#", justify="right")
+            table.add_column("Device")
+            table.add_column("Status")
+            for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
+                status = "Enabled" if device["Enabled"] else "Disabled"
+                table.add_row(str(int(device["Index"]) + 1), device["Name"], status)
+            self._log_table(table)
         else:
-            self.logger.info("Current boot order:")
-        for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
-            enabled = "" if device["Enabled"] else " (DISABLED)"
-            self.logger.info("%s: %s%s" % (int(device["Index"]) + 1, device["Name"], enabled))
+            for device in sorted(self.boot_devices, key=lambda x: x["Index"]):
+                enabled = "" if device["Enabled"] else " (DISABLED)"
+                self.logger.info("%s: %s%s" % (int(device["Index"]) + 1, device["Name"], enabled))
         return True
 
     async def check_device(self, device):
@@ -1387,6 +1408,8 @@ class Badfish:
             if "Installed" in a:
                 installed_devices.append(a)
 
+        _SKIP = {"odata", "Description", "Oem"}
+        rows = []
         for device in installed_devices:
             self.logger.debug("Getting device info for %s" % device)
             _uri = "%s/UpdateService/FirmwareInventory/%s" % (self.root_uri, device)
@@ -1397,11 +1420,32 @@ class Badfish:
 
             raw = await _response.text("utf-8", "ignore")
             data = json.loads(raw.strip())
-            for info in data.items():
-                if "Id" == info[0]:
-                    self.logger.info("%s:" % info[1])
-                if "odata" not in info[0] and "Description" not in info[0] and "Oem" not in info[0]:
-                    self.logger.info("    %s: %s" % (info[0], info[1]))
+            row = {k: v for k, v in data.items() if not any(s in k for s in _SKIP)}
+            rows.append(row)
+
+        if rows:
+            if self._use_tables:
+                cols = ["Id", "Name", "Version", "Manufacturer", "Status"]
+                table = Table(show_header=True, header_style="bold")
+                for col in cols:
+                    table.add_column(col)
+                for row in rows:
+                    status = row.get("Status")
+                    if isinstance(status, dict):
+                        status = status.get("State", "")
+                    table.add_row(
+                        str(row.get("Id", "")),
+                        str(row.get("Name", "")),
+                        str(row.get("Version", "")),
+                        str(row.get("Manufacturer", "")),
+                        str(status or ""),
+                    )
+                self._log_table(table)
+            else:
+                for row in rows:
+                    self.logger.info("%s:" % row.get("Id", ""))
+                    for k, v in row.items():
+                        self.logger.info("    %s: %s" % (k, v))
 
     async def get_host_type_boot_device(self, host_type, _interfaces_path):
         if _interfaces_path:
@@ -1844,22 +1888,49 @@ class Badfish:
                 self.logger.error("Server does not support this functionality")
                 return False
 
-        for interface, properties in data.items():
-            self.logger.info(f"{interface}:")
-            for key, value in properties.items():
-                if key == "SupportedLinkCapabilities":
-                    speed_key = "LinkSpeedMbps"
-                    speed = value[0].get(speed_key)
-                    if speed:
-                        self.logger.info(f"    {speed_key}: {speed}")
-                elif key == "Status":
-                    health_key = "Health"
-                    health = value.get(health_key)
-                    if health:
-                        self.logger.info(f"    {health_key}: {health}")
-                else:
-                    self.logger.info(f"    {key}: {value}")
+        if self._use_tables:
+            cols = {}
+            for interface, properties in data.items():
+                for key, value in properties.items():
+                    if key == "SupportedLinkCapabilities":
+                        cols["LinkSpeedMbps"] = True
+                    elif key == "Status":
+                        cols["Health"] = True
+                    else:
+                        cols[key] = True
 
+            table = Table(show_header=True, header_style="bold")
+            table.add_column("Interface")
+            for col in cols:
+                table.add_column(col)
+
+            for interface, properties in data.items():
+                row_vals = {"Interface": interface}
+                for key, value in properties.items():
+                    if key == "SupportedLinkCapabilities":
+                        caps = value[0] if isinstance(value, list) and value else {}
+                        row_vals["LinkSpeedMbps"] = str(caps.get("LinkSpeedMbps", ""))
+                    elif key == "Status":
+                        row_vals["Health"] = str(value.get("Health", ""))
+                    else:
+                        row_vals[key] = str(value)
+                table.add_row(*[row_vals.get(c, "") for c in ["Interface"] + list(cols)])
+
+            self._log_table(table)
+        else:
+            for interface, properties in data.items():
+                self.logger.info(f"{interface}:")
+                for key, value in properties.items():
+                    if key == "SupportedLinkCapabilities":
+                        speed = value[0].get("LinkSpeedMbps") if value else None
+                        if speed:
+                            self.logger.info(f"    LinkSpeedMbps: {speed}")
+                    elif key == "Status":
+                        health = value.get("Health")
+                        if health:
+                            self.logger.info(f"    Health: {health}")
+                    else:
+                        self.logger.info(f"    {key}: {value}")
         return True
 
     async def get_processor_summary(self):
@@ -2129,15 +2200,33 @@ class Badfish:
         data = await self.get_processor_summary()
 
         self.logger.info("Processor Summary:")
-        for _key, _value in data.items():
-            self.logger.info(f"    {_key}: {_value}")
+        if self._use_tables:
+            summary = Table(show_header=True, header_style="bold")
+            summary.add_column("Property")
+            summary.add_column("Value")
+            for _key, _value in data.items():
+                summary.add_row(_key, str(_value))
+            self._log_table(summary)
+        else:
+            for _key, _value in data.items():
+                self.logger.info(f"    {_key}: {_value}")
 
         processor_data = await self.get_processor_details()
 
-        for _processor, _properties in processor_data.items():
-            self.logger.info(f"{_processor}:")
-            for _key, _value in _properties.items():
-                self.logger.info(f"    {_key}: {_value}")
+        if self._use_tables:
+            detail = Table(show_header=True, header_style="bold")
+            detail.add_column("Processor")
+            all_keys = dict.fromkeys(k for props in processor_data.values() for k in props)
+            for col in all_keys:
+                detail.add_column(col)
+            for _processor, _properties in processor_data.items():
+                detail.add_row(_processor, *[str(_properties.get(k, "")) for k in all_keys])
+            self._log_table(detail)
+        else:
+            for _processor, _properties in processor_data.items():
+                self.logger.info(f"{_processor}:")
+                for _key, _value in _properties.items():
+                    self.logger.info(f"    {_key}: {_value}")
 
         return True
 
@@ -2148,17 +2237,34 @@ class Badfish:
         summary = await self.get_gpu_summary(gpu_responses)
 
         self.logger.info("GPU Summary:")
-        for _key, _value in summary.items():
-            self.logger.info(f"  Model: {_key} (Count: {_value})")
-
-        self.logger.info("Current GPU's on host:")
+        if self._use_tables:
+            summary_table = Table(show_header=True, header_style="bold")
+            summary_table.add_column("Model")
+            summary_table.add_column("Count", justify="right")
+            for _key, _value in summary.items():
+                summary_table.add_row(_key, str(_value))
+            self._log_table(summary_table)
+        else:
+            for _key, _value in summary.items():
+                self.logger.info(f"  Model: {_key} (Count: {_value})")
 
         gpu_data = await self.get_gpu_details(gpu_responses)
 
-        for _gpu, _properties in gpu_data.items():
-            self.logger.info(f"  {_gpu}:")
-            for _key, _value in _properties.items():
-                self.logger.info(f"    {_key}: {_value}")
+        self.logger.info("Current GPU's on host:")
+        if self._use_tables:
+            detail = Table(show_header=True, header_style="bold")
+            detail.add_column("GPU")
+            all_keys = dict.fromkeys(k for props in gpu_data.values() for k in props)
+            for col in all_keys:
+                detail.add_column(col)
+            for _gpu, _properties in gpu_data.items():
+                detail.add_row(_gpu, *[str(_properties.get(k, "")) for k in all_keys])
+            self._log_table(detail)
+        else:
+            for _gpu, _properties in gpu_data.items():
+                self.logger.info(f"  {_gpu}:")
+                for _key, _value in _properties.items():
+                    self.logger.info(f"    {_key}: {_value}")
 
         return True
 
@@ -2166,15 +2272,33 @@ class Badfish:
         data = await self.get_memory_summary()
 
         self.logger.info("Memory Summary:")
-        for _key, _value in data.items():
-            self.logger.info(f"    {_key}: {_value}")
+        if self._use_tables:
+            summary = Table(show_header=True, header_style="bold")
+            summary.add_column("Property")
+            summary.add_column("Value")
+            for _key, _value in data.items():
+                summary.add_row(_key, str(_value))
+            self._log_table(summary)
+        else:
+            for _key, _value in data.items():
+                self.logger.info(f"    {_key}: {_value}")
 
         memory_data = await self.get_memory_details()
 
-        for _memory, _properties in memory_data.items():
-            self.logger.info(f"{_memory}:")
-            for _key, _value in _properties.items():
-                self.logger.info(f"    {_key}: {_value}")
+        if self._use_tables:
+            detail = Table(show_header=True, header_style="bold")
+            detail.add_column("DIMM")
+            all_keys = dict.fromkeys(k for props in memory_data.values() for k in props)
+            for col in all_keys:
+                detail.add_column(col)
+            for _memory, _properties in memory_data.items():
+                detail.add_row(_memory, *[str(_properties.get(k, "")) for k in all_keys])
+            self._log_table(detail)
+        else:
+            for _memory, _properties in memory_data.items():
+                self.logger.info(f"{_memory}:")
+                for _key, _value in _properties.items():
+                    self.logger.info(f"    {_key}: {_value}")
 
         return True
 
@@ -2984,9 +3108,8 @@ def main(argv=None):
     multi_host = True if host_list else False
     result = True
     output = _args["output"]
-    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output)
-
     console = Console()
+    bfl = BadfishLogger(_args["verbose"], multi_host, _args["log"], output, console=console)
     progress_disabled = bool(output) or multi_host or bool(_args["log"]) or not console.is_terminal
 
     try:

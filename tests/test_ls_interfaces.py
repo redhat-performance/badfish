@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from tests.config import (
     DEVICE_NIC_I,
@@ -42,6 +42,31 @@ class TestLsInterfaces(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_LS_INTERFACES
+
+    @patch("rich.console.Console.is_terminal", new_callable=PropertyMock, return_value=True)
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    def test_ls_interfaces_table(self, mock_get, mock_post, mock_delete, mock_is_terminal):
+        responses_add = [
+            NETWORK_ADAPTERS_RESP,
+            NETWORK_PORTS_ROOT_RESP % (DEVICE_NIC_I, DEVICE_NIC_I),
+            NETWORK_DEV_FUNC_RESP % (DEVICE_NIC_I, DEVICE_NIC_I),
+            NETWORK_PORTS_RESP % DEVICE_NIC_I,
+            NETWORK_DEV_FUNC_DET_RESP,
+            NETWORK_PORTS_ROOT_RESP % (DEVICE_NIC_S, DEVICE_NIC_S),
+            NETWORK_DEV_FUNC_RESP % (DEVICE_NIC_S, DEVICE_NIC_S),
+            NETWORK_PORTS_RESP % DEVICE_NIC_S,
+            NETWORK_DEV_FUNC_DET_RESP,
+        ]
+        responses = INIT_RESP + responses_add
+        self.set_mock_response(mock_get, 200, responses)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert "- ERROR" not in err
+        assert "MACAddress" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -90,6 +115,33 @@ class TestLsInterfaces(TestBase):
         self.args = [self.option_arg]
         _, err = self.badfish_call()
         assert err == RESPONSE_LS_ETHERNET
+
+    @patch("rich.console.Console.is_terminal", new_callable=PropertyMock, return_value=True)
+    @patch("aiohttp.ClientSession.delete")
+    @patch("aiohttp.ClientSession.post")
+    @patch("aiohttp.ClientSession.get")
+    @patch("badfish.main.Badfish.check_supported_network_interfaces")
+    @patch("badfish.main.Badfish.get_ethernet_interfaces")
+    def test_ls_interfaces_ethernet_table(
+        self, mock_get_ethernet, mock_check_support, mock_get, mock_post, mock_delete, mock_is_terminal
+    ):
+        mock_check_support.side_effect = [False, True]
+        ethernet_data = {
+            "NIC.Slot.1-1-1": {
+                "Name": "System Ethernet Interface",
+                "MACAddress": "F8:BC:12:22:89:E1",
+                "Status": {"Health": "OK", "State": "Enabled"},
+                "SpeedMbps": 10240,
+            },
+        }
+        mock_get_ethernet.return_value = ethernet_data
+        self.set_mock_response(mock_get, 200, INIT_RESP)
+        self.set_mock_response(mock_post, 200, "OK")
+        self.set_mock_response(mock_delete, 200, "OK")
+        self.args = [self.option_arg]
+        _, err = self.badfish_call()
+        assert "- ERROR" not in err
+        assert "OK" in err
 
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
