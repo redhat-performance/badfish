@@ -352,7 +352,8 @@ async def test_get_raw_client_connector_certificate_error_raises(mock_get):
     client = HTTPClient("host", "u", "p", logger, insecure=False)
     # Simulate ClientConnectorCertificateError
     mock_get.side_effect = aiohttp.ClientConnectorCertificateError(
-        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error")
+    )
     with pytest.raises(BadfishException, match="SSL certificate verification failed"):
         await client.get_raw("https://x")
 
@@ -373,7 +374,8 @@ async def test_post_request_client_connector_certificate_error_raises(mock_post)
     logger = DummyLogger()
     client = HTTPClient("host", "u", "p", logger, insecure=False)
     mock_post.side_effect = aiohttp.ClientConnectorCertificateError(
-        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error")
+    )
     with pytest.raises(BadfishException, match="SSL certificate verification failed"):
         await client.post_request("https://x", {}, {})
 
@@ -403,7 +405,8 @@ async def test_patch_request_client_connector_certificate_error_raises(mock_patc
     logger = DummyLogger()
     client = HTTPClient("host", "u", "p", logger, insecure=False)
     mock_patch.side_effect = aiohttp.ClientConnectorCertificateError(
-        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error")
+    )
     with pytest.raises(BadfishException, match="SSL certificate verification failed"):
         await client.patch_request("https://x", {}, {})
 
@@ -424,7 +427,8 @@ async def test_delete_request_client_connector_certificate_error_raises(mock_del
     logger = DummyLogger()
     client = HTTPClient("host", "u", "p", logger, insecure=False)
     mock_delete.side_effect = aiohttp.ClientConnectorCertificateError(
-        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error"))
+        connection_key=MagicMock(), certificate_error=ssl.SSLError("cert error")
+    )
     with pytest.raises(BadfishException, match="SSL certificate verification failed"):
         await client.delete_request("https://x", {})
 

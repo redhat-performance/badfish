@@ -843,13 +843,14 @@ class TestSetNICAttribute(TestBase):
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,
         )
-        
+
         # Create updated list with NumberVFAdvertised set to 48
         import json
+
         updated_attrs = json.loads(GET_NIC_ATTR_LIST_WITH_VF)
         updated_attrs["Attributes"]["NumberVFAdvertised"] = "48"
         GET_NIC_ATTR_LIST_VF_48 = json.dumps(updated_attrs)
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY_WITH_VF,
@@ -867,7 +868,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -943,7 +944,7 @@ class TestSetNICAttribute(TestBase):
             GET_NIC_ATTR_REGISTRY_WITH_VF,
             GET_NIC_ATTR_LIST_WITH_VF,
         )
-        
+
         # NIC attrs with non-integer NumberPCIFunctionsEnabled to trigger ValueError in int() conversion
         ATTRS_WITH_INVALID_FUNCTION_COUNT = """
 {
@@ -956,7 +957,7 @@ class TestSetNICAttribute(TestBase):
     }
 }
 """
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY_WITH_VF,
@@ -973,7 +974,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -990,7 +991,6 @@ class TestSetNICAttribute(TestBase):
         # Exception caught at line 2568, proceeds with attempt
         assert "Attempting to set NumberVFAdvertised" not in err  # No warning due to exception
 
-    
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -999,7 +999,7 @@ class TestSetNICAttribute(TestBase):
         """Test set_nic_attribute when attribute doesn't exist (L2522-2523)"""
         # Return empty registry that won't match the requested attribute
         empty_registry = '{"RegistryEntries": {"Attributes": []}}'
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             empty_registry,  # Empty registry means attribute won't be found
@@ -1043,7 +1043,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -1067,7 +1067,7 @@ class TestSetNICAttribute(TestBase):
         """Test _monitor_and_verify_attribute_job when final verification returns None (L1023-1024)"""
         # Create a response that will cause get_nic_attribute_info to fail
         empty_or_invalid_response = '{"Attributes": {}}'  # Missing the requested attribute
-        
+
         responses = INIT_RESP + [
             GET_FW_VERSION,
             GET_NIC_ATTR_REGISTRY,
@@ -1083,7 +1083,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         patch_headers = {"Location": "/redfish/v1/Managers/iDRAC.Embedded.1/Jobs/JID_498218641680"}
         self.set_mock_response(mock_patch, 202, "OK", headers=patch_headers)
 
@@ -1182,7 +1182,6 @@ class TestSetNICAttribute(TestBase):
         # Should NOT have the NONE error
         assert "Cannot set NumberVFAdvertised when VirtualizationMode is NONE" not in err
 
-
     @patch("aiohttp.ClientSession.patch")
     @patch("aiohttp.ClientSession.delete")
     @patch("aiohttp.ClientSession.post")
@@ -1198,7 +1197,7 @@ class TestSetNICAttribute(TestBase):
         self.set_mock_response(mock_get, 200, responses)
         self.set_mock_response(mock_post, 200, "OK")
         self.set_mock_response(mock_delete, 200, "OK")
-        
+
         # Make PATCH context manager raise exception
         mock_patch.return_value.__aenter__.side_effect = ValueError("Test exception")
 
@@ -1212,4 +1211,4 @@ class TestSetNICAttribute(TestBase):
         ]
         _, err = self.badfish_call()
         # Should catch and log error (may be "Failed to communicate" or "Was unable to set")
-        assert ("Was unable to set" in err or "Failed to communicate" in err or "ERROR" in err)
+        assert "Was unable to set" in err or "Failed to communicate" in err or "ERROR" in err
