@@ -1,6 +1,35 @@
 # CHANGELOG
 
 
+## v1.5.0 (2026-05-05)
+
+### Bug Fixes
+
+- Black formatting for tests and main
+  ([`ed964de`](https://github.com/quadsproject/badfish/commit/ed964de14c46dcc8da5957c4d3e758e95c4d4996))
+
+- Final black fixes
+  ([`a524eb6`](https://github.com/quadsproject/badfish/commit/a524eb647eac756601f8b75d7ee73db6c535c325))
+
+- Guard against empty SupportedLinkCapabilities list in list_interfaces
+  ([`3a9f6c7`](https://github.com/quadsproject/badfish/commit/3a9f6c792a3e096c8272b9f1f1edc0b15fc51cd6))
+
+### Features
+
+- Colored log levels using rich
+  ([`9c7499d`](https://github.com/quadsproject/badfish/commit/9c7499d9f2e5a3bafe8b5f016d9a2cf4eb8d3fd6))
+
+Adds BadfishFormatter which uses rich markup to color-code log level names in terminal output.
+
+- Rich table output for hardware inventory commands
+  ([`c2ff592`](https://github.com/quadsproject/badfish/commit/c2ff592062bc6a97d1392497b75231cf0fc42bce))
+
+### Testing
+
+- Add coverage for is_table formatter bypass and emit skip
+  ([`ae4d170`](https://github.com/quadsproject/badfish/commit/ae4d170c16848c87e6d5d56917c193f732a05217))
+
+
 ## v1.4.0 (2026-04-27)
 
 ### Chores
